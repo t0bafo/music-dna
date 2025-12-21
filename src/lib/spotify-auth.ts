@@ -1,0 +1,145 @@
+// Spotify OAuth PKCE utilities
+export const SPOTIFY_CLIENT_ID = 'a0c70af1576b40bbb8d899ebdf9b8e08';
+export const SPOTIFY_SCOPES = 'user-read-private user-read-email user-top-read user-library-read playlist-read-private';
+
+export const getRedirectUri = () => {
+  return `${window.location.origin}/callback`;
+};
+
+export const generateRandomString = (length: number): string => {
+  const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const values = crypto.getRandomValues(new Uint8Array(length));
+  return values.reduce((acc, x) => acc + possible[x % possible.length], "");
+};
+
+export const sha256 = async (plain: string): Promise<ArrayBuffer> => {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(plain);
+  return window.crypto.subtle.digest('SHA-256', data);
+};
+
+export const base64encode = (input: ArrayBuffer): string => {
+  return btoa(String.fromCharCode(...new Uint8Array(input)))
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+};
+
+export const initiateSpotifyLogin = async (): Promise<void> => {
+  const codeVerifier = generateRandomString(64);
+  const hashed = await sha256(codeVerifier);
+  const codeChallenge = base64encode(hashed);
+
+  sessionStorage.setItem('code_verifier', codeVerifier);
+
+  const authUrl = new URL('https://accounts.spotify.com/authorize');
+  const params = {
+    client_id: SPOTIFY_CLIENT_ID,
+    response_type: 'code',
+    redirect_uri: getRedirectUri(),
+    scope: SPOTIFY_SCOPES,
+    code_challenge_method: 'S256',
+    code_challenge: codeChallenge,
+  };
+  authUrl.search = new URLSearchParams(params).toString();
+  window.location.href = authUrl.toString();
+};
+
+export const exchangeCodeForTokens = async (code: string): Promise<{
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+} | null> => {
+  const codeVerifier = sessionStorage.getItem('code_verifier');
+  
+  if (!codeVerifier) {
+    console.error('No code verifier found');
+    return null;
+  }
+
+  try {
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: SPOTIFY_CLIENT_ID,
+        grant_type: 'authorization_code',
+        code: code,
+        redirect_uri: getRedirectUri(),
+        code_verifier: codeVerifier,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('Token exchange failed:', errorData);
+      return null;
+    }
+
+    const data = await response.json();
+    sessionStorage.removeItem('code_verifier');
+    return data;
+  } catch (error) {
+    console.error('Token exchange error:', error);
+    return null;
+  }
+};
+
+export const refreshAccessToken = async (refreshToken: string): Promise<{
+  access_token: string;
+  refresh_token?: string;
+  expires_in: number;
+} | null> => {
+  try {
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        client_id: SPOTIFY_CLIENT_ID,
+        grant_type: 'refresh_token',
+        refresh_token: refreshToken,
+      }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Token refresh error:', error);
+    return null;
+  }
+};
+
+export const getStoredTokens = (): { accessToken: string | null; refreshToken: string | null; expiresAt: number | null } => {
+  return {
+    accessToken: sessionStorage.getItem('access_token'),
+    refreshToken: sessionStorage.getItem('refresh_token'),
+    expiresAt: sessionStorage.getItem('expires_at') ? parseInt(sessionStorage.getItem('expires_at')!) : null,
+  };
+};
+
+export const storeTokens = (accessToken: string, refreshToken: string, expiresIn: number): void => {
+  const expiresAt = Date.now() + (expiresIn * 1000);
+  sessionStorage.setItem('access_token', accessToken);
+  sessionStorage.setItem('refresh_token', refreshToken);
+  sessionStorage.setItem('expires_at', expiresAt.toString());
+};
+
+export const clearTokens = (): void => {
+  sessionStorage.removeItem('access_token');
+  sessionStorage.removeItem('refresh_token');
+  sessionStorage.removeItem('expires_at');
+  sessionStorage.removeItem('code_verifier');
+};
+
+export const isTokenExpired = (): boolean => {
+  const expiresAt = sessionStorage.getItem('expires_at');
+  if (!expiresAt) return true;
+  return Date.now() >= parseInt(expiresAt) - 60000; // 1 minute buffer
+};
