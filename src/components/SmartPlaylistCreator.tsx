@@ -32,7 +32,7 @@ interface TrackWithFeatures extends SpotifyTrack {
 }
 
 const SmartPlaylistCreator = () => {
-  const { accessToken, user } = useAuth();
+  const { accessToken, user, refreshToken } = useAuth();
 
   // Form state
   const [targetBpm, setTargetBpm] = useState(110);
@@ -66,9 +66,27 @@ const SmartPlaylistCreator = () => {
     try {
       // Fetch user's top tracks to use as seeds
       toast.info('Analyzing your music taste...');
-      const topTracksData = await getTopTracks(accessToken, 'medium_term', 50);
+      let topTracksData;
+      try {
+        topTracksData = await getTopTracks(accessToken, 'medium_term', 50);
+      } catch (err: any) {
+        // If token expired, try to refresh and retry
+        if (err?.message?.includes('401') || err?.message?.includes('expired')) {
+          toast.info('Refreshing session...');
+          const refreshed = await refreshToken();
+          if (!refreshed) {
+            toast.error('Session expired. Please log in again.');
+            setIsGenerating(false);
+            return;
+          }
+          // Retry with refreshed token - need to get fresh token from context
+          topTracksData = await getTopTracks(accessToken, 'medium_term', 50);
+        } else {
+          throw err;
+        }
+      }
       
-      if (!topTracksData.items || topTracksData.items.length === 0) {
+      if (!topTracksData?.items || topTracksData.items.length === 0) {
         toast.error('Listen to more music on Spotify to unlock personalized playlists!');
         setIsGenerating(false);
         return;
@@ -134,7 +152,24 @@ const SmartPlaylistCreator = () => {
       const playlistName = `${genreLabel} Mix - ${targetBpm} BPM`;
       const description = `Smart playlist: ${targetBpm} BPM, ${minDanceability}% danceability, ${minEnergy}% energy. Created with Music DNA.`;
 
-      const playlist = await createPlaylist(accessToken, user.id, playlistName, description);
+      let playlist;
+      try {
+        playlist = await createPlaylist(accessToken, user.id, playlistName, description);
+      } catch (err: any) {
+        // If token expired, try to refresh and retry
+        if (err?.message?.includes('401') || err?.message?.includes('expired')) {
+          toast.info('Refreshing session...');
+          const refreshed = await refreshToken();
+          if (!refreshed) {
+            toast.error('Session expired. Please log in again.');
+            setIsSaving(false);
+            return;
+          }
+          playlist = await createPlaylist(accessToken, user.id, playlistName, description);
+        } else {
+          throw err;
+        }
+      }
 
       // Add tracks to playlist
       const trackUris = generatedTracks.map(t => `spotify:track:${t.id}`);
