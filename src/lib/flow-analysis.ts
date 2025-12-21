@@ -13,6 +13,7 @@ export interface TrackWithFeatures {
   speechiness?: number;
   instrumentalness?: number;
   liveness?: number;
+  popularity?: number;
 }
 
 export interface FlowScore {

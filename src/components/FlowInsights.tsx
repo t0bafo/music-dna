@@ -1,16 +1,22 @@
 import { FlowInsight } from '@/lib/flow-analysis';
-import { CheckCircle2, AlertTriangle, Lightbulb } from 'lucide-react';
+import { AppealInsight } from '@/lib/appeal-analysis';
+import { CheckCircle2, AlertTriangle, Lightbulb, TrendingUp } from 'lucide-react';
 
 interface FlowInsightsProps {
   insights: FlowInsight[];
+  appealInsights?: AppealInsight[];
 }
 
-const FlowInsights = ({ insights }: FlowInsightsProps) => {
+const FlowInsights = ({ insights, appealInsights = [] }: FlowInsightsProps) => {
   const successInsights = insights.filter(i => i.type === 'success');
   const warningInsights = insights.filter(i => i.type === 'warning');
   const tipInsights = insights.filter(i => i.type === 'tip');
 
-  const renderInsight = (insight: FlowInsight, index: number) => {
+  const appealSuccess = appealInsights.filter(i => i.type === 'success');
+  const appealWarning = appealInsights.filter(i => i.type === 'warning');
+  const appealTip = appealInsights.filter(i => i.type === 'tip');
+
+  const renderInsight = (insight: FlowInsight | AppealInsight, index: number) => {
     const getIcon = () => {
       switch (insight.type) {
         case 'success':
@@ -71,7 +77,44 @@ const FlowInsights = ({ insights }: FlowInsightsProps) => {
           </div>
         )}
 
-        {insights.length === 0 && (
+        {/* Appeal & Discovery Insights */}
+        {appealInsights.length > 0 && (
+          <div className="pt-4 mt-4 border-t border-border">
+            <h4 className="text-sm font-medium text-purple-500 mb-3 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4" />
+              📊 Appeal & Discovery Insights
+            </h4>
+            
+            {appealSuccess.length > 0 && (
+              <div className="mb-3">
+                <p className="text-xs text-muted-foreground mb-2">✅ Strengths</p>
+                <div className="pl-2 border-l-2 border-green-500/30">
+                  {appealSuccess.map((insight, i) => renderInsight(insight, i))}
+                </div>
+              </div>
+            )}
+
+            {appealWarning.length > 0 && (
+              <div className="mb-3">
+                <p className="text-xs text-muted-foreground mb-2">⚠️ Opportunities</p>
+                <div className="pl-2 border-l-2 border-yellow-500/30">
+                  {appealWarning.map((insight, i) => renderInsight(insight, i))}
+                </div>
+              </div>
+            )}
+
+            {appealTip.length > 0 && (
+              <div>
+                <p className="text-xs text-muted-foreground mb-2">💡 Growth Tips</p>
+                <div className="pl-2 border-l-2 border-purple-500/30">
+                  {appealTip.map((insight, i) => renderInsight(insight, i))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {insights.length === 0 && appealInsights.length === 0 && (
           <p className="text-muted-foreground text-sm">
             Not enough data to generate insights. Try selecting a playlist with more tracks.
           </p>

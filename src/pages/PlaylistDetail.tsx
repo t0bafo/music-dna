@@ -5,6 +5,7 @@ import {
   getPlaylistTracks, 
   getAudioFeaturesFromReccoBeats,
   SpotifyPlaylist,
+  SpotifyTrack,
 } from '@/lib/spotify-api';
 import { 
   TrackWithFeatures, 
@@ -13,6 +14,13 @@ import {
   FlowScore,
   FlowInsight,
 } from '@/lib/flow-analysis';
+import {
+  AppealProfile,
+  AppealInsight,
+  TrackWithPopularity,
+  calculateAppealProfile,
+  generateAppealInsights,
+} from '@/lib/appeal-analysis';
 import { 
   ArrowLeft, 
   Loader2, 
@@ -27,6 +35,40 @@ import FlowScoreCard from '@/components/FlowScoreCard';
 import FlowCharts from '@/components/FlowCharts';
 import FlowInsights from '@/components/FlowInsights';
 import FlowTrackTable from '@/components/FlowTrackTable';
+import AppealScoreCard from '@/components/AppealScoreCard';
+
+// Fetch full track objects to get popularity scores
+const getTrackPopularity = async (
+  trackIds: string[],
+  accessToken: string
+): Promise<Map<string, number>> => {
+  const popularityMap = new Map<string, number>();
+  const BATCH_SIZE = 50;
+
+  for (let i = 0; i < trackIds.length; i += BATCH_SIZE) {
+    const chunk = trackIds.slice(i, i + BATCH_SIZE);
+    try {
+      const response = await fetch(
+        `https://api.spotify.com/v1/tracks?ids=${chunk.join(',')}`,
+        {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        data.tracks?.forEach((track: SpotifyTrack) => {
+          if (track?.id != null) {
+            popularityMap.set(track.id, track.popularity ?? 0);
+          }
+        });
+      }
+    } catch (error) {
+      console.warn('Failed to fetch track popularity:', error);
+    }
+  }
+
+  return popularityMap;
+};
 
 const PlaylistDetail = () => {
   const { playlistId } = useParams<{ playlistId: string }>();
@@ -37,6 +79,8 @@ const PlaylistDetail = () => {
   const [tracks, setTracks] = useState<TrackWithFeatures[]>([]);
   const [flowScore, setFlowScore] = useState<FlowScore | null>(null);
   const [insights, setInsights] = useState<FlowInsight[]>([]);
+  const [appealProfile, setAppealProfile] = useState<AppealProfile | null>(null);
+  const [appealInsights, setAppealInsights] = useState<AppealInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [highlightedTrackIndex, setHighlightedTrackIndex] = useState<number | undefined>();
@@ -75,14 +119,19 @@ const PlaylistDetail = () => {
           albumImage: item.track.album.images?.[2]?.url || item.track.album.images?.[0]?.url,
         }));
 
-      // Fetch audio features
       const trackIds = tracksList.map(t => t.id);
-      const features = await getAudioFeaturesFromReccoBeats(trackIds);
 
-      // Merge features
+      // Fetch audio features and popularity in parallel
+      const [features, popularityMap] = await Promise.all([
+        getAudioFeaturesFromReccoBeats(trackIds),
+        getTrackPopularity(trackIds, accessToken),
+      ]);
+
+      // Merge features and popularity
       tracksList.forEach(track => {
         const f = features.get(track.id);
         if (f) Object.assign(track, f);
+        track.popularity = popularityMap.get(track.id) ?? 0;
       });
 
       setTracks(tracksList);
@@ -93,6 +142,21 @@ const PlaylistDetail = () => {
 
       setFlowScore(score);
       setInsights(insightsList);
+
+      // Calculate appeal analysis
+      const tracksWithPopularity: TrackWithPopularity[] = tracksList.map((t, i) => ({
+        id: t.id,
+        name: t.name,
+        artist: t.artist,
+        popularity: t.popularity ?? 0,
+        position: i + 1,
+      }));
+
+      const profile = calculateAppealProfile(tracksWithPopularity);
+      const appealInsightsList = generateAppealInsights(tracksWithPopularity, profile);
+
+      setAppealProfile(profile);
+      setAppealInsights(appealInsightsList);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load playlist');
     } finally {
@@ -268,6 +332,16 @@ const PlaylistDetail = () => {
           </div>
         )}
 
+        {/* Appeal Score - NEW */}
+        {appealProfile && (
+          <div className="mb-8 animate-fade-in">
+            <AppealScoreCard
+              profile={appealProfile}
+              trackCount={tracks.length}
+            />
+          </div>
+        )}
+
         {/* Charts */}
         <div className="mb-8 animate-fade-in">
           <FlowCharts tracks={tracks} onTrackClick={handleTrackClick} />
@@ -275,13 +349,13 @@ const PlaylistDetail = () => {
 
         {/* Insights */}
         <div className="mb-8 animate-fade-in">
-          <FlowInsights insights={insights} />
+          <FlowInsights insights={insights} appealInsights={appealInsights} />
         </div>
 
         {/* Track Table */}
         <div id="track-table" className="mb-8 animate-fade-in">
           <h3 className="text-lg font-semibold text-foreground mb-4">Detailed Track Analysis</h3>
-          <FlowTrackTable tracks={tracks} highlightedIndex={highlightedTrackIndex} />
+          <FlowTrackTable tracks={tracks} highlightedIndex={highlightedTrackIndex} showAppeal={true} />
         </div>
 
         {/* Action Buttons */}
