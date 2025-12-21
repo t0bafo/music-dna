@@ -287,7 +287,7 @@ const Dashboard = () => {
           <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 gap-2 h-auto p-1">
             <TabsTrigger value="my-dna" className="flex items-center gap-2 py-3">
               <Disc3 className="w-4 h-4" />
-              <span className="hidden sm:inline">My Audio DNA</span>
+              <span className="hidden sm:inline">My Music DNA</span>
               <span className="sm:hidden">My DNA</span>
             </TabsTrigger>
             <TabsTrigger 
@@ -403,7 +403,10 @@ const Dashboard = () => {
 
           {/* Tab 3: My Playlists */}
           <TabsContent value="playlists" className="space-y-6">
-            <h2 className="text-xl font-bold text-foreground">Your Playlists</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-bold text-foreground">Your Playlists</h2>
+              <p className="text-sm text-muted-foreground">Click a playlist to analyze its flow</p>
+            </div>
 
             {loadingPlaylists ? (
               <div className="bg-card rounded-xl p-12 card-shadow text-center">
@@ -411,38 +414,10 @@ const Dashboard = () => {
                 <p className="text-muted-foreground">Loading your playlists...</p>
               </div>
             ) : playlists.length > 0 ? (
-              <>
-                <PlaylistGrid
-                  playlists={playlists}
-                  onSelectPlaylist={fetchPlaylistTracks}
-                  selectedPlaylistId={selectedPlaylist?.id}
-                />
-
-                {selectedPlaylist && (
-                  <div className="space-y-6 pt-6 border-t border-border">
-                    <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
-                      <ListMusic className="w-5 h-5 text-spotify" />
-                      {selectedPlaylist.name} Analysis
-                    </h3>
-
-                    {loadingPlaylistTracks ? (
-                      <div className="bg-card rounded-xl p-12 card-shadow text-center">
-                        <Loader2 className="w-10 h-10 animate-spin text-spotify mx-auto mb-4" />
-                        <p className="text-muted-foreground">Analyzing playlist...</p>
-                      </div>
-                    ) : playlistStats ? (
-                      <>
-                        <AudioDNACard
-                          title={`${selectedPlaylist.name} DNA`}
-                          subtitle={`${playlistTracks.length} tracks analyzed`}
-                          stats={playlistStats}
-                        />
-                        <TrackTable tracks={playlistTracks} />
-                      </>
-                    ) : null}
-                  </div>
-                )}
-              </>
+              <PlaylistGrid
+                playlists={playlists}
+                selectedPlaylistId={selectedPlaylist?.id}
+              />
             ) : (
               <div className="bg-card rounded-xl p-12 card-shadow text-center">
                 <ListMusic className="w-12 h-12 text-muted-foreground mx-auto mb-4" />

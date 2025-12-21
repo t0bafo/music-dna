@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Landing from "./pages/Landing";
 import Callback from "./pages/Callback";
 import Dashboard from "./pages/Dashboard";
+import PlaylistDetail from "./pages/PlaylistDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +24,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/callback" element={<Callback />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/playlist/:playlistId" element={<PlaylistDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
