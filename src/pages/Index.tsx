@@ -153,6 +153,9 @@ const Index = () => {
       // Step 3: Fetch audio features
       setLoadingStep('features');
       const trackIds = tracksData.map(t => t.id).join(',');
+      console.log('Fetching audio features for', tracksData.length, 'tracks');
+      console.log('Track IDs:', trackIds.substring(0, 100) + '...');
+      
       const featuresResponse = await fetch(
         `https://api.spotify.com/v1/audio-features?ids=${trackIds}`,
         {
@@ -160,21 +163,33 @@ const Index = () => {
         }
       );
 
+      console.log('Audio features response status:', featuresResponse.status);
+
       if (featuresResponse.ok) {
         const featuresData = await featuresResponse.json();
+        console.log('Audio features received:', featuresData);
         
-        featuresData.audio_features.forEach((feature: any, index: number) => {
-          if (feature && tracksData[index]) {
-            tracksData[index].tempo = feature.tempo;
-            tracksData[index].danceability = feature.danceability;
-            tracksData[index].energy = feature.energy;
-            tracksData[index].valence = feature.valence;
-            tracksData[index].acousticness = feature.acousticness;
-            tracksData[index].speechiness = feature.speechiness;
-            tracksData[index].instrumentalness = feature.instrumentalness;
-            tracksData[index].liveness = feature.liveness;
+        // Match features to tracks by ID for accuracy
+        tracksData.forEach((track) => {
+          const feature = featuresData.audio_features?.find((f: any) => f && f.id === track.id);
+          if (feature) {
+            track.tempo = feature.tempo;
+            track.danceability = feature.danceability;
+            track.energy = feature.energy;
+            track.valence = feature.valence;
+            track.acousticness = feature.acousticness;
+            track.speechiness = feature.speechiness;
+            track.instrumentalness = feature.instrumentalness;
+            track.liveness = feature.liveness;
           }
         });
+        
+        console.log('Enriched tracks sample:', tracksData.slice(0, 3));
+      } else {
+        // Log the error but continue - audio features API may be restricted
+        const errorData = await featuresResponse.json().catch(() => ({}));
+        console.warn('Audio features API returned:', featuresResponse.status, errorData);
+        console.warn('Note: Spotify deprecated Audio Features API for Client Credentials flow in Nov 2024');
       }
 
       // Calculate statistics
