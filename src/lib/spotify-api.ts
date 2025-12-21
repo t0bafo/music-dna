@@ -99,6 +99,7 @@ interface RecommendationParams {
   min_energy?: number;
   target_valence?: number;
   target_acousticness?: number;
+  seed_genres?: string[];
 }
 
 export const getRecommendations = async (
@@ -107,14 +108,23 @@ export const getRecommendations = async (
   params?: RecommendationParams,
   limit: number = 20
 ): Promise<{ tracks: SpotifyTrack[] }> => {
+  // Spotify allows max 5 seeds total across tracks + genres
+  const genreSeeds = params?.seed_genres || [];
+  const maxTracks = Math.max(1, 5 - genreSeeds.length);
+  const trackSeeds = seedTrackIds.slice(0, maxTracks);
+
   const queryParams = new URLSearchParams({
-    seed_tracks: seedTrackIds.slice(0, 5).join(','),
+    seed_tracks: trackSeeds.join(','),
     limit: limit.toString(),
   });
 
+  if (genreSeeds.length > 0) {
+    queryParams.append('seed_genres', genreSeeds.join(','));
+  }
+
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
-      if (value !== undefined) {
+      if (value !== undefined && key !== 'seed_genres') {
         queryParams.append(key, value.toString());
       }
     });

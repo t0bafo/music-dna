@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getRecommendations, createPlaylist, addTracksToPlaylist, getNigeriaTop100, SpotifyTrack } from '@/lib/spotify-api';
+import { getRecommendations, createPlaylist, addTracksToPlaylist, getTopTracks, SpotifyTrack } from '@/lib/spotify-api';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -14,6 +14,14 @@ import {
 import { Loader2, Music, Sparkles, Save, Clock, Zap, PartyPopper, Gauge } from 'lucide-react';
 import { toast } from 'sonner';
 import TrackTable from './TrackTable';
+
+// Map genre selection to Spotify genre seeds
+const GENRE_SEEDS: Record<string, string[]> = {
+  afrobeats: ['afrobeat'],
+  amapiano: ['afrobeat', 'house'],
+  afro_house: ['house', 'afrobeat'],
+  mix: [], // No genre filter - use only track seeds
+};
 
 interface TrackWithFeatures extends SpotifyTrack {
   artist: string;
@@ -56,25 +64,30 @@ const SmartPlaylistCreator = () => {
     setGeneratedTracks([]);
 
     try {
-      // First fetch Nigeria Top 100 to get valid seed tracks
-      toast.info('Fetching seed tracks from Nigeria Top 100...');
-      const { tracks: nigeriaTracksData } = await getNigeriaTop100();
+      // Fetch user's top tracks to use as seeds
+      toast.info('Analyzing your music taste...');
+      const topTracksData = await getTopTracks(accessToken, 'medium_term', 50);
       
-      if (!nigeriaTracksData || nigeriaTracksData.length === 0) {
-        throw new Error('Could not fetch seed tracks');
+      if (!topTracksData.items || topTracksData.items.length === 0) {
+        toast.error('Listen to more music on Spotify to unlock personalized playlists!');
+        setIsGenerating(false);
+        return;
       }
 
-      // Use top 5 tracks as seeds
-      const seedTracks = nigeriaTracksData.slice(0, 5).map(t => t.id);
+      // Use first 5 tracks as seeds
+      const seedTrackIds = topTracksData.items.slice(0, 5).map(t => t.id);
+      const genreSeeds = GENRE_SEEDS[genre] || [];
       const targetDurationMs = duration * 60 * 1000;
 
-      console.log('Using seed tracks:', seedTracks);
+      console.log('Using seed tracks:', seedTrackIds);
+      console.log('Using genre seeds:', genreSeeds);
 
       // Fetch recommendations with audio feature targets
-      const data = await getRecommendations(accessToken, seedTracks, {
+      const data = await getRecommendations(accessToken, seedTrackIds, {
         target_tempo: targetBpm,
         min_danceability: minDanceability / 100,
         min_energy: minEnergy / 100,
+        seed_genres: genreSeeds.length > 0 ? genreSeeds : undefined,
       }, 100);
 
       if (!data.tracks || data.tracks.length === 0) {
@@ -101,7 +114,7 @@ const SmartPlaylistCreator = () => {
       setGeneratedTracks(selectedTracks);
       setTotalDuration(accumulatedDuration);
 
-      toast.success(`Generated ${selectedTracks.length} tracks (${formatDuration(accumulatedDuration)})`);
+      toast.success(`Generated ${selectedTracks.length} personalized tracks (${formatDuration(accumulatedDuration)})`);
     } catch (err) {
       console.error('Failed to generate playlist:', err);
       toast.error(err instanceof Error ? err.message : 'Failed to generate playlist. Please try again.');
