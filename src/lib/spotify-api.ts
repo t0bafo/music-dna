@@ -93,26 +93,88 @@ export const getAudioFeatures = async (
   return spotifyFetch(`/audio-features?ids=${ids}`, accessToken);
 };
 
+interface RecommendationParams {
+  target_tempo?: number;
+  min_danceability?: number;
+  min_energy?: number;
+  target_valence?: number;
+  target_acousticness?: number;
+}
+
 export const getRecommendations = async (
   accessToken: string,
   seedTrackIds: string[],
-  targetFeatures?: Partial<AudioFeatures>,
+  params?: RecommendationParams,
   limit: number = 20
 ): Promise<{ tracks: SpotifyTrack[] }> => {
-  const params = new URLSearchParams({
+  const queryParams = new URLSearchParams({
     seed_tracks: seedTrackIds.slice(0, 5).join(','),
     limit: limit.toString(),
   });
 
-  if (targetFeatures) {
-    Object.entries(targetFeatures).forEach(([key, value]) => {
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {
-        params.append(`target_${key}`, value.toString());
+        queryParams.append(key, value.toString());
       }
     });
   }
 
-  return spotifyFetch(`/recommendations?${params.toString()}`, accessToken);
+  return spotifyFetch(`/recommendations?${queryParams.toString()}`, accessToken);
+};
+
+// Create a new playlist
+export const createPlaylist = async (
+  accessToken: string,
+  userId: string,
+  name: string,
+  description?: string,
+  isPublic: boolean = true
+): Promise<{ id: string; name: string; external_urls: { spotify: string } }> => {
+  const response = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name,
+      description,
+      public: isPublic,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || `Failed to create playlist: ${response.status}`);
+  }
+
+  return response.json();
+};
+
+// Add tracks to a playlist
+export const addTracksToPlaylist = async (
+  accessToken: string,
+  playlistId: string,
+  trackUris: string[]
+): Promise<{ snapshot_id: string }> => {
+  const response = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      uris: trackUris,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({}));
+    throw new Error(error.error?.message || `Failed to add tracks: ${response.status}`);
+  }
+
+  return response.json();
 };
 
 // Fetch audio features from ReccoBeats API (free alternative)

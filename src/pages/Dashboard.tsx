@@ -12,7 +12,7 @@ import {
   AudioFeatures,
   TimeRange,
 } from '@/lib/spotify-api';
-import { Music, Loader2, AlertCircle, Disc3, Globe, ListMusic, Sparkles, RefreshCw } from 'lucide-react';
+import { Music, Loader2, AlertCircle, Disc3, Globe, ListMusic, Sparkles, RefreshCw, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -27,6 +27,7 @@ import AudioDNACard from '@/components/AudioDNACard';
 import ComparisonView from '@/components/ComparisonView';
 import PlaylistGrid from '@/components/PlaylistGrid';
 import TrackTable from '@/components/TrackTable';
+import SmartPlaylistCreator from '@/components/SmartPlaylistCreator';
 
 interface TrackWithFeatures extends SpotifyTrack, Partial<AudioFeatures> {
   artist: string;
@@ -283,7 +284,7 @@ const Dashboard = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="my-dna" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 h-auto p-1">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 gap-2 h-auto p-1">
             <TabsTrigger value="my-dna" className="flex items-center gap-2 py-3">
               <Disc3 className="w-4 h-4" />
               <span className="hidden sm:inline">My Audio DNA</span>
@@ -302,6 +303,11 @@ const Dashboard = () => {
               <ListMusic className="w-4 h-4" />
               <span className="hidden sm:inline">My Playlists</span>
               <span className="sm:hidden">Playlists</span>
+            </TabsTrigger>
+            <TabsTrigger value="create" className="flex items-center gap-2 py-3">
+              <Wand2 className="w-4 h-4" />
+              <span className="hidden sm:inline">Create Playlist</span>
+              <span className="sm:hidden">Create</span>
             </TabsTrigger>
             <TabsTrigger value="discover" className="flex items-center gap-2 py-3">
               <Sparkles className="w-4 h-4" />
@@ -446,7 +452,13 @@ const Dashboard = () => {
             )}
           </TabsContent>
 
-          {/* Tab 4: Discover */}
+          {/* Tab 4: Create Playlist */}
+          <TabsContent value="create" className="space-y-6">
+            <h2 className="text-xl font-bold text-foreground">Smart Playlist Creator</h2>
+            <SmartPlaylistCreator />
+          </TabsContent>
+
+          {/* Tab 5: Discover */}
           <TabsContent value="discover" className="space-y-6">
             <h2 className="text-xl font-bold text-foreground">Discover New Music</h2>
             
