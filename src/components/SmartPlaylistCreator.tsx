@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { getRecommendations, createPlaylist, addTracksToPlaylist, SpotifyTrack } from '@/lib/spotify-api';
+import { getRecommendations, createPlaylist, addTracksToPlaylist, getNigeriaTop100, SpotifyTrack } from '@/lib/spotify-api';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -14,14 +14,6 @@ import {
 import { Loader2, Music, Sparkles, Save, Clock, Zap, PartyPopper, Gauge } from 'lucide-react';
 import { toast } from 'sonner';
 import TrackTable from './TrackTable';
-
-// Popular Nigeria seed tracks for different genres
-const GENRE_SEEDS: Record<string, string[]> = {
-  afrobeats: ['5GZe9w6gn2LvFDkRnoPCDz', '7iL6o9tox1zgHpKUfh9vuC', '4LRPiXqCikLlN15c3yImP7'],
-  amapiano: ['7CHi4DtfK8SdFxjLLlPPnO', '0qU6AYlEf9JvkTblwmQJj4', '0SHGMyjGt8VxvWDZEbXEHh'],
-  afro_house: ['2PpruBYCo4H7WOBJ7Q2EwM', '5IgjP7X4th6nMNDh4akUHb', '6J2LdBN97cDWn0MLxYh9HB'],
-  mix: ['5GZe9w6gn2LvFDkRnoPCDz', '7CHi4DtfK8SdFxjLLlPPnO', '2PpruBYCo4H7WOBJ7Q2EwM'],
-};
 
 interface TrackWithFeatures extends SpotifyTrack {
   artist: string;
@@ -64,8 +56,19 @@ const SmartPlaylistCreator = () => {
     setGeneratedTracks([]);
 
     try {
-      const seedTracks = GENRE_SEEDS[genre] || GENRE_SEEDS.mix;
+      // First fetch Nigeria Top 100 to get valid seed tracks
+      toast.info('Fetching seed tracks from Nigeria Top 100...');
+      const { tracks: nigeriaTracksData } = await getNigeriaTop100();
+      
+      if (!nigeriaTracksData || nigeriaTracksData.length === 0) {
+        throw new Error('Could not fetch seed tracks');
+      }
+
+      // Use top 5 tracks as seeds
+      const seedTracks = nigeriaTracksData.slice(0, 5).map(t => t.id);
       const targetDurationMs = duration * 60 * 1000;
+
+      console.log('Using seed tracks:', seedTracks);
 
       // Fetch recommendations with audio feature targets
       const data = await getRecommendations(accessToken, seedTracks, {
@@ -73,6 +76,10 @@ const SmartPlaylistCreator = () => {
         min_danceability: minDanceability / 100,
         min_energy: minEnergy / 100,
       }, 100);
+
+      if (!data.tracks || data.tracks.length === 0) {
+        throw new Error('No recommendations found. Try adjusting your parameters.');
+      }
 
       // Filter and accumulate tracks until target duration
       let accumulatedDuration = 0;
@@ -97,7 +104,7 @@ const SmartPlaylistCreator = () => {
       toast.success(`Generated ${selectedTracks.length} tracks (${formatDuration(accumulatedDuration)})`);
     } catch (err) {
       console.error('Failed to generate playlist:', err);
-      toast.error('Failed to generate playlist. Please try again.');
+      toast.error(err instanceof Error ? err.message : 'Failed to generate playlist. Please try again.');
     } finally {
       setIsGenerating(false);
     }
