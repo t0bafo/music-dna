@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   getPlaylistTracks, 
@@ -20,6 +20,7 @@ import {
   Music,
   FileText,
   Wand2,
+  ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import FlowScoreCard from '@/components/FlowScoreCard';
@@ -99,6 +100,11 @@ const PlaylistDetail = () => {
     }
   }, [accessToken, playlistId]);
 
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [playlistId]);
+
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       navigate('/', { replace: true });
@@ -163,57 +169,94 @@ const PlaylistDetail = () => {
 
   return (
     <div className="min-h-screen gradient-bg">
-      {/* Header */}
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/dashboard')}
-            className="text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Playlists
-          </Button>
-        </div>
-      </header>
+      {/* Hero Banner with Blurred Background */}
+      {playlist && (
+        <div className="relative overflow-hidden">
+          {/* Blurred Background Image */}
+          <div className="absolute inset-0 z-0">
+            {playlist.images?.[0]?.url && (
+              <img
+                src={playlist.images[0].url}
+                alt=""
+                className="w-full h-full object-cover blur-3xl scale-110 opacity-30"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background" />
+          </div>
 
-      <main className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Playlist Header */}
-        {playlist && (
-          <div className="flex flex-col md:flex-row gap-6 mb-8 animate-fade-in">
-            <div className="w-48 h-48 rounded-xl overflow-hidden bg-muted flex-shrink-0 mx-auto md:mx-0">
-              {playlist.images?.[0]?.url ? (
-                <img
-                  src={playlist.images[0].url}
-                  alt={playlist.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Music className="w-16 h-16 text-muted-foreground" />
-                </div>
-              )}
-            </div>
-            <div className="flex-1 text-center md:text-left">
-              <p className="text-sm text-muted-foreground mb-1">Playlist Analysis</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
-                {playlist.name}
-              </h1>
-              <p className="text-muted-foreground mb-4">
-                {tracks.length} tracks • by {playlist.owner?.display_name || 'Unknown'}
-              </p>
+          {/* Header with Breadcrumb */}
+          <header className="relative z-10 bg-transparent">
+            <div className="container mx-auto px-4 py-4">
+              {/* Breadcrumb Navigation */}
+              <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+                <Link 
+                  to="/dashboard" 
+                  className="hover:text-foreground transition-colors"
+                >
+                  Dashboard
+                </Link>
+                <ChevronRight className="w-4 h-4" />
+                <span className="hover:text-foreground transition-colors">
+                  My Playlists
+                </span>
+                <ChevronRight className="w-4 h-4" />
+                <span className="text-foreground font-medium truncate max-w-[200px]">
+                  {playlist.name}
+                </span>
+              </nav>
+
+              {/* Back Button */}
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.open(`https://open.spotify.com/playlist/${playlistId}`, '_blank')}
+                variant="ghost"
+                onClick={() => navigate('/dashboard')}
+                className="text-muted-foreground hover:text-foreground mb-4"
               >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Edit on Spotify
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Playlists
               </Button>
             </div>
-          </div>
-        )}
+          </header>
 
+          {/* Playlist Header Content */}
+          <div className="relative z-10 container mx-auto px-4 pb-8">
+            <div className="flex flex-col md:flex-row gap-6 animate-fade-in">
+              <div className="w-48 h-48 rounded-xl overflow-hidden bg-muted flex-shrink-0 mx-auto md:mx-0 shadow-2xl ring-1 ring-white/10">
+                {playlist.images?.[0]?.url ? (
+                  <img
+                    src={playlist.images[0].url}
+                    alt={playlist.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Music className="w-16 h-16 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <p className="text-sm text-muted-foreground mb-1">Playlist Analysis</p>
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+                  {playlist.name}
+                </h1>
+                <p className="text-muted-foreground mb-4">
+                  {tracks.length} tracks • by {playlist.owner?.display_name || 'Unknown'}
+                </p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.open(`https://open.spotify.com/playlist/${playlistId}`, '_blank')}
+                  className="bg-background/50 backdrop-blur-sm"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Edit on Spotify
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <main className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Flow Score */}
         {flowScore && (
           <div className="mb-8 animate-fade-in">
