@@ -39,7 +39,11 @@
     /* Custom tokens */
     --spotify-green: 141 76% 48%;
     --spotify-green-hover: 141 76% 42%;
-    --gradient-start: 145 40% 96%;
+    --nigeria-green: 154 100% 27%;
+    --nigeria-green-light: 154 60% 92%;
+    --nigeria-green-dark: 154 100% 20%;
+    --gold: 45 100% 51%;
+    --gradient-start: 154 40% 96%;
     --gradient-end: 200 40% 96%;
     
     --shadow-sm: 0 1px 2px 0 hsl(210 20% 15% / 0.03);
