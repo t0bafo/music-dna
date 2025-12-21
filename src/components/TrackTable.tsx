@@ -67,7 +67,7 @@ const TrackTable = ({ tracks, showPosition = true }: TrackTableProps) => {
                       {track.albumImage ? (
                         <img
                           src={track.albumImage}
-                          alt={track.album}
+                          alt={typeof track.album === 'string' ? track.album : track.album?.name || 'Album'}
                           className="w-full h-full object-cover"
                         />
                       ) : (
