@@ -350,3 +350,36 @@ export const calculateTrackFlowImpact = (
     energyChange,
   };
 };
+
+export interface BpmIssue {
+  position: number;
+  fromTrack: string;
+  toTrack: string;
+  fromBPM: number;
+  toBPM: number;
+  bpmChange: number;
+}
+
+export const extractBpmIssues = (tracks: TrackWithFeatures[]): BpmIssue[] => {
+  const issues: BpmIssue[] = [];
+  const tracksWithData = tracks.filter(t => t.tempo != null);
+
+  for (let i = 1; i < tracksWithData.length; i++) {
+    const prevTrack = tracksWithData[i - 1];
+    const currTrack = tracksWithData[i];
+    const bpmChange = Math.abs((currTrack.tempo || 0) - (prevTrack.tempo || 0));
+    
+    if (bpmChange > 20) {
+      issues.push({
+        position: i + 1,
+        fromTrack: prevTrack.name,
+        toTrack: currTrack.name,
+        fromBPM: Math.round(prevTrack.tempo || 0),
+        toBPM: Math.round(currTrack.tempo || 0),
+        bpmChange: Math.round(bpmChange),
+      });
+    }
+  }
+
+  return issues.sort((a, b) => b.bpmChange - a.bpmChange);
+};
