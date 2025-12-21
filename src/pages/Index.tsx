@@ -173,21 +173,36 @@ const Index = () => {
           if (featuresResponse.ok) {
             const featuresData = await featuresResponse.json();
             console.log('Batch audio features received:', featuresData);
-            
-            // ReccoBeats returns an array of audio features
-            const features = Array.isArray(featuresData) ? featuresData : featuresData.audio_features || [];
+
+            // ReccoBeats returns: { content: [...] }
+            const features = Array.isArray(featuresData)
+              ? featuresData
+              : (featuresData?.content ?? featuresData?.audio_features ?? []);
+
             allFeatures.push(...features);
           } else {
             const errorData = await featuresResponse.json().catch(() => ({}));
             console.warn('ReccoBeats API batch error:', featuresResponse.status, errorData);
           }
         }
-        
+
         console.log('Total features collected:', allFeatures.length);
-        
-        // Match features to tracks by ID
+
+        // Build lookup by Spotify track ID using the href returned by ReccoBeats
+        const featuresBySpotifyId = new Map<string, any>();
+        for (const f of allFeatures) {
+          const href: string | undefined = f?.href;
+          const spotifyId = typeof href === 'string'
+            ? href.split('/track/')[1]?.split('?')[0]
+            : undefined;
+          if (spotifyId) featuresBySpotifyId.set(spotifyId, f);
+        }
+
+        console.log('Features mapped to Spotify IDs:', featuresBySpotifyId.size);
+
+        // Merge features onto tracks
         tracksData.forEach((track) => {
-          const feature = allFeatures.find((f: any) => f && f.id === track.id);
+          const feature = featuresBySpotifyId.get(track.id);
           if (feature) {
             track.tempo = feature.tempo;
             track.danceability = feature.danceability;
@@ -199,10 +214,10 @@ const Index = () => {
             track.liveness = feature.liveness;
           }
         });
-        
+
         const tracksWithFeatures = tracksData.filter(t => t.tempo != null);
         console.log(`Enriched ${tracksWithFeatures.length} of ${tracksData.length} tracks with audio features`);
-        console.log('Enriched tracks sample:', tracksData.slice(0, 3));
+        console.log('Merged/enriched tracks sample:', tracksData.slice(0, 3));
       } catch (reccoError) {
         console.warn('ReccoBeats API error:', reccoError);
         console.log('Continuing without audio features...');
@@ -219,6 +234,8 @@ const Index = () => {
         instrumentalness: calculateStats(tracksData, 'instrumentalness'),
         liveness: calculateStats(tracksData, 'liveness'),
       };
+
+      console.log('Calculated statistics:', analysisStats);
 
       const trackInsights = findInsights(tracksData);
 
