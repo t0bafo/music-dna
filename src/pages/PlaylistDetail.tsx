@@ -11,8 +11,10 @@ import {
   TrackWithFeatures, 
   calculateFlowScore, 
   generateInsights,
+  extractBpmIssues,
   FlowScore,
   FlowInsight,
+  BpmIssue,
 } from '@/lib/flow-analysis';
 import {
   AppealProfile,
@@ -36,6 +38,7 @@ import FlowCharts from '@/components/FlowCharts';
 import FlowInsights from '@/components/FlowInsights';
 import FlowTrackTable from '@/components/FlowTrackTable';
 import AppealScoreCard from '@/components/AppealScoreCard';
+import { AIPlaylistCoach } from '@/components/AIPlaylistCoach';
 
 // Fetch full track objects to get popularity scores
 const getTrackPopularity = async (
@@ -79,6 +82,7 @@ const PlaylistDetail = () => {
   const [tracks, setTracks] = useState<TrackWithFeatures[]>([]);
   const [flowScore, setFlowScore] = useState<FlowScore | null>(null);
   const [insights, setInsights] = useState<FlowInsight[]>([]);
+  const [bpmIssues, setBpmIssues] = useState<BpmIssue[]>([]);
   const [appealProfile, setAppealProfile] = useState<AppealProfile | null>(null);
   const [appealInsights, setAppealInsights] = useState<AppealInsight[]>([]);
   const [loading, setLoading] = useState(true);
@@ -139,9 +143,11 @@ const PlaylistDetail = () => {
       // Calculate flow analysis
       const score = calculateFlowScore(tracksList);
       const insightsList = generateInsights(tracksList);
+      const bpmIssuesList = extractBpmIssues(tracksList);
 
       setFlowScore(score);
       setInsights(insightsList);
+      setBpmIssues(bpmIssuesList);
 
       // Calculate appeal analysis
       const tracksWithPopularity: TrackWithPopularity[] = tracksList.map((t, i) => ({
@@ -332,12 +338,25 @@ const PlaylistDetail = () => {
           </div>
         )}
 
-        {/* Appeal Score - NEW */}
+        {/* Appeal Score */}
         {appealProfile && (
           <div className="mb-8 animate-fade-in">
             <AppealScoreCard
               profile={appealProfile}
               trackCount={tracks.length}
+            />
+          </div>
+        )}
+
+        {/* AI Playlist Coach */}
+        {flowScore && appealProfile && (
+          <div className="mb-8 animate-fade-in">
+            <AIPlaylistCoach
+              playlistName={playlist?.name || 'Playlist'}
+              trackCount={tracks.length}
+              flowScore={flowScore.score}
+              appealProfile={appealProfile}
+              bpmIssues={bpmIssues}
             />
           </div>
         )}
