@@ -1,13 +1,19 @@
-import { Music } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Music, BarChart3 } from 'lucide-react';
 import { SpotifyPlaylist } from '@/lib/spotify-api';
 
 interface PlaylistGridProps {
   playlists: SpotifyPlaylist[];
-  onSelectPlaylist: (playlist: SpotifyPlaylist) => void;
   selectedPlaylistId?: string;
 }
 
-const PlaylistGrid = ({ playlists, onSelectPlaylist, selectedPlaylistId }: PlaylistGridProps) => {
+const PlaylistGrid = ({ playlists, selectedPlaylistId }: PlaylistGridProps) => {
+  const navigate = useNavigate();
+
+  const handlePlaylistClick = (playlist: SpotifyPlaylist) => {
+    navigate(`/playlist/${playlist.id}`);
+  };
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {playlists.map((playlist) => {
@@ -17,13 +23,21 @@ const PlaylistGrid = ({ playlists, onSelectPlaylist, selectedPlaylistId }: Playl
         return (
           <button
             key={playlist.id}
-            onClick={() => onSelectPlaylist(playlist)}
+            onClick={() => handlePlaylistClick(playlist)}
             className={`
               group bg-card rounded-xl p-4 card-shadow hover:card-shadow-hover 
-              transition-all duration-300 text-left
+              transition-all duration-300 text-left relative
               ${isSelected ? 'ring-2 ring-spotify' : ''}
             `}
           >
+            {/* Analyze overlay on hover */}
+            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl flex items-center justify-center z-10">
+              <div className="text-center text-white">
+                <BarChart3 className="w-8 h-8 mx-auto mb-2" />
+                <span className="text-sm font-medium">Analyze Flow</span>
+              </div>
+            </div>
+
             <div className="aspect-square rounded-lg overflow-hidden mb-3 bg-muted">
               {imageUrl ? (
                 <img
