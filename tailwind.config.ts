@@ -54,6 +54,12 @@ export default {
           DEFAULT: "hsl(var(--spotify-green))",
           hover: "hsl(var(--spotify-green-hover))",
         },
+        nigeria: {
+          DEFAULT: "hsl(var(--nigeria-green))",
+          light: "hsl(var(--nigeria-green-light))",
+          dark: "hsl(var(--nigeria-green-dark))",
+        },
+        gold: "hsl(var(--gold))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
