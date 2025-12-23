@@ -14,7 +14,135 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      listening_events: {
+        Row: {
+          event_type: string
+          id: string
+          playlist_id: string | null
+          playlist_name: string | null
+          timestamp: string | null
+          track_id: string
+          user_id: string
+        }
+        Insert: {
+          event_type: string
+          id?: string
+          playlist_id?: string | null
+          playlist_name?: string | null
+          timestamp?: string | null
+          track_id: string
+          user_id: string
+        }
+        Update: {
+          event_type?: string
+          id?: string
+          playlist_id?: string | null
+          playlist_name?: string | null
+          timestamp?: string | null
+          track_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      music_library: {
+        Row: {
+          acousticness: number | null
+          added_at: string | null
+          album: string | null
+          artist: string | null
+          danceability: number | null
+          energy: number | null
+          id: string
+          instrumentalness: number | null
+          liveness: number | null
+          name: string
+          popularity: number | null
+          release_date: string | null
+          speechiness: number | null
+          tempo: number | null
+          track_id: string
+          user_id: string
+          valence: number | null
+        }
+        Insert: {
+          acousticness?: number | null
+          added_at?: string | null
+          album?: string | null
+          artist?: string | null
+          danceability?: number | null
+          energy?: number | null
+          id?: string
+          instrumentalness?: number | null
+          liveness?: number | null
+          name: string
+          popularity?: number | null
+          release_date?: string | null
+          speechiness?: number | null
+          tempo?: number | null
+          track_id: string
+          user_id: string
+          valence?: number | null
+        }
+        Update: {
+          acousticness?: number | null
+          added_at?: string | null
+          album?: string | null
+          artist?: string | null
+          danceability?: number | null
+          energy?: number | null
+          id?: string
+          instrumentalness?: number | null
+          liveness?: number | null
+          name?: string
+          popularity?: number | null
+          release_date?: string | null
+          speechiness?: number | null
+          tempo?: number | null
+          track_id?: string
+          user_id?: string
+          valence?: number | null
+        }
+        Relationships: []
+      }
+      taste_snapshots: {
+        Row: {
+          avg_bpm: number | null
+          avg_danceability: number | null
+          avg_energy: number | null
+          avg_valence: number | null
+          created_at: string | null
+          id: string
+          snapshot_date: string
+          total_tracks: number | null
+          underground_ratio: number | null
+          user_id: string
+        }
+        Insert: {
+          avg_bpm?: number | null
+          avg_danceability?: number | null
+          avg_energy?: number | null
+          avg_valence?: number | null
+          created_at?: string | null
+          id?: string
+          snapshot_date: string
+          total_tracks?: number | null
+          underground_ratio?: number | null
+          user_id: string
+        }
+        Update: {
+          avg_bpm?: number | null
+          avg_danceability?: number | null
+          avg_energy?: number | null
+          avg_valence?: number | null
+          created_at?: string | null
+          id?: string
+          snapshot_date?: string
+          total_tracks?: number | null
+          underground_ratio?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

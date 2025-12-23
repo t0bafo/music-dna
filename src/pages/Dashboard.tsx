@@ -12,7 +12,7 @@ import {
   AudioFeatures,
   TimeRange,
 } from '@/lib/spotify-api';
-import { Music, Loader2, AlertCircle, Disc3, Globe, ListMusic, Sparkles, RefreshCw, Wand2 } from 'lucide-react';
+import { Music, Loader2, AlertCircle, Disc3, Globe, ListMusic, Sparkles, RefreshCw, Wand2, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -284,7 +284,7 @@ const Dashboard = () => {
 
         {/* Tabs */}
         <Tabs defaultValue="my-dna" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-5 gap-2 h-auto p-1">
+          <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 gap-2 h-auto p-1">
             <TabsTrigger value="my-dna" className="flex items-center gap-2 py-3">
               <Disc3 className="w-4 h-4" />
               <span className="hidden sm:inline">My Music DNA</span>
@@ -308,6 +308,15 @@ const Dashboard = () => {
               <Wand2 className="w-4 h-4" />
               <span className="hidden sm:inline">Create Playlist</span>
               <span className="sm:hidden">Create</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="intelligence" 
+              className="flex items-center gap-2 py-3"
+              onClick={() => navigate('/intelligence')}
+            >
+              <Brain className="w-4 h-4" />
+              <span className="hidden sm:inline">Intelligence</span>
+              <span className="sm:hidden">🧠</span>
             </TabsTrigger>
             <TabsTrigger value="discover" className="flex items-center gap-2 py-3">
               <Sparkles className="w-4 h-4" />
