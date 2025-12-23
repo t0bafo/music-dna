@@ -1,7 +1,14 @@
 // Music Intelligence - Data extraction and analytics
+// Now uses secure Edge Function for all database operations
 
-import { supabase } from '@/integrations/supabase/client';
 import { getAudioFeaturesFromReccoBeats, SpotifyTrack, AudioFeatures } from './spotify-api';
+import { 
+  storeTracksSecure, 
+  getLibraryStatsSecure, 
+  getTasteProfileSecure, 
+  getSnapshotsSecure,
+  createSnapshotSecure,
+} from './secure-database';
 
 export interface ExtractionProgress {
   phase: 'idle' | 'liked' | 'playlists' | 'tracks' | 'features' | 'storing' | 'complete' | 'error';
@@ -156,7 +163,7 @@ const getPlaylistTracksAll = async (
   return allTracks;
 };
 
-// Main extraction function
+// Main extraction function - now uses secure Edge Function
 export const extractMusicLibrary = async (
   accessToken: string,
   userId: string,
@@ -258,32 +265,16 @@ export const extractMusicLibrary = async (
         liveness: features?.liveness || null,
         popularity: track.popularity || null,
         release_date: null,
-        user_id: userId,
       };
     });
 
-    // Store in batches
-    const storageBatchSize = 100;
-    for (let i = 0; i < libraryData.length; i += storageBatchSize) {
-      const batch = libraryData.slice(i, i + storageBatchSize);
-      onProgress({ 
-        phase: 'storing', 
-        current: Math.min(i + storageBatchSize, libraryData.length), 
-        total: libraryData.length, 
-        message: `Storing ${Math.min(i + storageBatchSize, libraryData.length)} of ${libraryData.length} tracks...` 
-      });
-      
-      const { error } = await supabase
-        .from('music_library')
-        .upsert(batch, { onConflict: 'track_id,user_id' });
-      
-      if (error) {
-        console.error('[Intelligence] Storage error:', error);
-      }
-    }
+    // Store via secure Edge Function (handles batching internally)
+    console.log('[Intelligence] Storing tracks via secure Edge Function...');
+    await storeTracksSecure(libraryData, accessToken);
+    console.log('[Intelligence] Tracks stored successfully');
 
-    // Step 7: Create taste snapshot
-    await createTasteSnapshot(userId);
+    // Step 7: Create taste snapshot via secure Edge Function
+    await createSnapshotSecure(accessToken);
 
     onProgress({ phase: 'complete', current: uniqueTracks.length, total: uniqueTracks.length, message: 'Complete!' });
 
@@ -300,153 +291,22 @@ export const extractMusicLibrary = async (
   }
 };
 
-// Create a taste snapshot from current library data
-export const createTasteSnapshot = async (userId: string): Promise<void> => {
-  const { data: tracks, error } = await supabase
-    .from('music_library')
-    .select('tempo, energy, danceability, valence, popularity')
-    .eq('user_id', userId);
-
-  if (error || !tracks || tracks.length === 0) {
-    console.error('[Intelligence] Failed to get tracks for snapshot:', error);
-    return;
-  }
-
-  const validTracks = tracks.filter(t => t.tempo != null);
-  
-  const avgBpm = validTracks.reduce((sum, t) => sum + (t.tempo || 0), 0) / validTracks.length || 0;
-  const avgEnergy = validTracks.reduce((sum, t) => sum + (t.energy || 0), 0) / validTracks.length || 0;
-  const avgDanceability = validTracks.reduce((sum, t) => sum + (t.danceability || 0), 0) / validTracks.length || 0;
-  const avgValence = validTracks.reduce((sum, t) => sum + (t.valence || 0), 0) / validTracks.length || 0;
-  
-  const undergroundTracks = tracks.filter(t => (t.popularity || 100) < 40).length;
-  const undergroundRatio = tracks.length > 0 ? undergroundTracks / tracks.length : 0;
-
-  const today = new Date().toISOString().split('T')[0];
-  
-  const { error: snapshotError } = await supabase
-    .from('taste_snapshots')
-    .upsert({
-      user_id: userId,
-      snapshot_date: today,
-      avg_bpm: avgBpm,
-      avg_energy: avgEnergy,
-      avg_danceability: avgDanceability,
-      avg_valence: avgValence,
-      underground_ratio: undergroundRatio,
-      total_tracks: tracks.length,
-    }, { onConflict: 'user_id,snapshot_date' });
-
-  if (snapshotError) {
-    console.error('[Intelligence] Failed to create snapshot:', snapshotError);
-  }
+// Get library stats - now uses secure Edge Function
+export const getLibraryStats = async (accessToken: string): Promise<LibraryStats | null> => {
+  return await getLibraryStatsSecure(accessToken);
 };
 
-// Get library stats for a user
-export const getLibraryStats = async (userId: string): Promise<LibraryStats | null> => {
-  const { data: tracks, error } = await supabase
-    .from('music_library')
-    .select('id, tempo, added_at')
-    .eq('user_id', userId);
-
-  if (error) {
-    console.error('[Intelligence] Failed to get library stats:', error);
-    return null;
-  }
-
-  if (!tracks || tracks.length === 0) {
-    return null;
-  }
-
-  const tracksWithFeatures = tracks.filter(t => t.tempo != null).length;
-  const latestDate = tracks.reduce((latest, t) => {
-    const date = new Date(t.added_at);
-    return date > latest ? date : latest;
-  }, new Date(0));
-
-  return {
-    totalTracks: tracks.length,
-    totalPlaylists: 0, // We'd need to count from listening_events
-    likedSongs: 0,
-    tracksWithFeatures,
-    lastUpdated: latestDate.getTime() > 0 ? latestDate : null,
-  };
+// Get taste profile - now uses secure Edge Function
+export const getTasteProfile = async (accessToken: string): Promise<TasteProfile | null> => {
+  return await getTasteProfileSecure(accessToken);
 };
 
-// Get taste profile from stored library
-export const getTasteProfile = async (userId: string): Promise<TasteProfile | null> => {
-  const { data: tracks, error } = await supabase
-    .from('music_library')
-    .select('*')
-    .eq('user_id', userId);
-
-  if (error || !tracks || tracks.length === 0) {
-    return null;
-  }
-
-  const validTracks = tracks.filter(t => t.tempo != null && t.energy != null);
-  
-  if (validTracks.length === 0) {
-    return null;
-  }
-
-  const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
-
-  const tempos = validTracks.map(t => t.tempo!).filter(Boolean);
-  const energies = validTracks.map(t => t.energy!).filter(Boolean);
-  
-  const lowEnergy = energies.filter(e => e < 0.4).length;
-  const medEnergy = energies.filter(e => e >= 0.4 && e < 0.7).length;
-  const highEnergy = energies.filter(e => e >= 0.7).length;
-
-  const undergroundTracks = tracks.filter(t => (t.popularity || 100) < 40).length;
-
-  return {
-    avgBpm: avg(tempos),
-    avgEnergy: avg(energies),
-    avgDanceability: avg(validTracks.map(t => t.danceability!).filter(Boolean)),
-    avgValence: avg(validTracks.map(t => t.valence!).filter(Boolean)),
-    avgAcousticness: avg(validTracks.map(t => t.acousticness!).filter(Boolean)),
-    avgSpeechiness: avg(validTracks.map(t => t.speechiness!).filter(Boolean)),
-    avgInstrumentalness: avg(validTracks.map(t => t.instrumentalness!).filter(Boolean)),
-    avgLiveness: avg(validTracks.map(t => t.liveness!).filter(Boolean)),
-    undergroundRatio: tracks.length > 0 ? undergroundTracks / tracks.length : 0,
-    totalTracks: tracks.length,
-    bpmRange: { min: Math.min(...tempos), max: Math.max(...tempos) },
-    energyDistribution: {
-      low: lowEnergy / energies.length,
-      medium: medEnergy / energies.length,
-      high: highEnergy / energies.length,
-    },
-  };
+// Get historical snapshots - now uses secure Edge Function
+export const getTasteSnapshots = async (accessToken: string, limit = 12): Promise<TasteSnapshot[]> => {
+  return await getSnapshotsSecure(accessToken, limit);
 };
 
-// Get historical snapshots
-export const getTasteSnapshots = async (userId: string, limit = 12): Promise<TasteSnapshot[]> => {
-  const { data, error } = await supabase
-    .from('taste_snapshots')
-    .select('*')
-    .eq('user_id', userId)
-    .order('snapshot_date', { ascending: false })
-    .limit(limit);
-
-  if (error || !data) {
-    return [];
-  }
-
-  return data.map(s => ({
-    id: s.id,
-    snapshotDate: new Date(s.snapshot_date),
-    avgBpm: s.avg_bpm || 0,
-    avgEnergy: s.avg_energy || 0,
-    avgDanceability: s.avg_danceability || 0,
-    avgValence: s.avg_valence || 0,
-    undergroundRatio: s.underground_ratio || 0,
-    totalTracks: s.total_tracks || 0,
-  }));
-};
-
-// Generate insights from taste profile
+// Generate insights from taste profile (client-side, no DB needed)
 export const generateInsights = (profile: TasteProfile): string[] => {
   const insights: string[] = [];
 

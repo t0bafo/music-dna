@@ -69,16 +69,16 @@ const MusicIntelligence = () => {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-  // Load existing data
+  // Load existing data - now uses accessToken for secure API calls
   const loadData = useCallback(async () => {
-    if (!user?.id) return;
+    if (!accessToken) return;
     
     setLoading(true);
     try {
       const [stats, profile, snapshotData] = await Promise.all([
-        getLibraryStats(user.id),
-        getTasteProfile(user.id),
-        getTasteSnapshots(user.id),
+        getLibraryStats(accessToken),
+        getTasteProfile(accessToken),
+        getTasteSnapshots(accessToken),
       ]);
 
       setLibraryStats(stats);
@@ -90,16 +90,20 @@ const MusicIntelligence = () => {
       }
     } catch (err) {
       console.error('Failed to load intelligence data:', err);
+      // Token might be expired
+      if (err instanceof Error && err.message.includes('Invalid Spotify token')) {
+        setError('Session expired. Please log in again.');
+      }
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [accessToken]);
 
   useEffect(() => {
-    if (user?.id) {
+    if (accessToken) {
       loadData();
     }
-  }, [user?.id, loadData]);
+  }, [accessToken, loadData]);
 
   // Handle extraction
   const handleExtract = async () => {
