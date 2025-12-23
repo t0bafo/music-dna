@@ -43,6 +43,17 @@ const sortByProperty = (
 
 // Optimize using energy arc algorithm
 export const optimizePlaylist = (tracks: TrackWithFeatures[]): OptimizationResult => {
+  // Debug: Log incoming track data
+  console.log('[Optimizer] Input tracks sample:', tracks.slice(0, 3).map(t => ({
+    id: t.id,
+    name: t.name,
+    tempo: t.tempo,
+    energy: t.energy,
+  })));
+  console.log('[Optimizer] Tracks with tempo:', tracks.filter(t => t.tempo != null).length);
+  console.log('[Optimizer] Tracks with energy:', tracks.filter(t => t.energy != null).length);
+  console.log('[Optimizer] Tracks with both:', tracks.filter(t => t.tempo != null && t.energy != null).length);
+
   const originalScore = calculateFlowScore(tracks).score;
   const originalJumps = countBpmJumps(tracks);
 
