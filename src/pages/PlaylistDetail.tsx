@@ -506,6 +506,7 @@ const PlaylistDetail = () => {
               flowScore={flowScore.score}
               appealProfile={appealProfile}
               bpmIssues={bpmIssues}
+              accessToken={accessToken}
             />
           </div>
         )}

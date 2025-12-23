@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bot, RefreshCw, AlertCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { AppealProfile } from "@/lib/appeal-analysis";
 
 interface BpmIssue {
@@ -20,6 +19,7 @@ interface AIPlaylistCoachProps {
   flowScore: number;
   appealProfile: AppealProfile | null;
   bpmIssues: BpmIssue[];
+  accessToken: string | null;
 }
 
 export function AIPlaylistCoach({
@@ -27,7 +27,8 @@ export function AIPlaylistCoach({
   trackCount,
   flowScore,
   appealProfile,
-  bpmIssues
+  bpmIssues,
+  accessToken
 }: AIPlaylistCoachProps) {
   const [insights, setInsights] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -35,6 +36,11 @@ export function AIPlaylistCoach({
   const [hasGenerated, setHasGenerated] = useState(false);
 
   const generateInsights = async () => {
+    if (!accessToken) {
+      setError("Please log in to use AI insights");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -56,16 +62,23 @@ export function AIPlaylistCoach({
         popularTracks: appealProfile?.mainstreamHits || []
       };
 
-      const { data, error: fnError } = await supabase.functions.invoke('playlist-ai-coach', {
-        body: { playlistData }
-      });
+      // Call Edge Function with Spotify token for authentication
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/playlist-ai-coach`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-spotify-token': accessToken,
+          },
+          body: JSON.stringify({ playlistData }),
+        }
+      );
 
-      if (fnError) {
-        throw new Error(fnError.message);
-      }
+      const data = await response.json();
 
-      if (data.error) {
-        throw new Error(data.error);
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate insights');
       }
 
       setInsights(data.insights);
