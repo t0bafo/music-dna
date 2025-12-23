@@ -37,9 +37,20 @@ export interface TrackFlowImpact {
 }
 
 export const calculateFlowScore = (tracks: TrackWithFeatures[]): FlowScore => {
+  // Debug: Log what we're receiving
+  console.log('[FlowScore] Total tracks:', tracks.length);
+  console.log('[FlowScore] Sample track:', tracks[0] ? {
+    id: tracks[0].id,
+    name: tracks[0].name,
+    tempo: tracks[0].tempo,
+    energy: tracks[0].energy,
+  } : 'none');
+  
   const tracksWithTempo = tracks.filter(t => t.tempo != null && t.energy != null);
+  console.log('[FlowScore] Tracks with tempo AND energy:', tracksWithTempo.length);
   
   if (tracksWithTempo.length < 2) {
+    console.log('[FlowScore] Returning 0 - not enough data');
     return {
       score: 0,
       grade: 'Needs Work',
