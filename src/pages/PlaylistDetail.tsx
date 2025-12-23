@@ -1,9 +1,12 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   getPlaylistTracks, 
   getAudioFeaturesFromReccoBeats,
+  getCurrentUser,
+  createPlaylist,
+  addTracksToPlaylist,
   SpotifyPlaylist,
   SpotifyTrack,
 } from '@/lib/spotify-api';
@@ -16,6 +19,7 @@ import {
   FlowInsight,
   BpmIssue,
 } from '@/lib/flow-analysis';
+import { optimizePlaylist, OptimizationResult } from '@/lib/playlist-optimizer';
 import {
   AppealProfile,
   AppealInsight,
@@ -28,17 +32,21 @@ import {
   Loader2, 
   ExternalLink, 
   Music,
-  FileText,
-  Wand2,
+  Sparkles,
+  Save,
+  RotateCcw,
   ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import FlowScoreCard from '@/components/FlowScoreCard';
 import FlowCharts from '@/components/FlowCharts';
 import FlowInsights from '@/components/FlowInsights';
-import FlowTrackTable from '@/components/FlowTrackTable';
+import DraggableTrackTable from '@/components/DraggableTrackTable';
 import AppealScoreCard from '@/components/AppealScoreCard';
 import { AIPlaylistCoach } from '@/components/AIPlaylistCoach';
+import OptimizePreviewModal from '@/components/OptimizePreviewModal';
+import SaveToSpotifyModal from '@/components/SaveToSpotifyModal';
+import { toast } from 'sonner';
 
 // Fetch full track objects to get popularity scores
 const getTrackPopularity = async (
@@ -79,7 +87,9 @@ const PlaylistDetail = () => {
   const { accessToken, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const [playlist, setPlaylist] = useState<SpotifyPlaylist | null>(null);
-  const [tracks, setTracks] = useState<TrackWithFeatures[]>([]);
+  const [originalTracks, setOriginalTracks] = useState<TrackWithFeatures[]>([]);
+  const [currentTracks, setCurrentTracks] = useState<TrackWithFeatures[]>([]);
+  const [originalFlowScore, setOriginalFlowScore] = useState<FlowScore | null>(null);
   const [flowScore, setFlowScore] = useState<FlowScore | null>(null);
   const [insights, setInsights] = useState<FlowInsight[]>([]);
   const [bpmIssues, setBpmIssues] = useState<BpmIssue[]>([]);
@@ -87,7 +97,19 @@ const PlaylistDetail = () => {
   const [appealInsights, setAppealInsights] = useState<AppealInsight[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [highlightedTrackIndex, setHighlightedTrackIndex] = useState<number | undefined>();
+  
+  // Optimization state
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [optimizeResult, setOptimizeResult] = useState<OptimizationResult | null>(null);
+  const [showOptimizeModal, setShowOptimizeModal] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [scoreChange, setScoreChange] = useState<number | null>(null);
+
+  // Derived state
+  const hasChanges = useMemo(() => {
+    if (originalTracks.length !== currentTracks.length) return false;
+    return originalTracks.some((t, i) => t.id !== currentTracks[i]?.id);
+  }, [originalTracks, currentTracks]);
 
   const fetchPlaylistData = useCallback(async () => {
     if (!accessToken || !playlistId) return;
@@ -138,13 +160,15 @@ const PlaylistDetail = () => {
         track.popularity = popularityMap.get(track.id) ?? 0;
       });
 
-      setTracks(tracksList);
+      setOriginalTracks(tracksList);
+      setCurrentTracks(tracksList);
 
       // Calculate flow analysis
       const score = calculateFlowScore(tracksList);
       const insightsList = generateInsights(tracksList);
       const bpmIssuesList = extractBpmIssues(tracksList);
 
+      setOriginalFlowScore(score);
       setFlowScore(score);
       setInsights(insightsList);
       setBpmIssues(bpmIssuesList);
@@ -187,8 +211,107 @@ const PlaylistDetail = () => {
     }
   }, [accessToken, playlistId, fetchPlaylistData]);
 
+  // Handle track reorder
+  const handleReorder = useCallback((newTracks: TrackWithFeatures[]) => {
+    const previousScore = flowScore?.score ?? 0;
+    setCurrentTracks(newTracks);
+    
+    // Recalculate flow score
+    const newScore = calculateFlowScore(newTracks);
+    setFlowScore(newScore);
+    
+    // Show score change animation
+    const change = newScore.score - previousScore;
+    if (change !== 0) {
+      setScoreChange(change);
+      setTimeout(() => setScoreChange(null), 2000);
+      
+      if (change > 0) {
+        toast.success(`Flow improved by +${change}!`);
+      } else if (change < -5) {
+        toast.warning(`Flow decreased by ${change}`);
+      }
+    }
+    
+    // Recalculate insights
+    const newInsights = generateInsights(newTracks);
+    const newBpmIssues = extractBpmIssues(newTracks);
+    setInsights(newInsights);
+    setBpmIssues(newBpmIssues);
+  }, [flowScore]);
+
+  // Reset to original order
+  const handleReset = useCallback(() => {
+    setCurrentTracks(originalTracks);
+    setFlowScore(originalFlowScore);
+    setInsights(generateInsights(originalTracks));
+    setBpmIssues(extractBpmIssues(originalTracks));
+    toast.info('Reset to original track order');
+  }, [originalTracks, originalFlowScore]);
+
+  // Auto-optimize
+  const handleAutoOptimize = useCallback(() => {
+    if (currentTracks.length < 5) {
+      toast.error('Need at least 5 tracks to optimize');
+      return;
+    }
+    
+    setIsOptimizing(true);
+    setShowOptimizeModal(true);
+    
+    // Simulate a short delay for UX
+    setTimeout(() => {
+      const result = optimizePlaylist(currentTracks);
+      setOptimizeResult(result);
+      setIsOptimizing(false);
+    }, 1000);
+  }, [currentTracks]);
+
+  // Apply optimization
+  const handleApplyOptimization = useCallback(() => {
+    if (!optimizeResult) return;
+    
+    setCurrentTracks(optimizeResult.optimizedTracks);
+    const newScore = calculateFlowScore(optimizeResult.optimizedTracks);
+    setFlowScore(newScore);
+    setInsights(generateInsights(optimizeResult.optimizedTracks));
+    setBpmIssues(extractBpmIssues(optimizeResult.optimizedTracks));
+    
+    setShowOptimizeModal(false);
+    setOptimizeResult(null);
+    
+    toast.success(`Playlist optimized! Flow score: ${newScore.score}`);
+  }, [optimizeResult]);
+
+  // Save to Spotify
+  const handleSaveToSpotify = useCallback(async (playlistName: string): Promise<string | null> => {
+    if (!accessToken) {
+      toast.error('Not authenticated with Spotify');
+      return null;
+    }
+
+    try {
+      // Get current user
+      const user = await getCurrentUser(accessToken);
+      
+      // Create new playlist
+      const description = `Optimized for flow by Music DNA. Flow score: ${flowScore?.score ?? 0}/100. Created ${new Date().toLocaleDateString()}`;
+      const newPlaylist = await createPlaylist(accessToken, user.id, playlistName, description, false);
+      
+      // Add tracks in new order
+      const trackUris = currentTracks.map(t => `spotify:track:${t.id}`);
+      await addTracksToPlaylist(accessToken, newPlaylist.id, trackUris);
+      
+      toast.success('Playlist saved to Spotify!');
+      return newPlaylist.id;
+    } catch (err) {
+      console.error('Failed to save playlist:', err);
+      toast.error('Failed to save playlist to Spotify');
+      return null;
+    }
+  }, [accessToken, currentTracks, flowScore]);
+
   const handleTrackClick = (index: number) => {
-    setHighlightedTrackIndex(index);
     // Scroll to track table
     setTimeout(() => {
       const element = document.getElementById('track-table');
@@ -196,7 +319,7 @@ const PlaylistDetail = () => {
     }, 100);
   };
 
-  const tracksWithData = tracks.filter(t => t.tempo != null && t.energy != null).length;
+  const tracksWithData = currentTracks.filter(t => t.tempo != null && t.energy != null).length;
 
   if (authLoading || loading) {
     return (
@@ -309,17 +432,30 @@ const PlaylistDetail = () => {
                   {playlist.name}
                 </h1>
                 <p className="text-muted-foreground mb-4">
-                  {tracks.length} tracks • by {playlist.owner?.display_name || 'Unknown'}
+                  {currentTracks.length} tracks • by {playlist.owner?.display_name || 'Unknown'}
                 </p>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => window.open(`https://open.spotify.com/playlist/${playlistId}`, '_blank')}
-                  className="bg-background/50 backdrop-blur-sm"
-                >
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  Edit on Spotify
-                </Button>
+                <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => window.open(`https://open.spotify.com/playlist/${playlistId}`, '_blank')}
+                    className="bg-background/50 backdrop-blur-sm"
+                  >
+                    <ExternalLink className="w-4 h-4 mr-2" />
+                    View on Spotify
+                  </Button>
+                  {hasChanges && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleReset}
+                      className="bg-background/50 backdrop-blur-sm"
+                    >
+                      <RotateCcw className="w-4 h-4 mr-2" />
+                      Reset Order
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -327,14 +463,23 @@ const PlaylistDetail = () => {
       )}
 
       <main className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Flow Score */}
+        {/* Flow Score with Change Animation */}
         {flowScore && (
-          <div className="mb-8 animate-fade-in">
+          <div className="mb-8 animate-fade-in relative">
             <FlowScoreCard
               flowScore={flowScore}
-              trackCount={tracks.length}
+              trackCount={currentTracks.length}
               tracksWithData={tracksWithData}
             />
+            {scoreChange !== null && (
+              <div 
+                className={`absolute top-4 right-4 text-2xl font-bold animate-fade-in ${
+                  scoreChange > 0 ? 'text-green-500' : 'text-red-500'
+                }`}
+              >
+                {scoreChange > 0 ? '+' : ''}{scoreChange}
+              </div>
+            )}
           </div>
         )}
 
@@ -343,7 +488,7 @@ const PlaylistDetail = () => {
           <div className="mb-8 animate-fade-in">
             <AppealScoreCard
               profile={appealProfile}
-              trackCount={tracks.length}
+              trackCount={currentTracks.length}
             />
           </div>
         )}
@@ -353,7 +498,7 @@ const PlaylistDetail = () => {
           <div className="mb-8 animate-fade-in">
             <AIPlaylistCoach
               playlistName={playlist?.name || 'Playlist'}
-              trackCount={tracks.length}
+              trackCount={currentTracks.length}
               flowScore={flowScore.score}
               appealProfile={appealProfile}
               bpmIssues={bpmIssues}
@@ -363,7 +508,7 @@ const PlaylistDetail = () => {
 
         {/* Charts */}
         <div className="mb-8 animate-fade-in">
-          <FlowCharts tracks={tracks} onTrackClick={handleTrackClick} />
+          <FlowCharts tracks={currentTracks} onTrackClick={handleTrackClick} />
         </div>
 
         {/* Insights */}
@@ -371,10 +516,57 @@ const PlaylistDetail = () => {
           <FlowInsights insights={insights} appealInsights={appealInsights} />
         </div>
 
-        {/* Track Table */}
-        <div id="track-table" className="mb-8 animate-fade-in">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Detailed Track Analysis</h3>
-          <FlowTrackTable tracks={tracks} highlightedIndex={highlightedTrackIndex} showAppeal={true} />
+        {/* Track Table Header with Actions */}
+        <div id="track-table" className="mb-4 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+            <div>
+              <h3 className="text-lg font-semibold text-foreground">Detailed Track Analysis</h3>
+              <p className="text-sm text-muted-foreground">
+                Drag tracks to reorder and improve flow score
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleAutoOptimize}
+                disabled={currentTracks.length < 5}
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Auto-Optimize
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setShowSaveModal(true)}
+                disabled={!hasChanges}
+                className="bg-spotify hover:bg-spotify/90"
+              >
+                <Save className="w-4 h-4 mr-2" />
+                Save to Spotify
+              </Button>
+            </div>
+          </div>
+          
+          {hasChanges && (
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-4 py-2 mb-4 flex items-center justify-between">
+              <span className="text-sm text-yellow-500">
+                Unsaved changes • {originalFlowScore?.score} → {flowScore?.score}
+              </span>
+              <Button variant="ghost" size="sm" onClick={handleReset} className="text-yellow-500 hover:text-yellow-400">
+                Reset
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Draggable Track Table */}
+        <div className="mb-8">
+          <DraggableTrackTable 
+            tracks={currentTracks} 
+            originalTracks={originalTracks}
+            onReorder={handleReorder}
+            showAppeal={true} 
+          />
         </div>
 
         {/* Action Buttons */}
@@ -386,16 +578,29 @@ const PlaylistDetail = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Analyze Another Playlist
           </Button>
-          <Button variant="outline" disabled>
-            <FileText className="w-4 h-4 mr-2" />
-            Export Analysis (Coming Soon)
-          </Button>
-          <Button variant="outline" disabled>
-            <Wand2 className="w-4 h-4 mr-2" />
-            Optimize Order (Beta)
-          </Button>
         </div>
       </main>
+
+      {/* Modals */}
+      <OptimizePreviewModal
+        isOpen={showOptimizeModal}
+        onClose={() => {
+          setShowOptimizeModal(false);
+          setOptimizeResult(null);
+        }}
+        onApply={handleApplyOptimization}
+        result={optimizeResult}
+        isLoading={isOptimizing}
+      />
+
+      <SaveToSpotifyModal
+        isOpen={showSaveModal}
+        onClose={() => setShowSaveModal(false)}
+        onSave={handleSaveToSpotify}
+        originalName={playlist?.name || 'Playlist'}
+        flowScore={flowScore?.score ?? 0}
+        originalScore={originalFlowScore?.score ?? 0}
+      />
     </div>
   );
 };

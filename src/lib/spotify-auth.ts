@@ -1,6 +1,6 @@
 // Spotify OAuth PKCE utilities
 export const SPOTIFY_CLIENT_ID = 'a0c70af1576b40bbb8d899ebdf9b8e08';
-export const SPOTIFY_SCOPES = 'user-read-private user-read-email user-top-read user-library-read playlist-read-private';
+export const SPOTIFY_SCOPES = 'user-read-private user-read-email user-top-read user-library-read playlist-read-private playlist-modify-public playlist-modify-private';
 
 export const getRedirectUri = () => {
   return `${window.location.origin}/callback`;
