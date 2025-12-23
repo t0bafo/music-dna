@@ -2,3 +2,6 @@ project_id = "ducyigzfmdusadysrjmq"
 
 [functions.playlist-ai-coach]
 verify_jwt = false
+
+[functions.music-intelligence]
+verify_jwt = false
