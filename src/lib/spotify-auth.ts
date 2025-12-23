@@ -118,28 +118,28 @@ export const refreshAccessToken = async (refreshToken: string): Promise<{
 
 export const getStoredTokens = (): { accessToken: string | null; refreshToken: string | null; expiresAt: number | null } => {
   return {
-    accessToken: sessionStorage.getItem('access_token'),
-    refreshToken: sessionStorage.getItem('refresh_token'),
-    expiresAt: sessionStorage.getItem('expires_at') ? parseInt(sessionStorage.getItem('expires_at')!) : null,
+    accessToken: localStorage.getItem('spotify_access_token'),
+    refreshToken: localStorage.getItem('spotify_refresh_token'),
+    expiresAt: localStorage.getItem('spotify_expires_at') ? parseInt(localStorage.getItem('spotify_expires_at')!) : null,
   };
 };
 
 export const storeTokens = (accessToken: string, refreshToken: string, expiresIn: number): void => {
   const expiresAt = Date.now() + (expiresIn * 1000);
-  sessionStorage.setItem('access_token', accessToken);
-  sessionStorage.setItem('refresh_token', refreshToken);
-  sessionStorage.setItem('expires_at', expiresAt.toString());
+  localStorage.setItem('spotify_access_token', accessToken);
+  localStorage.setItem('spotify_refresh_token', refreshToken);
+  localStorage.setItem('spotify_expires_at', expiresAt.toString());
 };
 
 export const clearTokens = (): void => {
-  sessionStorage.removeItem('access_token');
-  sessionStorage.removeItem('refresh_token');
-  sessionStorage.removeItem('expires_at');
-  sessionStorage.removeItem('code_verifier');
+  localStorage.removeItem('spotify_access_token');
+  localStorage.removeItem('spotify_refresh_token');
+  localStorage.removeItem('spotify_expires_at');
+  sessionStorage.removeItem('code_verifier'); // Keep code_verifier in session (only needed during OAuth flow)
 };
 
 export const isTokenExpired = (): boolean => {
-  const expiresAt = sessionStorage.getItem('expires_at');
+  const expiresAt = localStorage.getItem('spotify_expires_at');
   if (!expiresAt) return true;
   return Date.now() >= parseInt(expiresAt) - 60000; // 1 minute buffer
 };
