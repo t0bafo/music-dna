@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.music-intelligence]
 verify_jwt = false
+
+[functions.spotify-public-token]
+verify_jwt = false
