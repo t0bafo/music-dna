@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { Music, Loader2, AlertCircle, Disc3, TrendingUp, Zap, Heart, Mic2, Volume2, Radio, RefreshCw } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
-// Hardcoded credentials - replace with your actual Spotify credentials
-const CLIENT_ID = 'a0c70af1576b40bbb8d899ebdf9b8e08';
-const CLIENT_SECRET = 'bf06180c93c149c8ab6eabd2ce8a5924';
-
+// CLIENT_SECRET is now stored securely in Edge Function environment variables
 const PLAYLIST_ID = '46iQn1DHoYNlHwBIOnfAxi';
 
 interface Track {
@@ -106,21 +104,13 @@ const Index = () => {
     setInsights(null);
 
     try {
-      // Step 1: Authentication
-      const tokenResponse = await fetch("https://accounts.spotify.com/api/token", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-          Authorization: `Basic ${btoa(`${CLIENT_ID}:${CLIENT_SECRET}`)}`,
-        },
-        body: "grant_type=client_credentials",
-      });
+      // Step 1: Get public access token via secure Edge Function
+      const { data: tokenData, error: tokenError } = await supabase.functions.invoke('spotify-public-token');
 
-      if (!tokenResponse.ok) {
-        throw new Error("Failed to authenticate. Check Spotify credentials.");
+      if (tokenError || !tokenData?.access_token) {
+        throw new Error("Failed to authenticate. Please try again.");
       }
 
-      const tokenData = await tokenResponse.json();
       const accessToken = tokenData.access_token;
 
       // Step 2: Fetch playlist tracks

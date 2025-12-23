@@ -241,24 +241,17 @@ export const getNigeriaTop100 = async (): Promise<{
   features: Map<string, AudioFeatures>;
 }> => {
   const PLAYLIST_ID = '46iQn1DHoYNlHwBIOnfAxi';
-  const CLIENT_ID = 'a0c70af1576b40bbb8d899ebdf9b8e08';
-  const CLIENT_SECRET = 'bf06180c93c149c8ab6eabd2ce8a5924';
+  
+  // CLIENT_SECRET is now stored securely in Edge Function environment variables
+  // Get public access token via secure Edge Function
+  const { supabase } = await import('@/integrations/supabase/client');
+  const { data: tokenData, error: tokenError } = await supabase.functions.invoke('spotify-public-token');
 
-  // Get public access token
-  const tokenResponse = await fetch('https://accounts.spotify.com/api/token', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Authorization: `Basic ${btoa(`${CLIENT_ID}:${CLIENT_SECRET}`)}`,
-    },
-    body: 'grant_type=client_credentials',
-  });
-
-  if (!tokenResponse.ok) {
+  if (tokenError || !tokenData?.access_token) {
     throw new Error('Failed to authenticate with Spotify');
   }
 
-  const { access_token } = await tokenResponse.json();
+  const access_token = tokenData.access_token;
 
   // Fetch playlist tracks
   const playlistData = await spotifyFetch<{ items: { track: SpotifyTrack }[] }>(
