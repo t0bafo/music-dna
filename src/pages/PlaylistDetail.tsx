@@ -320,6 +320,8 @@ const PlaylistDetail = () => {
   };
 
   const tracksWithData = currentTracks.filter(t => t.tempo != null && t.energy != null).length;
+  const tracksWithTempo = currentTracks.filter(t => t.tempo != null).length;
+  const tracksWithEnergy = currentTracks.filter(t => t.energy != null).length;
 
   if (authLoading || loading) {
     return (
@@ -470,6 +472,8 @@ const PlaylistDetail = () => {
               flowScore={flowScore}
               trackCount={currentTracks.length}
               tracksWithData={tracksWithData}
+              tracksWithTempo={tracksWithTempo}
+              tracksWithEnergy={tracksWithEnergy}
             />
             {scoreChange !== null && (
               <div 

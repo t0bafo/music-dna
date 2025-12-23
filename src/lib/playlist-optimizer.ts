@@ -7,6 +7,12 @@ export interface OptimizationResult {
   newScore: number;
   improvement: number;
   bpmJumpsReduced: { before: number; after: number };
+  dataAvailability: {
+    totalTracks: number;
+    tracksWithTempo: number;
+    tracksWithEnergy: number;
+    tracksWithBoth: number;
+  };
 }
 
 // Count BPM jumps > 20 in a track list
@@ -41,12 +47,21 @@ export const optimizePlaylist = (tracks: TrackWithFeatures[]): OptimizationResul
   const originalJumps = countBpmJumps(tracks);
 
   if (tracks.length < 5) {
+    const tracksWithTempo = tracks.filter(t => t.tempo != null).length;
+    const tracksWithEnergy = tracks.filter(t => t.energy != null).length;
+    const tracksWithBoth = tracks.filter(t => t.tempo != null && t.energy != null).length;
     return {
       optimizedTracks: tracks,
       originalScore,
       newScore: originalScore,
       improvement: 0,
       bpmJumpsReduced: { before: originalJumps, after: originalJumps },
+      dataAvailability: {
+        totalTracks: tracks.length,
+        tracksWithTempo,
+        tracksWithEnergy,
+        tracksWithBoth,
+      },
     };
   }
 
@@ -100,12 +115,22 @@ export const optimizePlaylist = (tracks: TrackWithFeatures[]): OptimizationResul
   const newScore = calculateFlowScore(optimized).score;
   const newJumps = countBpmJumps(optimized);
 
+  // Calculate data availability
+  const tracksWithTempo = tracks.filter(t => t.tempo != null).length;
+  const tracksWithEnergy = tracks.filter(t => t.energy != null).length;
+
   return {
     optimizedTracks: optimized,
     originalScore,
     newScore,
     improvement: newScore - originalScore,
     bpmJumpsReduced: { before: originalJumps, after: newJumps },
+    dataAvailability: {
+      totalTracks: tracks.length,
+      tracksWithTempo,
+      tracksWithEnergy,
+      tracksWithBoth: tracksWithData.length,
+    },
   };
 };
 
