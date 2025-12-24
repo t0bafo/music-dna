@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Search, Filter, Music2, Gem, TrendingDown, PlayCircle, Loader2 } from 'lucide-react';
+import { Search, Filter, Music2, Gem, PlayCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,10 +98,12 @@ const SmartDiscoveryEngine = ({ onSearch }: SmartDiscoveryEngineProps) => {
   }, [accessToken, results, filters]);
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-card via-card to-primary/5">
+    <Card className="border-primary/20 bg-gradient-to-br from-card/80 via-card/60 to-primary/5 backdrop-blur-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Search className="w-5 h-5 text-primary" />
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Search className="w-5 h-5 text-primary" />
+          </div>
           Smart Discovery Engine
         </CardTitle>
         <CardDescription>
@@ -113,15 +115,15 @@ const SmartDiscoveryEngine = ({ onSearch }: SmartDiscoveryEngineProps) => {
         <div className="grid gap-6 md:grid-cols-2">
           {/* BPM Range */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">
-              BPM Range: {filters.minBpm} - {filters.maxBpm}
+            <Label className="text-sm font-medium text-foreground">
+              BPM Range: <span className="text-primary">{filters.minBpm} - {filters.maxBpm}</span>
             </Label>
             <div className="flex items-center gap-3">
               <Input
                 type="number"
                 value={filters.minBpm}
                 onChange={(e) => setFilters(prev => ({ ...prev, minBpm: Number(e.target.value) }))}
-                className="w-20 h-8 text-sm"
+                className="w-20 h-9 text-sm bg-secondary/50 border-border/50"
                 min={50}
                 max={200}
               />
@@ -137,7 +139,7 @@ const SmartDiscoveryEngine = ({ onSearch }: SmartDiscoveryEngineProps) => {
                 type="number"
                 value={filters.maxBpm}
                 onChange={(e) => setFilters(prev => ({ ...prev, maxBpm: Number(e.target.value) }))}
-                className="w-20 h-8 text-sm"
+                className="w-20 h-9 text-sm bg-secondary/50 border-border/50"
                 min={50}
                 max={200}
               />
@@ -146,11 +148,11 @@ const SmartDiscoveryEngine = ({ onSearch }: SmartDiscoveryEngineProps) => {
 
           {/* Energy Range */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">
-              Energy: {filters.minEnergy}% - {filters.maxEnergy}%
+            <Label className="text-sm font-medium text-foreground">
+              Energy: <span className="text-primary">{filters.minEnergy}% - {filters.maxEnergy}%</span>
             </Label>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground w-8">{filters.minEnergy}%</span>
+              <span className="text-xs text-muted-foreground w-10">{filters.minEnergy}%</span>
               <Slider
                 value={[filters.minEnergy, filters.maxEnergy]}
                 onValueChange={([min, max]) => setFilters(prev => ({ ...prev, minEnergy: min, maxEnergy: max }))}
@@ -159,17 +161,17 @@ const SmartDiscoveryEngine = ({ onSearch }: SmartDiscoveryEngineProps) => {
                 step={5}
                 className="flex-1"
               />
-              <span className="text-xs text-muted-foreground w-8">{filters.maxEnergy}%</span>
+              <span className="text-xs text-muted-foreground w-10">{filters.maxEnergy}%</span>
             </div>
           </div>
 
           {/* Danceability Range */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">
-              Danceability: {filters.minDance}% - {filters.maxDance}%
+            <Label className="text-sm font-medium text-foreground">
+              Danceability: <span className="text-primary">{filters.minDance}% - {filters.maxDance}%</span>
             </Label>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-muted-foreground w-8">{filters.minDance}%</span>
+              <span className="text-xs text-muted-foreground w-10">{filters.minDance}%</span>
               <Slider
                 value={[filters.minDance, filters.maxDance]}
                 onValueChange={([min, max]) => setFilters(prev => ({ ...prev, minDance: min, maxDance: max }))}
@@ -178,13 +180,13 @@ const SmartDiscoveryEngine = ({ onSearch }: SmartDiscoveryEngineProps) => {
                 step={5}
                 className="flex-1"
               />
-              <span className="text-xs text-muted-foreground w-8">{filters.maxDance}%</span>
+              <span className="text-xs text-muted-foreground w-10">{filters.maxDance}%</span>
             </div>
           </div>
 
           {/* Controls Row */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 border border-border/30">
               <div className="flex items-center gap-2">
                 <Gem className="w-4 h-4 text-primary" />
                 <Label htmlFor="underground" className="text-sm font-medium cursor-pointer">
@@ -201,13 +203,13 @@ const SmartDiscoveryEngine = ({ onSearch }: SmartDiscoveryEngineProps) => {
               Only show tracks with popularity &lt; 50
             </p>
             
-            <div className="flex items-center gap-2 mt-4">
+            <div className="flex items-center gap-3">
               <Label className="text-sm">Limit:</Label>
               <Input
                 type="number"
                 value={filters.limit}
                 onChange={(e) => setFilters(prev => ({ ...prev, limit: Math.min(100, Math.max(10, Number(e.target.value))) }))}
-                className="w-20 h-8 text-sm"
+                className="w-20 h-9 text-sm bg-secondary/50 border-border/50"
                 min={10}
                 max={100}
               />
@@ -222,6 +224,7 @@ const SmartDiscoveryEngine = ({ onSearch }: SmartDiscoveryEngineProps) => {
             onClick={handleSearch} 
             disabled={isSearching}
             className="flex-1"
+            variant="sonic"
           >
             {isSearching ? (
               <>
@@ -264,27 +267,27 @@ const SmartDiscoveryEngine = ({ onSearch }: SmartDiscoveryEngineProps) => {
               </Button>
             </div>
 
-            <ScrollArea className="h-[300px] rounded-md border">
+            <ScrollArea className="h-[300px] rounded-xl border border-border/50 bg-secondary/20">
               <div className="p-4 space-y-2">
                 {results.map((track, i) => (
                   <div
                     key={track.track_id}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/50 transition-colors"
                   >
-                    <span className="text-xs text-muted-foreground w-6">{i + 1}</span>
+                    <span className="text-xs text-muted-foreground w-6 font-mono">{i + 1}</span>
                     <Music2 className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{track.name}</p>
+                      <p className="text-sm font-medium truncate text-foreground">{track.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {track.tempo && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs bg-secondary/80 text-foreground border-0">
                           {Math.round(track.tempo)} BPM
                         </Badge>
                       )}
                       {track.energy && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs border-border/50">
                           {Math.round(track.energy * 100)}% E
                         </Badge>
                       )}

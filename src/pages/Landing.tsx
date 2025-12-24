@@ -23,22 +23,22 @@ const Landing = () => {
 
   const features = [
     {
-      icon: <Brain className="w-8 h-8" />,
+      icon: <Brain className="w-7 h-7" />,
       title: 'Understand Your Taste',
       description: 'Analyze 5,000+ tracks from your library. See your top artists, BPM preferences, energy patterns, and how your taste evolves—based on real listening data.',
     },
     {
-      icon: <BarChart3 className="w-8 h-8" />,
+      icon: <BarChart3 className="w-7 h-7" />,
       title: 'Perfect Your Playlists',
       description: 'Get flow scores (0-100) for any playlist. Identify jarring BPM jumps, energy drops, and get AI-powered suggestions to reorder tracks for smooth listening.',
     },
     {
-      icon: <Search className="w-8 h-8" />,
+      icon: <Search className="w-7 h-7" />,
       title: 'Find Tracks That Fit',
       description: 'Search your library with precision: filter by BPM range, energy level, danceability, and underground status. Find the perfect tracks for any mood or event.',
     },
     {
-      icon: <Sparkles className="w-8 h-8" />,
+      icon: <Sparkles className="w-7 h-7" />,
       title: 'Create Event-Ready Playlists',
       description: 'Generate playlists for specific contexts: Event Openers, Peak Energy, Wind Down, Creative Focus. AI builds the perfect track sequence from your library.',
     },
@@ -48,7 +48,7 @@ const Landing = () => {
     return (
       <div className="min-h-screen flex items-center justify-center gradient-bg">
         <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-spotify mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-primary mx-auto mb-4" />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
@@ -56,24 +56,31 @@ const Landing = () => {
   }
 
   return (
-    <div className="min-h-screen gradient-bg">
+    <div className="min-h-screen gradient-bg relative overflow-hidden">
+      {/* Background glow effects */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-chart-purple/5 rounded-full blur-3xl" />
+      </div>
+
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-16 max-w-6xl">
-        <div className="text-center mb-16 animate-fade-in">
-          <div className="inline-flex items-center justify-center gap-3 mb-6">
+      <div className="container mx-auto px-4 py-20 max-w-6xl relative z-10">
+        <div className="text-center mb-20 animate-fade-in">
+          {/* Logo */}
+          <div className="inline-flex items-center justify-center gap-3 mb-8">
             <div className="relative">
-              <div className="w-16 h-16 bg-spotify rounded-full flex items-center justify-center">
-                <Music className="w-8 h-8 text-primary-foreground" />
+              <div className="w-20 h-20 bg-gradient-to-br from-primary to-sonic-dark rounded-2xl flex items-center justify-center shadow-glow animate-glow-pulse">
+                <Music className="w-10 h-10 text-primary-foreground" />
               </div>
             </div>
           </div>
           
-          <h1 className="text-4xl md:text-6xl font-extrabold text-foreground mb-6">
+          <h1 className="font-display text-5xl md:text-7xl font-bold text-foreground mb-6 tracking-tight">
             Your Personal Music <br className="hidden sm:block" />
-            <span className="text-spotify">Intelligence Platform</span>
+            <span className="text-gradient">Intelligence Platform</span>
           </h1>
           
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
             Analyze your listening patterns, optimize playlist flow, and discover tracks that match your vibe—all powered by your Spotify data.
           </p>
 
@@ -82,7 +89,7 @@ const Landing = () => {
               onClick={handleLogin}
               disabled={isLoggingIn}
               size="lg"
-              className="bg-spotify hover:bg-spotify-hover text-primary-foreground font-bold px-8 py-6 text-lg rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+              className="bg-gradient-to-r from-primary to-sonic-dark text-primary-foreground font-bold px-10 py-7 text-lg rounded-2xl shadow-glow hover:shadow-glow-intense animate-glow-pulse"
             >
               {isLoggingIn ? (
                 <>
@@ -100,10 +107,10 @@ const Landing = () => {
             </Button>
             
             <Button
-              variant="outline"
+              variant="glass"
               size="lg"
               onClick={() => setShowSetupDialog(true)}
-              className="px-6 py-6 text-lg rounded-full"
+              className="px-8 py-7 text-lg rounded-2xl"
             >
               Setup Instructions
             </Button>
@@ -111,22 +118,22 @@ const Landing = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 gap-6 mb-16">
+        <div className="grid md:grid-cols-2 gap-6 mb-20">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="bg-card rounded-xl p-6 card-shadow hover:card-shadow-hover transition-all duration-300 animate-scale-in"
+              className="group rounded-2xl border border-border/50 bg-card/60 backdrop-blur-xl p-8 transition-all duration-300 hover:border-primary/30 hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/5 animate-scale-in"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="flex items-start gap-4">
-                <div className="p-3 bg-spotify/10 rounded-lg text-spotify">
+              <div className="flex items-start gap-5">
+                <div className="p-4 bg-primary/10 rounded-xl text-primary group-hover:bg-primary/20 transition-colors">
                   {feature.icon}
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-card-foreground mb-2">
+                  <h3 className="font-display text-xl font-semibold text-foreground mb-3">
                     {feature.title}
                   </h3>
-                  <p className="text-muted-foreground">
+                  <p className="text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
@@ -136,42 +143,44 @@ const Landing = () => {
         </div>
 
         {/* Privacy Notice */}
-        <div className="bg-card rounded-xl p-6 card-shadow max-w-2xl mx-auto text-center animate-fade-in">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <Shield className="w-5 h-5 text-spotify" />
-            <h3 className="font-bold text-card-foreground">Your Privacy Matters</h3>
+        <div className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-xl p-8 max-w-2xl mx-auto text-center animate-fade-in">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Shield className="w-5 h-5 text-primary" />
+            </div>
+            <h3 className="font-display text-lg font-semibold text-foreground">Your Privacy Matters</h3>
           </div>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground">
             We only request read access to your Spotify data. All analysis happens in your browser session 
             and is securely stored. Your data stays private—we never share it with third parties.
           </p>
         </div>
 
         {/* Footer */}
-        <footer className="text-center mt-16 text-muted-foreground text-sm">
+        <footer className="text-center mt-20 text-muted-foreground text-sm">
           <p>Powered by Spotify Web API</p>
         </footer>
       </div>
 
       {/* Setup Instructions Dialog */}
       <Dialog open={showSetupDialog} onOpenChange={setShowSetupDialog}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg bg-card/95 backdrop-blur-xl border-border/50">
           <DialogHeader>
-            <DialogTitle>Spotify App Setup Instructions</DialogTitle>
+            <DialogTitle className="font-display">Spotify App Setup Instructions</DialogTitle>
             <DialogDescription>
               Before you can login, you need to update your Spotify App settings.
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            <ol className="list-decimal list-inside space-y-3 text-sm">
+            <ol className="list-decimal list-inside space-y-3 text-sm text-foreground">
               <li>
                 Go to{' '}
                 <a
                   href="https://developer.spotify.com/dashboard"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-spotify underline"
+                  className="text-primary hover:underline"
                 >
                   developer.spotify.com/dashboard
                 </a>
@@ -180,7 +189,7 @@ const Landing = () => {
               <li>Click "Edit Settings"</li>
               <li>
                 Add this Redirect URI:
-                <code className="block mt-2 p-2 bg-muted rounded text-xs break-all">
+                <code className="block mt-2 p-3 bg-secondary rounded-lg text-xs break-all border border-border/50">
                   {getRedirectUri()}
                 </code>
               </li>
