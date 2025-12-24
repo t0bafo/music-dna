@@ -26,6 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
 import TopListenedArtistsCard from '@/components/charts/TopListenedArtistsCard';
+import YourMusicYearSection from '@/components/music-year/YourMusicYearSection';
 import BpmDistributionCard from '@/components/charts/BpmDistributionCard';
 import EnergyDanceScatterCard from '@/components/charts/EnergyDanceScatterCard';
 import ListeningPatternsCard from '@/components/charts/ListeningPatternsCard';
@@ -408,10 +409,13 @@ const MusicIntelligence = () => {
               </div>
             </section>
 
-            {/* Section 2: Listening Patterns */}
+            {/* Section 2: Your Music Year - Wrapped-style analytics */}
+            <YourMusicYearSection accessToken={accessToken!} />
+
+            {/* Section 3: Listening Patterns */}
             <section>
-              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-primary" />
+              <h2 className="font-display text-base lg:text-lg font-semibold text-foreground mb-3 lg:mb-4 flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
                 Listening Patterns
               </h2>
               <div className="grid gap-6 md:grid-cols-2">
