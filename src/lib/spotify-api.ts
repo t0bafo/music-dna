@@ -70,6 +70,23 @@ export const getTopTracks = async (
   return spotifyFetch(`/me/top/tracks?limit=${limit}&time_range=${timeRange}`, accessToken);
 };
 
+export interface SpotifyArtist {
+  id: string;
+  name: string;
+  genres: string[];
+  popularity: number;
+  images: { url: string; height: number; width: number }[];
+  external_urls: { spotify: string };
+}
+
+export const getTopArtists = async (
+  accessToken: string,
+  timeRange: TimeRange = 'medium_term',
+  limit: number = 50
+): Promise<{ items: SpotifyArtist[] }> => {
+  return spotifyFetch(`/me/top/artists?limit=${limit}&time_range=${timeRange}`, accessToken);
+};
+
 export const getUserPlaylists = async (
   accessToken: string,
   limit: number = 50
