@@ -271,6 +271,147 @@ serve(async (req) => {
         break
       }
 
+      case 'search_tracks': {
+        // Smart Discovery: Search with filters
+        const { filters } = data
+        console.log(`[music-intelligence] Searching tracks for user ${userId} with filters:`, filters)
+
+        let query = supabaseAdmin
+          .from('music_library')
+          .select('track_id, name, artist, album, tempo, energy, danceability, popularity')
+          .eq('user_id', userId)
+
+        // Apply filters
+        if (filters.minBpm > 0) query = query.gte('tempo', filters.minBpm)
+        if (filters.maxBpm < 300) query = query.lte('tempo', filters.maxBpm)
+        if (filters.minEnergy > 0) query = query.gte('energy', filters.minEnergy / 100)
+        if (filters.maxEnergy < 100) query = query.lte('energy', filters.maxEnergy / 100)
+        if (filters.minDance > 0) query = query.gte('danceability', filters.minDance / 100)
+        if (filters.maxDance < 100) query = query.lte('danceability', filters.maxDance / 100)
+        if (filters.undergroundOnly) query = query.lt('popularity', 50)
+        if (filters.limit) query = query.limit(filters.limit)
+
+        result = await query.order('popularity', { ascending: true })
+        break
+      }
+
+      case 'generate_playlist': {
+        // Context Playlist Generator
+        const { context, durationMinutes } = data
+        console.log(`[music-intelligence] Generating ${context} playlist for user ${userId}, ${durationMinutes} mins`)
+
+        const contexts: Record<string, { minBpm: number; maxBpm: number; minEnergy: number; maxEnergy: number; undergroundRatio: number }> = {
+          'event_opener': { minBpm: 95, maxBpm: 115, minEnergy: 50, maxEnergy: 75, undergroundRatio: 0.4 },
+          'peak_energy': { minBpm: 120, maxBpm: 140, minEnergy: 75, maxEnergy: 95, undergroundRatio: 0.3 },
+          'wind_down': { minBpm: 85, maxBpm: 110, minEnergy: 40, maxEnergy: 70, undergroundRatio: 0.5 },
+          'creative_focus': { minBpm: 90, maxBpm: 105, minEnergy: 40, maxEnergy: 60, undergroundRatio: 0.6 },
+          'late_night': { minBpm: 100, maxBpm: 115, minEnergy: 50, maxEnergy: 65, undergroundRatio: 0.5 },
+        }
+
+        const ctx = contexts[context]
+        if (!ctx) {
+          return new Response(
+            JSON.stringify({ error: 'Invalid context' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+
+        // Calculate tracks needed (~3.5 min per track)
+        const tracksNeeded = Math.ceil(durationMinutes / 3.5)
+
+        // Fetch tracks matching context
+        const { data: tracks, error: fetchError } = await supabaseAdmin
+          .from('music_library')
+          .select('track_id, name, artist, tempo, energy, popularity')
+          .eq('user_id', userId)
+          .gte('tempo', ctx.minBpm)
+          .lte('tempo', ctx.maxBpm)
+          .gte('energy', ctx.minEnergy / 100)
+          .lte('energy', ctx.maxEnergy / 100)
+          .not('tempo', 'is', null)
+          .not('energy', 'is', null)
+          .limit(tracksNeeded * 2)
+
+        if (fetchError) throw fetchError
+
+        if (!tracks || tracks.length === 0) {
+          result = { data: [] }
+          break
+        }
+
+        // Sort by BPM for progression
+        const ordered = tracks.sort((a: any, b: any) => (a.tempo || 0) - (b.tempo || 0))
+
+        // Apply underground ratio
+        const undergroundCount = Math.floor(tracksNeeded * ctx.undergroundRatio)
+        const underground = ordered.filter((t: any) => (t.popularity || 100) < 50).slice(0, undergroundCount)
+        const mainstream = ordered.filter((t: any) => (t.popularity || 0) >= 50).slice(0, tracksNeeded - undergroundCount)
+
+        // Interleave for variety
+        const playlist: any[] = []
+        const undergroundCopy = [...underground]
+        const mainstreamCopy = [...mainstream]
+        
+        for (let i = 0; i < tracksNeeded && (undergroundCopy.length > 0 || mainstreamCopy.length > 0); i++) {
+          if (i % 3 === 0 && undergroundCopy.length > 0) {
+            playlist.push({ ...undergroundCopy.shift(), position: i + 1 })
+          } else if (mainstreamCopy.length > 0) {
+            playlist.push({ ...mainstreamCopy.shift(), position: i + 1 })
+          } else if (undergroundCopy.length > 0) {
+            playlist.push({ ...undergroundCopy.shift(), position: i + 1 })
+          }
+        }
+
+        result = { data: playlist.slice(0, tracksNeeded) }
+        break
+      }
+
+      case 'get_suggestions': {
+        // Get track suggestions for a playlist
+        const { playlistTrackIds, playlistAverages } = data
+        console.log(`[music-intelligence] Getting suggestions for user ${userId}`)
+
+        const { data: tracks, error: fetchError } = await supabaseAdmin
+          .from('music_library')
+          .select('track_id, name, artist, tempo, energy, danceability, popularity')
+          .eq('user_id', userId)
+          .gte('tempo', playlistAverages.avgBpm - 15)
+          .lte('tempo', playlistAverages.avgBpm + 15)
+          .gte('energy', (playlistAverages.avgEnergy - 15) / 100)
+          .lte('energy', (playlistAverages.avgEnergy + 15) / 100)
+          .limit(50)
+
+        if (fetchError) throw fetchError
+
+        // Filter out tracks already in playlist and calculate fit scores
+        const suggestions = (tracks || [])
+          .filter((track: any) => !playlistTrackIds.includes(track.track_id))
+          .map((track: any) => {
+            const bpmDiff = Math.abs((track.tempo || playlistAverages.avgBpm) - playlistAverages.avgBpm)
+            const energyDiff = Math.abs(((track.energy || 0) * 100) - playlistAverages.avgEnergy)
+            const danceDiff = Math.abs(((track.danceability || 0) * 100) - playlistAverages.avgDanceability)
+            const fitScore = Math.max(0, 1 - (bpmDiff / 50 + energyDiff / 100 + danceDiff / 100) / 3)
+
+            let reason = ''
+            if (bpmDiff < 5) {
+              reason = `Matches your ${Math.round(playlistAverages.avgBpm)} BPM zone perfectly`
+            } else if ((track.popularity || 0) < 40) {
+              reason = 'Underground gem that fits your vibe'
+            } else if (Math.abs(((track.energy || 0) * 100) - playlistAverages.avgEnergy) < 10) {
+              reason = 'Energy level aligns with your playlist'
+            } else {
+              reason = 'Similar audio profile to your playlist'
+            }
+
+            return { ...track, fitScore, reason }
+          })
+          .sort((a: any, b: any) => b.fitScore - a.fitScore)
+          .slice(0, 10)
+
+        result = { data: suggestions }
+        break
+      }
+
       default:
         console.error(`[music-intelligence] Invalid action: ${action}`)
         return new Response(
