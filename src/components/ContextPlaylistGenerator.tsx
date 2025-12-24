@@ -169,10 +169,12 @@ const ContextPlaylistGenerator = ({ onGenerate }: ContextPlaylistGeneratorProps)
   };
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-card via-card to-primary/5">
+    <Card className="border-primary/20 bg-gradient-to-br from-card/80 via-card/60 to-chart-purple/5 backdrop-blur-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
-          <Sparkles className="w-5 h-5 text-primary" />
+          <div className="p-2 bg-primary/10 rounded-lg">
+            <Sparkles className="w-5 h-5 text-primary" />
+          </div>
           Context Playlist Generator
         </CardTitle>
         <CardDescription>
@@ -182,17 +184,17 @@ const ContextPlaylistGenerator = ({ onGenerate }: ContextPlaylistGeneratorProps)
       <CardContent className="space-y-6">
         {/* Context Selection */}
         <div className="space-y-3">
-          <Label className="text-sm font-medium">Select Context</Label>
+          <Label className="text-sm font-medium text-foreground">Select Context</Label>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
             {CONTEXTS.map((ctx) => (
               <button
                 key={ctx.key}
                 onClick={() => setSelectedContext(ctx)}
                 className={cn(
-                  "flex flex-col items-center gap-2 p-3 rounded-lg border transition-all",
+                  "flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-300",
                   selectedContext?.key === ctx.key
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-border hover:border-primary/50 hover:bg-muted/50"
+                    ? "border-primary bg-primary/10 text-primary shadow-glow"
+                    : "border-border/50 hover:border-primary/50 hover:bg-secondary/50 text-muted-foreground hover:text-foreground"
                 )}
               >
                 {ctx.icon}
@@ -204,23 +206,25 @@ const ContextPlaylistGenerator = ({ onGenerate }: ContextPlaylistGeneratorProps)
 
         {/* Context Details */}
         {selectedContext && (
-          <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-            <div className="flex items-center gap-2 mb-2">
-              {selectedContext.icon}
-              <span className="font-medium">{selectedContext.name}</span>
+          <div className="p-4 rounded-xl bg-secondary/30 border border-border/30 space-y-3">
+            <div className="flex items-center gap-2">
+              <div className="p-2 bg-primary/10 rounded-lg text-primary">
+                {selectedContext.icon}
+              </div>
+              <span className="font-display font-semibold text-foreground">{selectedContext.name}</span>
             </div>
             <p className="text-sm text-muted-foreground">{selectedContext.description}</p>
-            <div className="flex flex-wrap gap-2 mt-3">
-              <Badge variant="secondary">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary" className="bg-secondary/80 border-0">
                 BPM: {selectedContext.bpmStart}-{selectedContext.bpmEnd}
               </Badge>
-              <Badge variant="outline">
+              <Badge variant="outline" className="border-border/50">
                 Energy: {selectedContext.energyStart}-{selectedContext.energyEnd}%
               </Badge>
-              <Badge variant="outline">
+              <Badge variant="outline" className="border-border/50">
                 {getProgressionLabel(selectedContext.progression)}
               </Badge>
-              <Badge variant="outline">
+              <Badge variant="outline" className="border-border/50">
                 {Math.round(selectedContext.undergroundRatio * 100)}% Underground
               </Badge>
             </div>
@@ -228,21 +232,21 @@ const ContextPlaylistGenerator = ({ onGenerate }: ContextPlaylistGeneratorProps)
         )}
 
         {/* Duration Input */}
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Label className="text-sm">Duration:</Label>
+        <div className="flex items-center gap-4 p-3 rounded-lg bg-secondary/20 border border-border/30">
+          <div className="flex items-center gap-3">
+            <Label className="text-sm text-muted-foreground">Duration:</Label>
             <Input
               type="number"
               value={duration}
               onChange={(e) => setDuration(Math.min(180, Math.max(15, Number(e.target.value))))}
-              className="w-20 h-8 text-sm"
+              className="w-20 h-9 text-sm bg-secondary/50 border-border/50"
               min={15}
               max={180}
             />
             <span className="text-sm text-muted-foreground">minutes</span>
           </div>
           <span className="text-sm text-muted-foreground">
-            ≈ {estimatedTracks} tracks
+            ≈ <span className="text-foreground font-medium">{estimatedTracks}</span> tracks
           </span>
         </div>
 
@@ -251,6 +255,7 @@ const ContextPlaylistGenerator = ({ onGenerate }: ContextPlaylistGeneratorProps)
           onClick={handleGenerate} 
           disabled={!selectedContext || isGenerating}
           className="w-full"
+          variant="sonic"
         >
           {isGenerating ? (
             <>
@@ -296,27 +301,27 @@ const ContextPlaylistGenerator = ({ onGenerate }: ContextPlaylistGeneratorProps)
               </Button>
             </div>
 
-            <ScrollArea className="h-[280px] rounded-md border">
+            <ScrollArea className="h-[280px] rounded-xl border border-border/50 bg-secondary/20">
               <div className="p-4 space-y-2">
                 {generatedTracks.map((track, i) => (
                   <div
                     key={track.track_id}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
+                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/50 transition-colors"
                   >
-                    <span className="text-xs text-muted-foreground w-6">{i + 1}</span>
+                    <span className="text-xs text-muted-foreground w-6 font-mono">{i + 1}</span>
                     <Music className="w-4 h-4 text-muted-foreground flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{track.name}</p>
+                      <p className="text-sm font-medium truncate text-foreground">{track.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       {track.tempo && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs bg-secondary/80 border-0">
                           {Math.round(track.tempo)} BPM
                         </Badge>
                       )}
                       {track.energy && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs border-border/50">
                           {Math.round(track.energy * 100)}%
                         </Badge>
                       )}
