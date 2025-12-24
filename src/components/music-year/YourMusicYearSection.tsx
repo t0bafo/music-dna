@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getTopTracks, getTopArtists, getAudioFeaturesFromReccoBeats, SpotifyTrack, SpotifyArtist, AudioFeatures, TimeRange } from '@/lib/spotify-api';
+import { getTopTracks, getTopArtists, getSavedTracks, getAudioFeaturesFromReccoBeats, SpotifyTrack, SpotifyArtist, AudioFeatures, TimeRange } from '@/lib/spotify-api';
 import TopSongsCard from './TopSongsCard';
 import TopAlbumsCard from './TopAlbumsCard';
 import TopGenresCard from './TopGenresCard';
@@ -40,9 +40,44 @@ const YourMusicYearSection = ({ accessToken }: YourMusicYearSectionProps) => {
     long_term: null,
   });
 
+  // Saved tracks for Top Albums (fetched once, not time-period dependent)
+  const [savedTracks, setSavedTracks] = useState<SpotifyTrack[]>([]);
+  const [savedTracksLoading, setSavedTracksLoading] = useState(true);
+
   // Always fetch all-time data for comparison
   const [allTimeArtists, setAllTimeArtists] = useState<SpotifyArtist[]>([]);
   const [baselineFeatures, setBaselineFeatures] = useState<AudioFeatures | null>(null);
+
+  // Fetch saved tracks for Top Albums (one-time fetch)
+  useEffect(() => {
+    const fetchSavedTracks = async () => {
+      setSavedTracksLoading(true);
+      try {
+        // Fetch up to 200 saved tracks for album analysis
+        const allTracks: SpotifyTrack[] = [];
+        let offset = 0;
+        const batchSize = 50;
+        const maxTracks = 200;
+
+        while (offset < maxTracks) {
+          const response = await getSavedTracks(accessToken, batchSize, offset);
+          const tracks = response.items.map(item => item.track).filter(Boolean);
+          allTracks.push(...tracks);
+          
+          if (!response.next || tracks.length < batchSize) break;
+          offset += batchSize;
+        }
+
+        setSavedTracks(allTracks);
+      } catch (error) {
+        console.error('Failed to fetch saved tracks:', error);
+      } finally {
+        setSavedTracksLoading(false);
+      }
+    };
+
+    fetchSavedTracks();
+  }, [accessToken]);
 
   const fetchData = useCallback(async (period: TimePeriod) => {
     const cached = cache[period];
@@ -163,8 +198,8 @@ const YourMusicYearSection = ({ accessToken }: YourMusicYearSectionProps) => {
             isLoading={isLoading} 
           />
           <TopAlbumsCard 
-            tracks={currentData?.tracks || []} 
-            isLoading={isLoading} 
+            savedTracks={savedTracks} 
+            isLoading={savedTracksLoading} 
           />
         </div>
 
