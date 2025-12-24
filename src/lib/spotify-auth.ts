@@ -129,13 +129,17 @@ export const storeTokens = (accessToken: string, refreshToken: string, expiresIn
   localStorage.setItem('spotify_access_token', accessToken);
   localStorage.setItem('spotify_refresh_token', refreshToken);
   localStorage.setItem('spotify_expires_at', expiresAt.toString());
+  // Dispatch custom event so AuthContext can react immediately
+  window.dispatchEvent(new Event('spotify-auth-changed'));
 };
 
 export const clearTokens = (): void => {
   localStorage.removeItem('spotify_access_token');
   localStorage.removeItem('spotify_refresh_token');
   localStorage.removeItem('spotify_expires_at');
-  sessionStorage.removeItem('code_verifier'); // Keep code_verifier in session (only needed during OAuth flow)
+  sessionStorage.removeItem('code_verifier');
+  // Dispatch custom event so AuthContext can react immediately
+  window.dispatchEvent(new Event('spotify-auth-changed'));
 };
 
 export const isTokenExpired = (): boolean => {

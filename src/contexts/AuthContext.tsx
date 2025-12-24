@@ -70,32 +70,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return await fetchUser(tokenData.access_token);
   }, [fetchUser]);
 
-  useEffect(() => {
-    const initAuth = async () => {
-      const { accessToken: storedToken, refreshToken: storedRefresh } = getStoredTokens();
+  const initAuth = useCallback(async () => {
+    setIsLoading(true);
+    const { accessToken: storedToken, refreshToken: storedRefresh } = getStoredTokens();
 
-      if (!storedToken) {
-        setIsLoading(false);
-        return;
-      }
-
-      if (isTokenExpired() && storedRefresh) {
-        const success = await refreshTokenHandler();
-        if (!success) {
-          clearTokens();
-        }
-      } else if (storedToken) {
-        const success = await fetchUser(storedToken);
-        if (!success && storedRefresh) {
-          await refreshTokenHandler();
-        }
-      }
-
+    if (!storedToken) {
       setIsLoading(false);
+      return;
+    }
+
+    if (isTokenExpired() && storedRefresh) {
+      const success = await refreshTokenHandler();
+      if (!success) {
+        clearTokens();
+      }
+    } else if (storedToken) {
+      const success = await fetchUser(storedToken);
+      if (!success && storedRefresh) {
+        await refreshTokenHandler();
+      }
+    }
+
+    setIsLoading(false);
+  }, [fetchUser, refreshTokenHandler]);
+
+  // Initialize auth on mount
+  useEffect(() => {
+    initAuth();
+  }, [initAuth]);
+
+  // Listen for token changes (from Callback page or logout)
+  useEffect(() => {
+    const handleAuthChange = () => {
+      initAuth();
     };
 
-    initAuth();
-  }, [fetchUser, refreshTokenHandler]);
+    window.addEventListener('spotify-auth-changed', handleAuthChange);
+    return () => {
+      window.removeEventListener('spotify-auth-changed', handleAuthChange);
+    };
+  }, [initAuth]);
 
   const login = async () => {
     await initiateLogin();
