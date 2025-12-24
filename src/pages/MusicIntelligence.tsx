@@ -15,7 +15,8 @@ import {
   CheckCircle2,
   AlertCircle,
   Home,
-  ListMusic
+  ListMusic,
+  Wrench
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,6 +28,8 @@ import GenreBreakdownCard from '@/components/charts/GenreBreakdownCard';
 import BpmDistributionCard from '@/components/charts/BpmDistributionCard';
 import EnergyDanceScatterCard from '@/components/charts/EnergyDanceScatterCard';
 import ListeningPatternsCard from '@/components/charts/ListeningPatternsCard';
+import SmartDiscoveryEngine from '@/components/SmartDiscoveryEngine';
+import ContextPlaylistGenerator from '@/components/ContextPlaylistGenerator';
 import {
   extractMusicLibrary,
   getLibraryStats,
@@ -46,6 +49,7 @@ import {
   generateEnhancedInsights,
   TrackData,
 } from '@/lib/music-analytics';
+import { searchLibraryTracks, generateContextPlaylist } from '@/lib/curation-tools';
 import {
   RadarChart,
   PolarGrid,
@@ -321,6 +325,22 @@ const MusicIntelligence = () => {
         {/* Main Content */}
         {hasData && (
           <div className="space-y-8">
+            {/* Section 0: Curation Tools */}
+            <section>
+              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                <Wrench className="w-5 h-5 text-primary" />
+                Curation Tools
+              </h2>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <SmartDiscoveryEngine 
+                  onSearch={(filters) => searchLibraryTracks(accessToken!, filters)}
+                />
+                <ContextPlaylistGenerator 
+                  onGenerate={(context, duration) => generateContextPlaylist(accessToken!, context, duration)}
+                />
+              </div>
+            </section>
+
             {/* Section 1: Your Signature Sound */}
             <section>
               <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
