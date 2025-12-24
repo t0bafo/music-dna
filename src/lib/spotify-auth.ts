@@ -124,22 +124,32 @@ export const getStoredTokens = (): { accessToken: string | null; refreshToken: s
   };
 };
 
-export const storeTokens = (accessToken: string, refreshToken: string, expiresIn: number): void => {
-  const expiresAt = Date.now() + (expiresIn * 1000);
+export const storeTokens = (
+  accessToken: string,
+  refreshToken: string,
+  expiresIn: number,
+  options?: { notify?: boolean }
+): void => {
+  const expiresAt = Date.now() + expiresIn * 1000;
   localStorage.setItem('spotify_access_token', accessToken);
   localStorage.setItem('spotify_refresh_token', refreshToken);
   localStorage.setItem('spotify_expires_at', expiresAt.toString());
-  // Dispatch custom event so AuthContext can react immediately
-  window.dispatchEvent(new Event('spotify-auth-changed'));
+
+  // Notify the app that auth tokens changed (Callback/login, logout, etc.)
+  if (options?.notify !== false) {
+    window.dispatchEvent(new Event('spotify-auth-changed'));
+  }
 };
 
-export const clearTokens = (): void => {
+export const clearTokens = (options?: { notify?: boolean }): void => {
   localStorage.removeItem('spotify_access_token');
   localStorage.removeItem('spotify_refresh_token');
   localStorage.removeItem('spotify_expires_at');
   sessionStorage.removeItem('code_verifier');
-  // Dispatch custom event so AuthContext can react immediately
-  window.dispatchEvent(new Event('spotify-auth-changed'));
+
+  if (options?.notify !== false) {
+    window.dispatchEvent(new Event('spotify-auth-changed'));
+  }
 };
 
 export const isTokenExpired = (): boolean => {
