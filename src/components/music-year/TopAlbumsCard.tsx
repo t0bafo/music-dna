@@ -1,6 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Disc3, ExternalLink } from 'lucide-react';
+import { Disc3, ExternalLink, Heart } from 'lucide-react';
 import { SpotifyTrack } from '@/lib/spotify-api';
 
 interface AlbumData {
@@ -12,13 +12,13 @@ interface AlbumData {
 }
 
 interface TopAlbumsCardProps {
-  tracks: SpotifyTrack[];
+  savedTracks: SpotifyTrack[];
   isLoading: boolean;
 }
 
-const TopAlbumsCard = ({ tracks, isLoading }: TopAlbumsCardProps) => {
-  // Derive top albums from tracks
-  const albums = tracks.reduce<Record<string, AlbumData>>((acc, track) => {
+const TopAlbumsCard = ({ savedTracks, isLoading }: TopAlbumsCardProps) => {
+  // Derive top albums from saved tracks - count tracks per album
+  const albums = savedTracks.reduce<Record<string, AlbumData>>((acc, track) => {
     const albumId = track.album.id;
     if (!acc[albumId]) {
       acc[albumId] = {
@@ -45,7 +45,9 @@ const TopAlbumsCard = ({ tracks, isLoading }: TopAlbumsCardProps) => {
             <Disc3 className="w-4 h-4 text-primary" />
             Top Albums
           </CardTitle>
-          <CardDescription className="text-xs">Albums you loved most</CardDescription>
+          <CardDescription className="text-xs flex items-center gap-1">
+            <Heart className="w-3 h-3" /> Based on your saved library
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-3">
@@ -72,11 +74,13 @@ const TopAlbumsCard = ({ tracks, isLoading }: TopAlbumsCardProps) => {
             <Disc3 className="w-4 h-4 text-primary" />
             Top Albums
           </CardTitle>
-          <CardDescription className="text-xs">Albums you loved most</CardDescription>
+          <CardDescription className="text-xs flex items-center gap-1">
+            <Heart className="w-3 h-3" /> Based on your saved library
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground text-center py-8">
-            Not enough listening data for this period.
+            No saved tracks found in your library.
           </p>
         </CardContent>
       </Card>
@@ -90,7 +94,9 @@ const TopAlbumsCard = ({ tracks, isLoading }: TopAlbumsCardProps) => {
           <Disc3 className="w-4 h-4 text-primary" />
           Top Albums
         </CardTitle>
-        <CardDescription className="text-xs">Albums you loved most</CardDescription>
+        <CardDescription className="text-xs flex items-center gap-1">
+          <Heart className="w-3 h-3" /> Albums with most saved tracks
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -115,7 +121,7 @@ const TopAlbumsCard = ({ tracks, isLoading }: TopAlbumsCardProps) => {
                   {album.artist}
                 </p>
                 <p className="text-xs text-primary mt-1">
-                  {album.trackCount} track{album.trackCount > 1 ? 's' : ''} in top 50
+                  {album.trackCount} saved track{album.trackCount > 1 ? 's' : ''}
                 </p>
               </div>
               <ExternalLink className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />

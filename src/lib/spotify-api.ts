@@ -87,6 +87,15 @@ export const getTopArtists = async (
   return spotifyFetch(`/me/top/artists?limit=${limit}&time_range=${timeRange}`, accessToken);
 };
 
+// Get user's saved/liked tracks
+export const getSavedTracks = async (
+  accessToken: string,
+  limit: number = 50,
+  offset: number = 0
+): Promise<{ items: { added_at: string; track: SpotifyTrack }[]; total: number; next: string | null }> => {
+  return spotifyFetch(`/me/tracks?limit=${limit}&offset=${offset}`, accessToken);
+};
+
 export const getUserPlaylists = async (
   accessToken: string,
   limit: number = 50
