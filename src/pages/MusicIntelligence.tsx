@@ -24,6 +24,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import UserProfile from '@/components/UserProfile';
+import BottomNav from '@/components/BottomNav';
 import TopListenedArtistsCard from '@/components/charts/TopListenedArtistsCard';
 import BpmDistributionCard from '@/components/charts/BpmDistributionCard';
 import EnergyDanceScatterCard from '@/components/charts/EnergyDanceScatterCard';
@@ -198,40 +199,39 @@ const MusicIntelligence = () => {
   const hasData = libraryStats && tasteProfile;
 
   return (
-    <div className="min-h-screen gradient-bg">
+    <div className="min-h-screen gradient-bg pb-24 lg:pb-0">
       {/* Header with Navigation */}
-      <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-6">
+      <header className="bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50">
+        <div className="container mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4 lg:gap-6">
             <div 
-              className="w-10 h-10 bg-primary rounded-full flex items-center justify-center cursor-pointer"
+              className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-primary to-sonic-dark rounded-xl flex items-center justify-center cursor-pointer shadow-glow"
               onClick={() => navigate('/dashboard')}
             >
-              <Music className="w-5 h-5 text-primary-foreground" />
+              <Music className="w-4 h-4 lg:w-5 lg:h-5 text-primary-foreground" />
             </div>
             
-            {/* Simplified Navigation */}
-            <nav className="hidden sm:flex items-center gap-1">
+            {/* Desktop Navigation - Hidden on mobile */}
+            <nav className="hidden lg:flex items-center gap-1">
               <Link 
                 to="/dashboard" 
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
               >
                 <Home className="w-4 h-4" />
                 <span>Dashboard</span>
               </Link>
               <Link 
                 to="/dashboard" 
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
                 onClick={(e) => {
                   e.preventDefault();
                   navigate('/dashboard');
-                  // Will scroll to playlists tab
                 }}
               >
                 <ListMusic className="w-4 h-4" />
                 <span>Playlists</span>
               </Link>
-              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium">
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 text-primary font-medium">
                 <Brain className="w-4 h-4" />
                 <span>Intelligence</span>
               </div>
@@ -241,28 +241,28 @@ const MusicIntelligence = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
+      <main className="container mx-auto px-4 lg:px-8 py-6 lg:py-8 max-w-7xl">
         {/* Hero Section */}
-        <div className="mb-8 animate-fade-in">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="mb-6 lg:mb-8 animate-fade-in">
+          <div className="flex flex-col gap-4">
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Brain className="w-8 h-8 text-primary" />
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+              <div className="flex items-center gap-2 lg:gap-3 mb-2">
+                <Brain className="w-6 h-6 lg:w-8 lg:h-8 text-primary" />
+                <h1 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
                   Music Intelligence
                 </h1>
               </div>
               {hasData && (
-                <p className="text-muted-foreground">
+                <p className="text-sm lg:text-base text-muted-foreground">
                   {libraryStats.totalTracks.toLocaleString()} tracks analyzed • {libraryStats.tracksWithFeatures.toLocaleString()} with audio features
                   {daysSinceUpdate !== null && ` • Updated ${daysSinceUpdate === 0 ? 'today' : `${daysSinceUpdate}d ago`}`}
                 </p>
               )}
             </div>
             {hasData && (
-              <Button onClick={handleExtract} variant="outline" size="sm" disabled={isExtracting}>
+              <Button onClick={handleExtract} variant="outline" size="sm" disabled={isExtracting} className="self-start lg:absolute lg:right-8 lg:top-24">
                 <RefreshCw className={`w-4 h-4 mr-2 ${isExtracting ? 'animate-spin' : ''}`} />
-                Refresh Data
+                Refresh
               </Button>
             )}
           </div>
@@ -323,14 +323,14 @@ const MusicIntelligence = () => {
 
         {/* Main Content */}
         {hasData && (
-          <div className="space-y-8">
+          <div className="space-y-6 lg:space-y-8">
             {/* Section 0: Curation Tools */}
             <section>
-              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Wrench className="w-5 h-5 text-primary" />
+              <h2 className="font-display text-base lg:text-lg font-semibold text-foreground mb-3 lg:mb-4 flex items-center gap-2">
+                <Wrench className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
                 Curation Tools
               </h2>
-              <div className="grid gap-6 lg:grid-cols-2">
+              <div className="grid gap-4 lg:gap-6 lg:grid-cols-2">
                 <SmartDiscoveryEngine 
                   onSearch={(filters) => searchLibraryTracks(accessToken!, filters)}
                 />
@@ -342,54 +342,60 @@ const MusicIntelligence = () => {
 
             {/* Section 1: Your Signature Sound */}
             <section>
-              <h2 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                <Target className="w-5 h-5 text-primary" />
+              <h2 className="font-display text-base lg:text-lg font-semibold text-foreground mb-3 lg:mb-4 flex items-center gap-2">
+                <Target className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
                 Your Signature Sound
               </h2>
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-4 lg:gap-6 lg:grid-cols-2">
                 {/* Audio DNA Radar */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
+                  <CardHeader className="p-4 lg:p-6">
+                    <CardTitle className="flex items-center gap-2 text-sm lg:text-base">
                       Your Audio DNA
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-xs lg:text-sm">
                       Signature profile based on {tasteProfile.totalTracks.toLocaleString()} tracks
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="h-[280px]">
+                  <CardContent className="p-4 lg:p-6 pt-0 lg:pt-0">
+                    <div className="h-[220px] lg:h-[280px]">
                       <ResponsiveContainer width="100%" height="100%">
                         <RadarChart data={radarData}>
                           <PolarGrid stroke="hsl(var(--border))" />
                           <PolarAngleAxis 
                             dataKey="feature" 
-                            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} 
+                            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} 
                           />
                           <PolarRadiusAxis 
                             angle={30} 
                             domain={[0, 100]} 
-                            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9 }}
+                            tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 8 }}
                           />
                           <Radar
                             name="Your Profile"
                             dataKey="value"
-                            stroke="hsl(var(--primary))"
-                            fill="hsl(var(--primary))"
-                            fillOpacity={0.4}
+                            stroke="hsl(262, 83%, 58%)"
+                            fill="url(#radarGradient)"
+                            fillOpacity={0.5}
                             strokeWidth={2}
                           />
+                          <defs>
+                            <linearGradient id="radarGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                              <stop offset="0%" stopColor="hsl(262, 83%, 58%)" />
+                              <stop offset="100%" stopColor="hsl(192, 91%, 43%)" />
+                            </linearGradient>
+                          </defs>
                         </RadarChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="mt-4 grid grid-cols-2 gap-4 text-sm">
+                    <div className="mt-3 lg:mt-4 grid grid-cols-2 gap-3 lg:gap-4 text-xs lg:text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Avg BPM</span>
-                        <span className="font-semibold">{Math.round(tasteProfile.avgBpm)}</span>
+                        <span className="font-semibold text-foreground">{Math.round(tasteProfile.avgBpm)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">BPM Range</span>
-                        <span className="font-semibold">
+                        <span className="font-semibold text-foreground">
                           {Math.round(tasteProfile.bpmRange.min)}-{Math.round(tasteProfile.bpmRange.max)}
                         </span>
                       </div>
@@ -600,6 +606,9 @@ const MusicIntelligence = () => {
           </div>
         )}
       </main>
+      
+      {/* Mobile Bottom Navigation */}
+      <BottomNav />
     </div>
   );
 };

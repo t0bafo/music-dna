@@ -59,37 +59,37 @@ const Landing = () => {
     <div className="min-h-screen gradient-bg relative overflow-hidden">
       {/* Background glow effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-chart-purple/5 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 left-1/4 w-64 lg:w-96 h-64 lg:h-96 bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 right-1/4 w-64 lg:w-96 h-64 lg:h-96 bg-chart-purple/5 rounded-full blur-3xl" />
       </div>
 
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-20 max-w-6xl relative z-10">
-        <div className="text-center mb-20 animate-fade-in">
+      <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-20 max-w-6xl relative z-10">
+        <div className="text-center mb-12 lg:mb-20 animate-fade-in">
           {/* Logo */}
-          <div className="inline-flex items-center justify-center gap-3 mb-8">
+          <div className="inline-flex items-center justify-center gap-3 mb-6 lg:mb-8">
             <div className="relative">
-              <div className="w-20 h-20 bg-gradient-to-br from-primary to-sonic-dark rounded-2xl flex items-center justify-center shadow-glow animate-glow-pulse">
-                <Music className="w-10 h-10 text-primary-foreground" />
+              <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-primary to-sonic-dark rounded-2xl flex items-center justify-center shadow-glow animate-glow-pulse">
+                <Music className="w-8 h-8 lg:w-10 lg:h-10 text-primary-foreground" />
               </div>
             </div>
           </div>
           
-          <h1 className="font-display text-5xl md:text-7xl font-bold text-foreground mb-6 tracking-tight">
+          <h1 className="font-display text-3xl sm:text-4xl lg:text-6xl xl:text-7xl font-bold text-foreground mb-4 lg:mb-6 tracking-tight leading-tight">
             Your Personal Music <br className="hidden sm:block" />
             <span className="text-gradient">Intelligence Platform</span>
           </h1>
           
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-12 leading-relaxed">
+          <p className="text-base lg:text-xl text-muted-foreground max-w-2xl mx-auto mb-8 lg:mb-12 leading-relaxed px-4">
             Analyze your listening patterns, optimize playlist flow, and discover tracks that match your vibe—all powered by your Spotify data.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 justify-center items-center px-4">
             <Button
               onClick={handleLogin}
               disabled={isLoggingIn}
               size="lg"
-              className="bg-gradient-to-r from-primary to-sonic-dark text-primary-foreground font-bold px-10 py-7 text-lg rounded-2xl shadow-glow hover:shadow-glow-intense animate-glow-pulse"
+              className="w-full sm:w-auto bg-gradient-to-r from-primary to-sonic-dark text-primary-foreground font-bold px-8 lg:px-10 py-6 lg:py-7 text-base lg:text-lg rounded-2xl shadow-glow hover:shadow-glow-intense animate-glow-pulse min-h-[56px]"
             >
               {isLoggingIn ? (
                 <>
@@ -98,7 +98,7 @@ const Landing = () => {
                 </>
               ) : (
                 <>
-                  <svg className="w-6 h-6 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                  <svg className="w-5 h-5 lg:w-6 lg:h-6 mr-2" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
                   </svg>
                   Login with Spotify
@@ -110,7 +110,7 @@ const Landing = () => {
               variant="glass"
               size="lg"
               onClick={() => setShowSetupDialog(true)}
-              className="px-8 py-7 text-lg rounded-2xl"
+              className="w-full sm:w-auto px-6 lg:px-8 py-6 lg:py-7 text-base lg:text-lg rounded-2xl min-h-[56px]"
             >
               Setup Instructions
             </Button>
@@ -118,22 +118,22 @@ const Landing = () => {
         </div>
 
         {/* Features Grid */}
-        <div className="grid md:grid-cols-2 gap-6 mb-20">
+        <div className="grid sm:grid-cols-2 gap-4 lg:gap-6 mb-12 lg:mb-20 px-0">
           {features.map((feature, index) => (
             <div
               key={index}
-              className="group rounded-2xl border border-border/50 bg-card/60 backdrop-blur-xl p-8 transition-all duration-300 hover:border-primary/30 hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/5 animate-scale-in"
+              className="group rounded-2xl border border-border/50 bg-card/60 backdrop-blur-xl p-5 lg:p-8 transition-all duration-300 hover:border-primary/30 hover:-translate-y-2 hover:shadow-xl hover:shadow-primary/5 animate-scale-in"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="flex items-start gap-5">
-                <div className="p-4 bg-primary/10 rounded-xl text-primary group-hover:bg-primary/20 transition-colors">
+              <div className="flex items-start gap-4 lg:gap-5">
+                <div className="p-3 lg:p-4 bg-primary/10 rounded-xl text-primary group-hover:bg-primary/20 transition-colors flex-shrink-0">
                   {feature.icon}
                 </div>
-                <div>
-                  <h3 className="font-display text-xl font-semibold text-foreground mb-3">
+                <div className="min-w-0">
+                  <h3 className="font-display text-base lg:text-xl font-semibold text-foreground mb-2 lg:mb-3">
                     {feature.title}
                   </h3>
-                  <p className="text-muted-foreground leading-relaxed">
+                  <p className="text-sm lg:text-base text-muted-foreground leading-relaxed">
                     {feature.description}
                   </p>
                 </div>
@@ -143,21 +143,21 @@ const Landing = () => {
         </div>
 
         {/* Privacy Notice */}
-        <div className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-xl p-8 max-w-2xl mx-auto text-center animate-fade-in">
-          <div className="flex items-center justify-center gap-3 mb-4">
+        <div className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-xl p-5 lg:p-8 max-w-2xl mx-auto text-center animate-fade-in">
+          <div className="flex items-center justify-center gap-2 lg:gap-3 mb-3 lg:mb-4">
             <div className="p-2 bg-primary/10 rounded-lg">
-              <Shield className="w-5 h-5 text-primary" />
+              <Shield className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
             </div>
-            <h3 className="font-display text-lg font-semibold text-foreground">Your Privacy Matters</h3>
+            <h3 className="font-display text-base lg:text-lg font-semibold text-foreground">Your Privacy Matters</h3>
           </div>
-          <p className="text-muted-foreground">
+          <p className="text-sm lg:text-base text-muted-foreground">
             We only request read access to your Spotify data. All analysis happens in your browser session 
             and is securely stored. Your data stays private—we never share it with third parties.
           </p>
         </div>
 
         {/* Footer */}
-        <footer className="text-center mt-20 text-muted-foreground text-sm">
+        <footer className="text-center mt-12 lg:mt-20 text-muted-foreground text-xs lg:text-sm">
           <p>Powered by Spotify Web API</p>
         </footer>
       </div>
