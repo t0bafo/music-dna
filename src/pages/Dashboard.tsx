@@ -1,18 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   getTopTracks, 
   getUserPlaylists, 
   getPlaylistTracks,
-  getNigeriaTop100,
   getAudioFeaturesFromReccoBeats,
   SpotifyTrack,
   SpotifyPlaylist,
   AudioFeatures,
   TimeRange,
 } from '@/lib/spotify-api';
-import { Music, Loader2, AlertCircle, Disc3, Globe, ListMusic, Sparkles, RefreshCw, Wand2, Brain } from 'lucide-react';
+import { Music, Loader2, AlertCircle, ListMusic, RefreshCw, Brain, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -24,10 +23,8 @@ import {
 } from '@/components/ui/select';
 import UserProfile from '@/components/UserProfile';
 import AudioDNACard from '@/components/AudioDNACard';
-import ComparisonView from '@/components/ComparisonView';
 import PlaylistGrid from '@/components/PlaylistGrid';
 import TrackTable from '@/components/TrackTable';
-import SmartPlaylistCreator from '@/components/SmartPlaylistCreator';
 
 interface TrackWithFeatures extends SpotifyTrack, Partial<AudioFeatures> {
   artist: string;
@@ -77,18 +74,10 @@ const Dashboard = () => {
   const [userStats, setUserStats] = useState<Stats | null>(null);
   const [loadingTopTracks, setLoadingTopTracks] = useState(false);
 
-  // Nigeria Top 100 state
-  const [nigeriaStats, setNigeriaStats] = useState<Stats | null>(null);
-  const [nigeriaTrackCount, setNigeriaTrackCount] = useState(0);
-  const [loadingNigeria, setLoadingNigeria] = useState(false);
-
   // My Playlists state
   const [playlists, setPlaylists] = useState<SpotifyPlaylist[]>([]);
   const [selectedPlaylist, setSelectedPlaylist] = useState<SpotifyPlaylist | null>(null);
-  const [playlistTracks, setPlaylistTracks] = useState<TrackWithFeatures[]>([]);
-  const [playlistStats, setPlaylistStats] = useState<Stats | null>(null);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
-  const [loadingPlaylistTracks, setLoadingPlaylistTracks] = useState(false);
 
   // Errors
   const [error, setError] = useState<string | null>(null);
@@ -134,27 +123,6 @@ const Dashboard = () => {
     }
   }, [accessToken, timeRange]);
 
-  // Fetch Nigeria Top 100
-  const fetchNigeriaTop100 = useCallback(async () => {
-    setLoadingNigeria(true);
-
-    try {
-      const { tracks } = await getNigeriaTop100();
-      const enrichedTracks: TrackWithFeatures[] = tracks.map(track => ({
-        ...track,
-        artist: track.artists[0]?.name || 'Unknown',
-        albumImage: track.album.images?.[2]?.url || track.album.images?.[0]?.url,
-      }));
-
-      setNigeriaStats(calculateStats(enrichedTracks));
-      setNigeriaTrackCount(enrichedTracks.length);
-    } catch (err) {
-      console.error('Failed to fetch Nigeria Top 100:', err);
-    } finally {
-      setLoadingNigeria(false);
-    }
-  }, []);
-
   // Fetch user's playlists
   const fetchPlaylists = useCallback(async () => {
     if (!accessToken) return;
@@ -168,44 +136,6 @@ const Dashboard = () => {
       console.error('Failed to fetch playlists:', err);
     } finally {
       setLoadingPlaylists(false);
-    }
-  }, [accessToken]);
-
-  // Fetch playlist tracks
-  const fetchPlaylistTracks = useCallback(async (playlist: SpotifyPlaylist) => {
-    if (!accessToken) return;
-
-    setSelectedPlaylist(playlist);
-    setLoadingPlaylistTracks(true);
-    setPlaylistTracks([]);
-    setPlaylistStats(null);
-
-    try {
-      const data = await getPlaylistTracks(accessToken, playlist.id, 100);
-      const tracks: TrackWithFeatures[] = data.items
-        .filter(item => item.track)
-        .map(item => ({
-          ...item.track,
-          artist: item.track.artists[0]?.name || 'Unknown',
-          albumImage: item.track.album.images?.[2]?.url || item.track.album.images?.[0]?.url,
-        }));
-
-      // Fetch audio features
-      const trackIds = tracks.map(t => t.id);
-      const features = await getAudioFeaturesFromReccoBeats(trackIds);
-
-      // Merge features
-      tracks.forEach(track => {
-        const f = features.get(track.id);
-        if (f) Object.assign(track, f);
-      });
-
-      setPlaylistTracks(tracks);
-      setPlaylistStats(calculateStats(tracks));
-    } catch (err) {
-      console.error('Failed to fetch playlist tracks:', err);
-    } finally {
-      setLoadingPlaylistTracks(false);
     }
   }, [accessToken]);
 
@@ -243,16 +173,28 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen gradient-bg">
-      {/* Header */}
+      {/* Header with Navigation */}
       <header className="bg-card/80 backdrop-blur-sm border-b border-border sticky top-0 z-50">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-6">
             <div className="w-10 h-10 bg-spotify rounded-full flex items-center justify-center">
               <Music className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="font-bold text-lg text-foreground hidden sm:inline">
-              Music DNA
-            </span>
+            
+            {/* Simplified Navigation */}
+            <nav className="hidden sm:flex items-center gap-1">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-primary/10 text-primary font-medium">
+                <Home className="w-4 h-4" />
+                <span>Dashboard</span>
+              </div>
+              <Link 
+                to="/intelligence" 
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+              >
+                <Brain className="w-4 h-4" />
+                <span>Intelligence</span>
+              </Link>
+            </nav>
           </div>
           <UserProfile />
         </div>
@@ -266,7 +208,7 @@ const Dashboard = () => {
             Welcome back, {user?.display_name?.split(' ')[0] || 'there'}! 👋
           </h1>
           <p className="text-muted-foreground">
-            Explore your music DNA and see how your taste compares to Nigeria's charts.
+            Explore your music DNA and analyze your playlists.
           </p>
         </div>
 
@@ -282,50 +224,21 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Tabs */}
-        <Tabs defaultValue="my-dna" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 gap-2 h-auto p-1">
-            <TabsTrigger value="my-dna" className="flex items-center gap-2 py-3">
-              <Disc3 className="w-4 h-4" />
-              <span className="hidden sm:inline">My Music DNA</span>
-              <span className="sm:hidden">My DNA</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="compare" 
-              className="flex items-center gap-2 py-3"
-              onClick={() => !nigeriaStats && fetchNigeriaTop100()}
-            >
-              <Globe className="w-4 h-4" />
-              <span className="hidden sm:inline">Compare to Nigeria</span>
-              <span className="sm:hidden">Compare</span>
+        {/* Tabs - Simplified to 2 tabs */}
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2 gap-2 h-auto p-1">
+            <TabsTrigger value="overview" className="flex items-center gap-2 py-3">
+              <Home className="w-4 h-4" />
+              <span>Overview</span>
             </TabsTrigger>
             <TabsTrigger value="playlists" className="flex items-center gap-2 py-3">
               <ListMusic className="w-4 h-4" />
-              <span className="hidden sm:inline">My Playlists</span>
-              <span className="sm:hidden">Playlists</span>
-            </TabsTrigger>
-            <TabsTrigger value="create" className="flex items-center gap-2 py-3">
-              <Wand2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Create Playlist</span>
-              <span className="sm:hidden">Create</span>
-            </TabsTrigger>
-            <TabsTrigger 
-              value="intelligence" 
-              className="flex items-center gap-2 py-3"
-              onClick={() => navigate('/intelligence')}
-            >
-              <Brain className="w-4 h-4" />
-              <span className="hidden sm:inline">Intelligence</span>
-              <span className="sm:hidden">🧠</span>
-            </TabsTrigger>
-            <TabsTrigger value="discover" className="flex items-center gap-2 py-3">
-              <Sparkles className="w-4 h-4" />
-              <span>Discover</span>
+              <span>My Playlists</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab 1: My Audio DNA */}
-          <TabsContent value="my-dna" className="space-y-6">
+          {/* Tab 1: Overview (Your Audio DNA) */}
+          <TabsContent value="overview" className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <h2 className="text-xl font-bold text-foreground">Your Audio DNA Profile</h2>
               <Select value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
@@ -366,51 +279,28 @@ const Dashboard = () => {
                 <p className="text-muted-foreground">Start listening to music on Spotify and come back!</p>
               </div>
             )}
-          </TabsContent>
 
-          {/* Tab 2: Compare to Nigeria */}
-          <TabsContent value="compare" className="space-y-6">
-            <h2 className="text-xl font-bold text-foreground">Compare to Nigeria Top 100</h2>
-
-            {loadingNigeria || loadingTopTracks ? (
-              <div className="bg-card rounded-xl p-12 card-shadow text-center">
-                <Loader2 className="w-10 h-10 animate-spin text-spotify mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  {loadingNigeria ? 'Loading Nigeria Top 100...' : 'Loading your data...'}
-                </p>
-              </div>
-            ) : userStats && nigeriaStats ? (
-              <div className="grid lg:grid-cols-2 gap-6">
-                <AudioDNACard
-                  title="Your DNA"
-                  subtitle={timeRangeLabels[timeRange]}
-                  stats={userStats}
-                  trackCount={topTracks.length}
-                  variant="compact"
-                />
-                <AudioDNACard
-                  title="🇳🇬 Nigeria Top 100"
-                  subtitle="Current chart DNA"
-                  stats={nigeriaStats}
-                  trackCount={nigeriaTrackCount}
-                  variant="compact"
-                />
-                <div className="lg:col-span-2">
-                  <ComparisonView userStats={userStats} chartStats={nigeriaStats} />
+            {/* CTA to Intelligence */}
+            <div className="mt-8 p-6 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-xl border border-primary/20">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <Brain className="w-8 h-8 text-primary" />
+                  <div>
+                    <h3 className="font-semibold text-foreground">Want deeper insights?</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Analyze your entire library with Music Intelligence
+                    </p>
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="bg-card rounded-xl p-12 card-shadow text-center">
-                <Globe className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Loading comparison data...</p>
-                <Button onClick={fetchNigeriaTop100} className="mt-4">
-                  Load Nigeria Top 100
+                <Button onClick={() => navigate('/intelligence')} className="gap-2">
+                  <Brain className="w-4 h-4" />
+                  Go to Intelligence
                 </Button>
               </div>
-            )}
+            </div>
           </TabsContent>
 
-          {/* Tab 3: My Playlists */}
+          {/* Tab 2: My Playlists */}
           <TabsContent value="playlists" className="space-y-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-foreground">Your Playlists</h2>
@@ -434,26 +324,6 @@ const Dashboard = () => {
                 <p className="text-muted-foreground">Create some playlists on Spotify to see them here.</p>
               </div>
             )}
-          </TabsContent>
-
-          {/* Tab 4: Create Playlist */}
-          <TabsContent value="create" className="space-y-6">
-            <h2 className="text-xl font-bold text-foreground">Smart Playlist Creator</h2>
-            <SmartPlaylistCreator />
-          </TabsContent>
-
-          {/* Tab 5: Discover */}
-          <TabsContent value="discover" className="space-y-6">
-            <h2 className="text-xl font-bold text-foreground">Discover New Music</h2>
-            
-            <div className="bg-card rounded-xl p-12 card-shadow text-center">
-              <Sparkles className="w-12 h-12 text-spotify mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-card-foreground mb-2">Coming Soon!</h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                Get personalized music recommendations based on your audio DNA. 
-                We're working on this feature — check back soon!
-              </p>
-            </div>
           </TabsContent>
         </Tabs>
       </main>
