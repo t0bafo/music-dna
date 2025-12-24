@@ -83,37 +83,73 @@ serve(async (req) => {
       }
 
       case 'get_library': {
-        // Get only this user's tracks
+        // Get ALL user's tracks using pagination (bypass 1000 row limit)
         console.log(`[music-intelligence] Fetching library for user ${userId}`)
-        result = await supabaseAdmin
-          .from('music_library')
-          .select('*')
-          .eq('user_id', userId)
+        
+        let allTracks: any[] = []
+        let offset = 0
+        const pageSize = 1000
+        
+        while (true) {
+          const { data: batch, error } = await supabaseAdmin
+            .from('music_library')
+            .select('*')
+            .eq('user_id', userId)
+            .range(offset, offset + pageSize - 1)
+            .order('added_at', { ascending: false })
+          
+          if (error) throw error
+          if (!batch || batch.length === 0) break
+          
+          allTracks = allTracks.concat(batch)
+          console.log(`[music-intelligence] Fetched batch: ${batch.length} tracks (total: ${allTracks.length})`)
+          
+          if (batch.length < pageSize) break
+          offset += pageSize
+        }
+        
+        console.log(`[music-intelligence] Total tracks fetched: ${allTracks.length}`)
+        result = { data: allTracks }
         break
       }
 
       case 'get_library_stats': {
-        // Get library statistics
+        // Get library statistics using pagination (bypass 1000 row limit)
         console.log(`[music-intelligence] Fetching library stats for user ${userId}`)
-        const { data: tracks, error } = await supabaseAdmin
-          .from('music_library')
-          .select('id, tempo, added_at')
-          .eq('user_id', userId)
         
-        if (error) throw error
+        let allTracks: any[] = []
+        let offset = 0
+        const pageSize = 1000
         
-        if (!tracks || tracks.length === 0) {
+        while (true) {
+          const { data: batch, error } = await supabaseAdmin
+            .from('music_library')
+            .select('id, tempo, added_at')
+            .eq('user_id', userId)
+            .range(offset, offset + pageSize - 1)
+          
+          if (error) throw error
+          if (!batch || batch.length === 0) break
+          
+          allTracks = allTracks.concat(batch)
+          if (batch.length < pageSize) break
+          offset += pageSize
+        }
+        
+        console.log(`[music-intelligence] Stats: analyzed ${allTracks.length} tracks`)
+        
+        if (allTracks.length === 0) {
           result = { data: null }
         } else {
-          const tracksWithFeatures = tracks.filter((t: any) => t.tempo != null).length
-          const latestDate = tracks.reduce((latest: Date, t: any) => {
+          const tracksWithFeatures = allTracks.filter((t: any) => t.tempo != null).length
+          const latestDate = allTracks.reduce((latest: Date, t: any) => {
             const date = new Date(t.added_at)
             return date > latest ? date : latest
           }, new Date(0))
           
           result = {
             data: {
-              totalTracks: tracks.length,
+              totalTracks: allTracks.length,
               totalPlaylists: 0,
               likedSongs: 0,
               tracksWithFeatures,
@@ -125,19 +161,34 @@ serve(async (req) => {
       }
 
       case 'get_taste_profile': {
-        // Get taste profile from tracks
+        // Get taste profile from ALL tracks using pagination (bypass 1000 row limit)
         console.log(`[music-intelligence] Calculating taste profile for user ${userId}`)
-        const { data: tracks, error } = await supabaseAdmin
-          .from('music_library')
-          .select('*')
-          .eq('user_id', userId)
         
-        if (error) throw error
+        let allTracks: any[] = []
+        let offset = 0
+        const pageSize = 1000
         
-        if (!tracks || tracks.length === 0) {
+        while (true) {
+          const { data: batch, error } = await supabaseAdmin
+            .from('music_library')
+            .select('*')
+            .eq('user_id', userId)
+            .range(offset, offset + pageSize - 1)
+          
+          if (error) throw error
+          if (!batch || batch.length === 0) break
+          
+          allTracks = allTracks.concat(batch)
+          if (batch.length < pageSize) break
+          offset += pageSize
+        }
+        
+        console.log(`[music-intelligence] Taste profile: analyzing ${allTracks.length} tracks`)
+        
+        if (allTracks.length === 0) {
           result = { data: null }
         } else {
-          const validTracks = tracks.filter((t: any) => t.tempo != null && t.energy != null)
+          const validTracks = allTracks.filter((t: any) => t.tempo != null && t.energy != null)
           
           if (validTracks.length === 0) {
             result = { data: null }
@@ -151,7 +202,7 @@ serve(async (req) => {
             const medEnergy = energies.filter((e: number) => e >= 0.4 && e < 0.7).length
             const highEnergy = energies.filter((e: number) => e >= 0.7).length
             
-            const undergroundTracks = tracks.filter((t: any) => (t.popularity || 100) < 40).length
+            const undergroundTracks = allTracks.filter((t: any) => (t.popularity || 100) < 40).length
             
             result = {
               data: {
@@ -163,8 +214,8 @@ serve(async (req) => {
                 avgSpeechiness: avg(validTracks.map((t: any) => t.speechiness).filter(Boolean)),
                 avgInstrumentalness: avg(validTracks.map((t: any) => t.instrumentalness).filter(Boolean)),
                 avgLiveness: avg(validTracks.map((t: any) => t.liveness).filter(Boolean)),
-                undergroundRatio: tracks.length > 0 ? undergroundTracks / tracks.length : 0,
-                totalTracks: tracks.length,
+                undergroundRatio: allTracks.length > 0 ? undergroundTracks / allTracks.length : 0,
+                totalTracks: allTracks.length,
                 bpmRange: { min: Math.min(...tempos), max: Math.max(...tempos) },
                 energyDistribution: {
                   low: lowEnergy / energies.length,
@@ -202,28 +253,42 @@ serve(async (req) => {
       }
 
       case 'create_snapshot': {
-        // Create taste snapshot based on current library
+        // Create taste snapshot based on ALL library tracks using pagination
         console.log(`[music-intelligence] Creating snapshot for user ${userId}`)
         
-        const { data: tracks, error: fetchError } = await supabaseAdmin
-          .from('music_library')
-          .select('tempo, energy, danceability, valence, popularity')
-          .eq('user_id', userId)
+        let allTracks: any[] = []
+        let offset = 0
+        const pageSize = 1000
         
-        if (fetchError) throw fetchError
+        while (true) {
+          const { data: batch, error } = await supabaseAdmin
+            .from('music_library')
+            .select('tempo, energy, danceability, valence, popularity')
+            .eq('user_id', userId)
+            .range(offset, offset + pageSize - 1)
+          
+          if (error) throw error
+          if (!batch || batch.length === 0) break
+          
+          allTracks = allTracks.concat(batch)
+          if (batch.length < pageSize) break
+          offset += pageSize
+        }
         
-        if (!tracks || tracks.length === 0) {
+        console.log(`[music-intelligence] Snapshot: analyzing ${allTracks.length} tracks`)
+        
+        if (allTracks.length === 0) {
           result = { data: null }
         } else {
-          const validTracks = tracks.filter((t: any) => t.tempo != null)
+          const validTracks = allTracks.filter((t: any) => t.tempo != null)
           
           const avgBpm = validTracks.reduce((sum: number, t: any) => sum + (t.tempo || 0), 0) / validTracks.length || 0
           const avgEnergy = validTracks.reduce((sum: number, t: any) => sum + (t.energy || 0), 0) / validTracks.length || 0
           const avgDanceability = validTracks.reduce((sum: number, t: any) => sum + (t.danceability || 0), 0) / validTracks.length || 0
           const avgValence = validTracks.reduce((sum: number, t: any) => sum + (t.valence || 0), 0) / validTracks.length || 0
           
-          const undergroundTracks = tracks.filter((t: any) => (t.popularity || 100) < 40).length
-          const undergroundRatio = tracks.length > 0 ? undergroundTracks / tracks.length : 0
+          const undergroundTracks = allTracks.filter((t: any) => (t.popularity || 100) < 40).length
+          const undergroundRatio = allTracks.length > 0 ? undergroundTracks / allTracks.length : 0
           
           const today = new Date().toISOString().split('T')[0]
           
@@ -235,7 +300,7 @@ serve(async (req) => {
             avg_danceability: avgDanceability,
             avg_valence: avgValence,
             underground_ratio: undergroundRatio,
-            total_tracks: tracks.length,
+            total_tracks: allTracks.length,
           }
           
           const { error: snapshotError } = await supabaseAdmin
