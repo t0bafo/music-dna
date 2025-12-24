@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Music, BarChart3, Globe, Target, TrendingUp, Shield, Loader2 } from 'lucide-react';
+import { Music, Brain, BarChart3, Search, Sparkles, Shield, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -23,24 +23,24 @@ const Landing = () => {
 
   const features = [
     {
+      icon: <Brain className="w-8 h-8" />,
+      title: 'Understand Your Taste',
+      description: 'Analyze 5,000+ tracks from your library. See your top artists, BPM preferences, energy patterns, and how your taste evolves—based on real listening data.',
+    },
+    {
       icon: <BarChart3 className="w-8 h-8" />,
-      title: 'Analyze Your Top Tracks',
-      description: 'Deep dive into your most-played songs and discover what makes them tick.',
+      title: 'Perfect Your Playlists',
+      description: 'Get flow scores (0-100) for any playlist. Identify jarring BPM jumps, energy drops, and get AI-powered suggestions to reorder tracks for smooth listening.',
     },
     {
-      icon: <Globe className="w-8 h-8" />,
-      title: "Compare to Nigeria's Top 100",
-      description: 'See how your taste stacks up against the hottest tracks in Nigeria.',
+      icon: <Search className="w-8 h-8" />,
+      title: 'Find Tracks That Fit',
+      description: 'Search your library with precision: filter by BPM range, energy level, danceability, and underground status. Find the perfect tracks for any mood or event.',
     },
     {
-      icon: <Target className="w-8 h-8" />,
-      title: 'Get Personalized Insights',
-      description: 'Understand your unique music DNA with detailed audio analysis.',
-    },
-    {
-      icon: <TrendingUp className="w-8 h-8" />,
-      title: 'Visualize Your Audio DNA',
-      description: 'See your listening patterns through beautiful charts and comparisons.',
+      icon: <Sparkles className="w-8 h-8" />,
+      title: 'Create Event-Ready Playlists',
+      description: 'Generate playlists for specific contexts: Event Openers, Peak Energy, Wind Down, Creative Focus. AI builds the perfect track sequence from your library.',
     },
   ];
 
@@ -69,12 +69,12 @@ const Landing = () => {
           </div>
           
           <h1 className="text-4xl md:text-6xl font-extrabold text-foreground mb-6">
-            🎵 Discover Your Music DNA
+            Your Personal Music <br className="hidden sm:block" />
+            <span className="text-spotify">Intelligence Platform</span>
           </h1>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-            Connect your Spotify account to analyze your listening patterns, compare with global trends, 
-            and explore what makes your music taste unique.
+            Analyze your listening patterns, optimize playlist flow, and discover tracks that match your vibe—all powered by your Spotify data.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -142,8 +142,8 @@ const Landing = () => {
             <h3 className="font-bold text-card-foreground">Your Privacy Matters</h3>
           </div>
           <p className="text-muted-foreground text-sm">
-            We only request read access to your Spotify data. We don't store any information — 
-            your data stays in your browser session and is never sent to our servers.
+            We only request read access to your Spotify data. All analysis happens in your browser session 
+            and is securely stored. Your data stays private—we never share it with third parties.
           </p>
         </div>
 
