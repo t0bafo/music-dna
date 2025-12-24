@@ -1,12 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, type Easing } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { Music, Brain, BarChart3, Search, Sparkles, Shield, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Landing = () => {
-  const { login, isLoading } = useAuth();
+  const { login, isLoading, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [isLoading, isAuthenticated, navigate]);
 
   const handleLogin = async () => {
     setIsLoggingIn(true);
@@ -39,7 +48,8 @@ const Landing = () => {
   // Smooth easing curve
   const smoothEase: Easing = [0.25, 0.46, 0.45, 0.94];
 
-  if (isLoading) {
+  // Show loading while checking auth or redirecting
+  if (isLoading || isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center gradient-bg">
         <div className="text-center">

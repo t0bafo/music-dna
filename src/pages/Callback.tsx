@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { exchangeCodeForTokens, storeTokens, clearTokens } from '@/lib/spotify-auth';
+import { exchangeCodeForTokens, storeTokens, clearTokens, getStoredTokens } from '@/lib/spotify-auth';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -14,6 +14,13 @@ const Callback = () => {
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
       const errorParam = urlParams.get('error');
+
+      // Check if already authenticated (prevents re-processing on remount)
+      const { accessToken: existingToken } = getStoredTokens();
+      if (existingToken && !code) {
+        navigate('/dashboard', { replace: true });
+        return;
+      }
 
       if (errorParam) {
         setError(`Authentication cancelled: ${errorParam}`);
@@ -30,7 +37,7 @@ const Callback = () => {
       const tokenData = await exchangeCodeForTokens(code);
 
       if (!tokenData) {
-        setError('Failed to exchange code for tokens. Please try again.');
+        setError('Failed to exchange code for tokens. This can happen if you refreshed the page. Please try logging in again.');
         clearTokens();
         return;
       }
@@ -43,10 +50,11 @@ const Callback = () => {
         tokenData.expires_in
       );
 
-      // Small delay for UX
-      setTimeout(() => {
-        navigate('/dashboard', { replace: true });
-      }, 500);
+      // Clear the URL params to prevent reprocessing on refresh
+      window.history.replaceState({}, document.title, '/callback');
+
+      // Navigate to dashboard - the AuthContext will pick up the stored tokens
+      navigate('/dashboard', { replace: true });
     };
 
     handleCallback();
