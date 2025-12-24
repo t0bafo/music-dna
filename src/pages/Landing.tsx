@@ -2,18 +2,9 @@ import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Music, Brain, BarChart3, Search, Sparkles, Shield, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { getRedirectUri } from '@/lib/spotify-auth';
 
 const Landing = () => {
   const { login, isLoading } = useAuth();
-  const [showSetupDialog, setShowSetupDialog] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleLogin = async () => {
@@ -84,7 +75,7 @@ const Landing = () => {
             Analyze your listening patterns, optimize playlist flow, and discover tracks that match your vibe—all powered by your Spotify data.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-3 lg:gap-4 justify-center items-center px-4">
+          <div className="flex justify-center px-4">
             <Button
               onClick={handleLogin}
               disabled={isLoggingIn}
@@ -104,15 +95,6 @@ const Landing = () => {
                   Login with Spotify
                 </>
               )}
-            </Button>
-            
-            <Button
-              variant="glass"
-              size="lg"
-              onClick={() => setShowSetupDialog(true)}
-              className="w-full sm:w-auto px-6 lg:px-8 py-6 lg:py-7 text-base lg:text-lg rounded-2xl min-h-[56px]"
-            >
-              Setup Instructions
             </Button>
           </div>
         </div>
@@ -161,48 +143,6 @@ const Landing = () => {
           <p>Powered by Spotify Web API</p>
         </footer>
       </div>
-
-      {/* Setup Instructions Dialog */}
-      <Dialog open={showSetupDialog} onOpenChange={setShowSetupDialog}>
-        <DialogContent className="sm:max-w-lg bg-card/95 backdrop-blur-xl border-border/50">
-          <DialogHeader>
-            <DialogTitle className="font-display">Spotify App Setup Instructions</DialogTitle>
-            <DialogDescription>
-              Before you can login, you need to update your Spotify App settings.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <ol className="list-decimal list-inside space-y-3 text-sm text-foreground">
-              <li>
-                Go to{' '}
-                <a
-                  href="https://developer.spotify.com/dashboard"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  developer.spotify.com/dashboard
-                </a>
-              </li>
-              <li>Click on your app (or create one if needed)</li>
-              <li>Click "Edit Settings"</li>
-              <li>
-                Add this Redirect URI:
-                <code className="block mt-2 p-3 bg-secondary rounded-lg text-xs break-all border border-border/50">
-                  {getRedirectUri()}
-                </code>
-              </li>
-              <li>Save your changes</li>
-              <li>Come back here and click "Login with Spotify"</li>
-            </ol>
-          </div>
-
-          <Button onClick={() => setShowSetupDialog(false)} className="w-full">
-            Got it!
-          </Button>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
