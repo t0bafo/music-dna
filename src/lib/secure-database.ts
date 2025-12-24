@@ -177,3 +177,66 @@ export async function deleteLibrarySecure(spotifyToken: string): Promise<void> {
     spotifyToken
   );
 }
+
+/**
+ * Search tracks with filters (Smart Discovery)
+ */
+export async function searchTracksSecure(
+  filters: {
+    minBpm: number;
+    maxBpm: number;
+    minEnergy: number;
+    maxEnergy: number;
+    minDance: number;
+    maxDance: number;
+    undergroundOnly: boolean;
+    limit: number;
+  },
+  spotifyToken: string
+): Promise<any[]> {
+  return await callSecureEndpoint<any[]>(
+    {
+      action: 'search_tracks',
+      data: { filters },
+    },
+    spotifyToken
+  );
+}
+
+/**
+ * Generate context-based playlist
+ */
+export async function generatePlaylistSecure(
+  context: string,
+  durationMinutes: number,
+  spotifyToken: string
+): Promise<any[]> {
+  return await callSecureEndpoint<any[]>(
+    {
+      action: 'generate_playlist',
+      data: { context, durationMinutes },
+    },
+    spotifyToken
+  );
+}
+
+/**
+ * Get track suggestions for a playlist
+ */
+export async function getSuggestionsSecure(
+  playlistTrackIds: string[],
+  playlistAverages: {
+    avgBpm: number;
+    avgEnergy: number;
+    avgDanceability: number;
+  },
+  spotifyToken: string
+): Promise<any[]> {
+  return await callSecureEndpoint<any[]>(
+    {
+      action: 'get_suggestions',
+      data: { playlistTrackIds, playlistAverages },
+    },
+    spotifyToken
+  );
+}
