@@ -27,6 +27,7 @@ import {
   calculateAppealProfile,
   generateAppealInsights,
 } from '@/lib/appeal-analysis';
+import { getPlaylistSuggestions } from '@/lib/curation-tools';
 import { 
   ArrowLeft, 
   Loader2, 
@@ -46,6 +47,7 @@ import AppealScoreCard from '@/components/AppealScoreCard';
 import { AIPlaylistCoach } from '@/components/AIPlaylistCoach';
 import OptimizePreviewModal from '@/components/OptimizePreviewModal';
 import SaveToSpotifyModal from '@/components/SaveToSpotifyModal';
+import TrackSuggestions from '@/components/TrackSuggestions';
 import { toast } from 'sonner';
 
 // Fetch full track objects to get popularity scores
@@ -493,6 +495,28 @@ const PlaylistDetail = () => {
             <AppealScoreCard
               profile={appealProfile}
               trackCount={currentTracks.length}
+            />
+          </div>
+        )}
+
+        {/* Track Suggestions */}
+        {flowScore && playlist && accessToken && (
+          <div className="mb-8 animate-fade-in">
+            <TrackSuggestions
+              playlistId={playlist.id}
+              playlistName={playlist.name}
+              onGetSuggestions={() => {
+                const avgBpm = currentTracks.filter(t => t.tempo).reduce((sum, t) => sum + (t.tempo || 0), 0) / (currentTracks.filter(t => t.tempo).length || 1);
+                const avgEnergy = currentTracks.filter(t => t.energy).reduce((sum, t) => sum + ((t.energy || 0) * 100), 0) / (currentTracks.filter(t => t.energy).length || 1);
+                const avgDance = currentTracks.filter(t => t.danceability).reduce((sum, t) => sum + ((t.danceability || 0) * 100), 0) / (currentTracks.filter(t => t.danceability).length || 1);
+                
+                return getPlaylistSuggestions(
+                  accessToken,
+                  currentTracks.map(t => t.id),
+                  { avgBpm, avgEnergy, avgDanceability: avgDance }
+                );
+              }}
+              onTrackAdded={() => fetchPlaylistData()}
             />
           </div>
         )}
