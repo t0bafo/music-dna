@@ -24,7 +24,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import UserProfile from '@/components/UserProfile';
-import GenreBreakdownCard from '@/components/charts/GenreBreakdownCard';
+import TopListenedArtistsCard from '@/components/charts/TopListenedArtistsCard';
 import BpmDistributionCard from '@/components/charts/BpmDistributionCard';
 import EnergyDanceScatterCard from '@/components/charts/EnergyDanceScatterCard';
 import ListeningPatternsCard from '@/components/charts/ListeningPatternsCard';
@@ -42,7 +42,6 @@ import {
 } from '@/lib/music-intelligence';
 import { getLibrarySecure } from '@/lib/secure-database';
 import {
-  calculateArtistBreakdown,
   calculateBpmDistribution,
   calculateEnergyDanceScatter,
   calculateListeningPatterns,
@@ -81,7 +80,7 @@ const MusicIntelligence = () => {
 
   // New chart data state
   const [libraryTracks, setLibraryTracks] = useState<TrackData[]>([]);
-  const [artistBreakdown, setArtistBreakdown] = useState<Array<{ genre: string; count: number; percentage: number }>>([]);
+  
   const [bpmData, setBpmData] = useState<{ distribution: Array<{ range: string; count: number; percentage: number }>; sweetSpot: { min: number; max: number } | null }>({ distribution: [], sweetSpot: null });
   const [scatterData, setScatterData] = useState<{ data: Array<{ x: number; y: number; z: number; isMainstream: boolean }>; clusterInfo: { avgDance: number; avgEnergy: number } | null }>({ data: [], clusterInfo: null });
   const [listeningPatterns, setListeningPatterns] = useState<{ data: Array<{ day: string; count: number }>; mostActiveDay: string | null }>({ data: [], mostActiveDay: null });
@@ -123,7 +122,7 @@ const MusicIntelligence = () => {
         }));
 
         // Calculate chart data
-        setArtistBreakdown(calculateArtistBreakdown(tracks));
+        
         setBpmData(calculateBpmDistribution(tracks));
         setScatterData(calculateEnergyDanceScatter(tracks));
         setListeningPatterns(calculateListeningPatterns(tracks));
@@ -398,8 +397,8 @@ const MusicIntelligence = () => {
                   </CardContent>
                 </Card>
 
-                {/* Top Artists Breakdown */}
-                <GenreBreakdownCard genres={artistBreakdown} />
+                {/* Top Artists - Real Listening Data */}
+                <TopListenedArtistsCard accessToken={accessToken} />
               </div>
             </section>
 
