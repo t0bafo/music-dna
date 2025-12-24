@@ -16,33 +16,34 @@ const COLORS = [
 ];
 
 const GenreBreakdownCard = ({ genres }: GenreBreakdownCardProps) => {
-  // Take top 6 genres
-  const topGenres = genres.slice(0, 6);
+  // Take top 6 artists and use track counts for better visualization
+  const topArtists = genres.slice(0, 6);
+  const maxCount = Math.max(...topArtists.map(a => a.count), 1);
 
   return (
     <Card className="h-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Music2 className="w-5 h-5 text-primary" />
-          Top Artists
+          Most Played Artists
         </CardTitle>
         <CardDescription>
-          Most played artists in your library
+          By track count in your library
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {topGenres.length > 0 ? (
+        {topArtists.length > 0 ? (
           <div className="h-[280px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
-                data={topGenres} 
+                data={topArtists} 
                 layout="vertical"
                 margin={{ left: 0, right: 10, top: 0, bottom: 0 }}
               >
                 <XAxis 
                   type="number" 
-                  domain={[0, 100]} 
-                  tickFormatter={(v) => `${v}%`}
+                  domain={[0, Math.ceil(maxCount * 1.1)]}
+                  tickFormatter={(v) => `${v}`}
                   tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
                   axisLine={false}
                 />
@@ -55,16 +56,16 @@ const GenreBreakdownCard = ({ genres }: GenreBreakdownCardProps) => {
                   tickLine={false}
                 />
                 <Tooltip 
-                  formatter={(value: number) => [`${value.toFixed(1)}%`, 'Share']}
-                  labelFormatter={(label) => `Artist: ${label}`}
+                  formatter={(value: number) => [`${value} tracks`, 'Count']}
+                  labelFormatter={(label) => `${label}`}
                   contentStyle={{ 
                     backgroundColor: 'hsl(var(--card))', 
                     border: '1px solid hsl(var(--border))',
                     borderRadius: '8px',
                   }}
                 />
-                <Bar dataKey="percentage" radius={[0, 4, 4, 0]}>
-                  {topGenres.map((_, index) => (
+                <Bar dataKey="count" radius={[0, 4, 4, 0]}>
+                  {topArtists.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Bar>
