@@ -1,9 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { 
-  getStoredTokens, 
-  storeTokens, 
-  clearTokens, 
-  isTokenExpired, 
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import {
+  getStoredTokens,
+  storeTokens,
+  clearTokens,
+  isTokenExpired,
   refreshAccessToken,
   initiateSpotifyLogin as initiateLogin,
 } from '@/lib/spotify-auth';
@@ -35,6 +35,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<SpotifyUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
 
+  const initInFlightRef = useRef(false);
+
   const fetchUser = useCallback(async (token: string) => {
     try {
       const userData = await getCurrentUser(token);
@@ -61,37 +63,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return false;
     }
 
-    storeTokens(
-      tokenData.access_token,
-      tokenData.refresh_token || storedRefreshToken,
-      tokenData.expires_in
-    );
-    
+    // IMPORTANT: don't notify here (it would re-trigger initAuth and keep loading stuck)
+    storeTokens(tokenData.access_token, tokenData.refresh_token || storedRefreshToken, tokenData.expires_in, {
+      notify: false,
+    });
+
     return await fetchUser(tokenData.access_token);
   }, [fetchUser]);
 
   const initAuth = useCallback(async () => {
+    // Prevent overlapping init cycles (can happen when tokens are refreshed)
+    if (initInFlightRef.current) return;
+    initInFlightRef.current = true;
+
     setIsLoading(true);
-    const { accessToken: storedToken, refreshToken: storedRefresh } = getStoredTokens();
 
-    if (!storedToken) {
+    try {
+      const { accessToken: storedToken, refreshToken: storedRefresh } = getStoredTokens();
+
+      if (!storedToken) {
+        setIsAuthenticated(false);
+        setUser(null);
+        setAccessToken(null);
+        return;
+      }
+
+      if (isTokenExpired() && storedRefresh) {
+        const success = await refreshTokenHandler();
+        if (!success) {
+          clearTokens();
+        }
+      } else {
+        const success = await fetchUser(storedToken);
+        if (!success && storedRefresh) {
+          await refreshTokenHandler();
+        }
+      }
+    } finally {
       setIsLoading(false);
-      return;
+      initInFlightRef.current = false;
     }
-
-    if (isTokenExpired() && storedRefresh) {
-      const success = await refreshTokenHandler();
-      if (!success) {
-        clearTokens();
-      }
-    } else if (storedToken) {
-      const success = await fetchUser(storedToken);
-      if (!success && storedRefresh) {
-        await refreshTokenHandler();
-      }
-    }
-
-    setIsLoading(false);
   }, [fetchUser, refreshTokenHandler]);
 
   // Initialize auth on mount
