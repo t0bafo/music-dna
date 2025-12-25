@@ -602,7 +602,7 @@ const PlaylistDetail = () => {
         <div className="flex flex-wrap gap-4 justify-center pb-8">
           <Button
             variant="outline"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate('/playlists')}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Analyze Another Playlist
