@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Landing from "./pages/Landing";
 import Callback from "./pages/Callback";
 import Dashboard from "./pages/Dashboard";
+import Playlists from "./pages/Playlists";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import MusicIntelligence from "./pages/MusicIntelligence";
 import CurationLab from "./pages/CurationLab";
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/callback" element={<Callback />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/playlists" element={<Playlists />} />
             <Route path="/playlist/:playlistId" element={<PlaylistDetail />} />
             <Route path="/intelligence" element={<MusicIntelligence />} />
             <Route path="/curation" element={<CurationLab />} />
