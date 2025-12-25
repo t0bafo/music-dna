@@ -343,52 +343,6 @@ const Landing = () => {
           </motion.div>
         </motion.section>
 
-        {/* ============ PREVIEW SECTION ============ */}
-        <motion.section
-          className="mb-16 lg:mb-24"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.6, ease: smoothEase }}
-        >
-          <h2 className="font-display text-2xl lg:text-3xl font-bold text-foreground text-center mb-6 lg:mb-8">
-            See What You'll Discover
-          </h2>
-          
-          {/* Example Personality Card */}
-          <div className="max-w-lg mx-auto">
-            <motion.div 
-              className="rounded-2xl border border-primary/30 bg-card/80 backdrop-blur-xl p-6 lg:p-8 text-center shadow-xl shadow-primary/5"
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.2 }}
-            >
-              <p className="text-muted-foreground text-sm mb-2">Your personality is...</p>
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <span className="text-3xl lg:text-4xl">🌙</span>
-                <h3 className="font-display text-2xl lg:text-3xl font-bold text-primary">
-                  MIDNIGHT CURATOR
-                </h3>
-              </div>
-              <p className="text-muted-foreground mb-4">
-                Mid-tempo Afrobeats • Introspective vibes • Quality over trends
-              </p>
-              <div className="flex items-center justify-center gap-4 text-sm">
-                <span className="px-3 py-1 rounded-full bg-primary/10 text-primary font-medium">
-                  108 BPM sweet spot
-                </span>
-                <span className="px-3 py-1 rounded-full bg-chart-purple/10 text-chart-purple font-medium">
-                  34% underground gems
-                </span>
-              </div>
-            </motion.div>
-          </div>
-          
-          {/* Supporting text */}
-          <p className="text-center text-muted-foreground text-sm lg:text-base mt-6 lg:mt-8 max-w-2xl mx-auto px-4">
-            Plus: Audio DNA charts, top artists, listening patterns, BPM distribution, and AI-powered playlist curation tools.
-          </p>
-        </motion.section>
-
         {/* ============ FEATURES SECTION ============ */}
         <motion.section
           className="mb-16 lg:mb-24"
