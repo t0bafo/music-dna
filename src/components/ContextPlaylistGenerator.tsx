@@ -36,6 +36,7 @@ export interface GeneratedTrack {
 
 interface ContextPlaylistGeneratorProps {
   onGenerate: (context: ContextConfig, durationMinutes: number) => Promise<GeneratedTrack[]>;
+  fullWidth?: boolean;
 }
 
 const CONTEXTS: ContextConfig[] = [
@@ -101,7 +102,7 @@ const CONTEXTS: ContextConfig[] = [
   },
 ];
 
-const ContextPlaylistGenerator = ({ onGenerate }: ContextPlaylistGeneratorProps) => {
+const ContextPlaylistGenerator = ({ onGenerate, fullWidth }: ContextPlaylistGeneratorProps) => {
   const { accessToken } = useAuth();
   const [selectedContext, setSelectedContext] = useState<ContextConfig | null>(null);
   const [duration, setDuration] = useState(60);
@@ -169,7 +170,10 @@ const ContextPlaylistGenerator = ({ onGenerate }: ContextPlaylistGeneratorProps)
   };
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-card/80 via-card/60 to-chart-purple/5 backdrop-blur-xl">
+    <Card className={cn(
+      "border-primary/20 bg-gradient-to-br from-card/80 via-card/60 to-chart-purple/5 backdrop-blur-xl",
+      fullWidth && "shadow-none border-0 bg-transparent"
+    )}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <div className="p-2 bg-primary/10 rounded-lg">

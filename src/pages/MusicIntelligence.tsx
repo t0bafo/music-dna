@@ -16,7 +16,7 @@ import {
   AlertCircle,
   Home,
   ListMusic,
-  Wrench
+  SlidersHorizontal
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -30,9 +30,6 @@ import YourMusicYearSection from '@/components/music-year/YourMusicYearSection';
 import BpmDistributionCard from '@/components/charts/BpmDistributionCard';
 import EnergyDanceScatterCard from '@/components/charts/EnergyDanceScatterCard';
 import ListeningPatternsCard from '@/components/charts/ListeningPatternsCard';
-import SmartDiscoveryEngine from '@/components/SmartDiscoveryEngine';
-import ContextPlaylistGenerator from '@/components/ContextPlaylistGenerator';
-import TrackSuggestionsTool from '@/components/TrackSuggestionsTool';
 import {
   extractMusicLibrary,
   getLibraryStats,
@@ -51,7 +48,6 @@ import {
   generateEnhancedInsights,
   TrackData,
 } from '@/lib/music-analytics';
-import { searchLibraryTracks, generateContextPlaylist } from '@/lib/curation-tools';
 import {
   RadarChart,
   PolarGrid,
@@ -223,12 +219,8 @@ const MusicIntelligence = () => {
                 <span>Dashboard</span>
               </Link>
               <Link 
-                to="/dashboard" 
+                to="/dashboard#playlists" 
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-                onClick={(e) => {
-                  e.preventDefault();
-                  navigate('/dashboard');
-                }}
               >
                 <ListMusic className="w-4 h-4" />
                 <span>Playlists</span>
@@ -237,6 +229,13 @@ const MusicIntelligence = () => {
                 <Brain className="w-4 h-4" />
                 <span>Intelligence</span>
               </div>
+              <Link 
+                to="/curation" 
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                <span>Curation Lab</span>
+              </Link>
             </nav>
           </div>
           <UserProfile />
@@ -326,22 +325,6 @@ const MusicIntelligence = () => {
         {/* Main Content */}
         {hasData && (
           <div className="space-y-6 lg:space-y-8">
-            {/* Section 0: Curation Tools */}
-            <section>
-              <h2 className="font-display text-base lg:text-lg font-semibold text-foreground mb-3 lg:mb-4 flex items-center gap-2">
-                <Wrench className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
-                Curation Tools
-              </h2>
-              <div className="grid gap-4 lg:gap-6 lg:grid-cols-3">
-                <SmartDiscoveryEngine 
-                  onSearch={(filters) => searchLibraryTracks(accessToken!, filters)}
-                />
-                <ContextPlaylistGenerator 
-                  onGenerate={(context, duration) => generateContextPlaylist(accessToken!, context, duration)}
-                />
-                <TrackSuggestionsTool />
-              </div>
-            </section>
 
             {/* Section 1: Your Signature Sound */}
             <section>
@@ -609,6 +592,35 @@ const MusicIntelligence = () => {
                 </div>
               </section>
             )}
+
+            {/* CTA to Curation Lab */}
+            <section className="mt-8">
+              <Card className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20">
+                <CardContent className="p-6 lg:p-8 text-center">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="p-3 bg-primary/10 rounded-xl">
+                      <SlidersHorizontal className="w-8 h-8 lg:w-10 lg:h-10 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="font-display text-lg lg:text-xl font-semibold text-foreground mb-2">
+                        Ready to Build Playlists?
+                      </h3>
+                      <p className="text-sm lg:text-base text-muted-foreground max-w-md mx-auto">
+                        Use our AI-powered curation tools to discover tracks, generate playlists, and find compatible songs for your vibe.
+                      </p>
+                    </div>
+                    <Button 
+                      onClick={() => navigate('/curation')} 
+                      className="gap-2 mt-2"
+                      size="lg"
+                    >
+                      <SlidersHorizontal className="w-4 h-4" />
+                      Go to Curation Lab
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
           </div>
         )}
       </main>

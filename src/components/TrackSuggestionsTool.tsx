@@ -51,7 +51,7 @@ interface SuggestTracksResponse {
   suggestions: SuggestedTrack[];
 }
 
-const TrackSuggestionsTool = () => {
+const TrackSuggestionsTool = ({ fullWidth }: { fullWidth?: boolean }) => {
   const { accessToken } = useAuth();
   const isMobile = useIsMobile();
   const [playlists, setPlaylists] = useState<SpotifyPlaylist[]>([]);
@@ -192,7 +192,10 @@ const TrackSuggestionsTool = () => {
   const displayedSuggestions = showAll ? suggestions : suggestions.slice(0, 10);
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-card/80 via-card/60 to-chart-cyan/5 backdrop-blur-xl">
+    <Card className={cn(
+      "border-primary/20 bg-gradient-to-br from-card/80 via-card/60 to-chart-cyan/5 backdrop-blur-xl",
+      fullWidth && "shadow-none border-0 bg-transparent"
+    )}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <div className="p-2 bg-primary/10 rounded-lg">
