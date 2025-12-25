@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Target, Loader2, Play, Plus, ChevronDown, ChevronUp, Music2, Check } from 'lucide-react';
+import { Target, Loader2, Play, Plus, ChevronDown, ChevronUp, Music2, Check, Info } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserPlaylists, addTracksToPlaylist, SpotifyPlaylist } from '@/lib/spotify-api';
 import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface PlaylistProfile {
   name: string;
@@ -52,6 +53,7 @@ interface SuggestTracksResponse {
 
 const TrackSuggestionsTool = () => {
   const { accessToken } = useAuth();
+  const isMobile = useIsMobile();
   const [playlists, setPlaylists] = useState<SpotifyPlaylist[]>([]);
   const [loadingPlaylists, setLoadingPlaylists] = useState(true);
   const [selectedPlaylistId, setSelectedPlaylistId] = useState<string>('');
@@ -62,6 +64,7 @@ const TrackSuggestionsTool = () => {
   const [addingTrackId, setAddingTrackId] = useState<string | null>(null);
   const [addedTracks, setAddedTracks] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
+  const [expandedTracks, setExpandedTracks] = useState<Set<string>>(new Set());
 
   // Fetch user's playlists on mount
   useEffect(() => {
@@ -172,6 +175,18 @@ const TrackSuggestionsTool = () => {
     if (percent >= 90) return 'text-primary';
     if (percent >= 70) return 'text-yellow-400';
     return 'text-muted-foreground';
+  };
+
+  const toggleTrackExpanded = (trackId: string) => {
+    setExpandedTracks(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(trackId)) {
+        newSet.delete(trackId);
+      } else {
+        newSet.add(trackId);
+      }
+      return newSet;
+    });
   };
 
   const displayedSuggestions = showAll ? suggestions : suggestions.slice(0, 10);
@@ -318,56 +333,104 @@ const TrackSuggestionsTool = () => {
                   {displayedSuggestions.map((track) => {
                     const isAdded = addedTracks.has(track.track_id);
                     const isAdding = addingTrackId === track.track_id;
+                    const isExpanded = expandedTracks.has(track.track_id);
                     
                     return (
                       <div
                         key={track.track_id}
                         className={cn(
-                          "flex items-start gap-3 p-4 rounded-xl transition-all duration-200 group",
+                          "p-3 sm:p-4 rounded-xl transition-all duration-200 group",
                           isAdded 
                             ? "bg-primary/5 border border-primary/20" 
                             : "hover:bg-secondary/50 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 border border-border/30"
                         )}
                       >
-                        {/* Album Art */}
-                        <div className="w-12 h-12 sm:w-12 sm:h-12 rounded-lg bg-secondary/50 flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/30 group-hover:border-primary/30 transition-colors">
-                          {track.album_art ? (
-                            <img 
-                              src={track.album_art} 
-                              alt={`${track.name} album art`}
-                              className="w-full h-full object-cover"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
-                              }}
-                            />
-                          ) : null}
-                          <Music2 className={cn("w-5 h-5 text-muted-foreground", track.album_art && "hidden")} />
+                        {/* Mobile Layout */}
+                        <div className="flex items-start gap-3">
+                          {/* Album Art */}
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-secondary/50 flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/30 group-hover:border-primary/30 transition-colors">
+                            {track.album_art ? (
+                              <img 
+                                src={track.album_art} 
+                                alt={`${track.name} album art`}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = 'none';
+                                  e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                }}
+                              />
+                            ) : null}
+                            <Music2 className={cn("w-5 h-5 text-muted-foreground", track.album_art && "hidden")} />
+                          </div>
+
+                          {/* Track Info - Flex grows to fill space */}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate text-foreground">{track.name}</p>
+                            <p className="text-xs text-muted-foreground truncate mb-2">{track.artist}</p>
+                            
+                            {/* Match Score & BPM - Full width on mobile */}
+                            <div className="flex flex-wrap gap-1.5">
+                              <Badge 
+                                variant="outline" 
+                                className={cn("text-xs font-semibold", getScoreColorClass(track.score))}
+                              >
+                                {Math.round(track.score)}% Match
+                              </Badge>
+                              <Badge variant="secondary" className="text-xs bg-secondary/80 border-0">
+                                {Math.round(track.bpm)} BPM
+                              </Badge>
+                            </div>
+                          </div>
+
+                          {/* Desktop Actions - Hidden on Mobile */}
+                          <div className="hidden sm:flex flex-row items-center gap-2 flex-shrink-0">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+                              onClick={() => window.open(`https://open.spotify.com/track/${track.track_id}`, '_blank')}
+                              aria-label={`Preview ${track.name} in Spotify`}
+                            >
+                              <Play className="w-3.5 h-3.5 mr-1" />
+                              <span className="text-xs">Preview</span>
+                            </Button>
+                            
+                            <Button
+                              variant={isAdded ? "ghost" : "sonic"}
+                              size="sm"
+                              onClick={() => handleAddTrack(track)}
+                              disabled={isAdding || isAdded}
+                              className={cn(
+                                "h-8 transition-all",
+                                isAdded && "text-primary bg-primary/10"
+                              )}
+                              aria-label={`Add ${track.name} to playlist`}
+                            >
+                              {isAdding ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                                  <span className="text-xs">Adding...</span>
+                                </>
+                              ) : isAdded ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5 mr-1" />
+                                  <span className="text-xs">Added</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Plus className="w-3.5 h-3.5 mr-1" />
+                                  <span className="text-xs">Add</span>
+                                </>
+                              )}
+                            </Button>
+                          </div>
                         </div>
 
-                        {/* Track Info */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-0.5">
-                            <p className="text-sm font-medium truncate text-foreground">{track.name}</p>
-                          </div>
-                          <p className="text-xs text-muted-foreground truncate mb-2">{track.artist}</p>
-                          
-                          {/* Match Score & BPM */}
-                          <div className="flex flex-wrap gap-1.5 mb-2">
-                            <Badge 
-                              variant="outline" 
-                              className={cn("text-xs font-semibold", getScoreColorClass(track.score))}
-                            >
-                              {Math.round(track.score)}% Match
-                            </Badge>
-                            <Badge variant="secondary" className="text-xs bg-secondary/80 border-0">
-                              {Math.round(track.bpm)} BPM
-                            </Badge>
-                          </div>
-
-                          {/* Score Breakdown */}
-                          {track.scores && (
-                            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] sm:text-xs mb-2">
+                        {/* Score Breakdown - Desktop always visible, Mobile collapsible */}
+                        {track.scores && (
+                          <>
+                            {/* Desktop Score Breakdown */}
+                            <div className="hidden sm:flex flex-wrap gap-x-3 gap-y-1 text-xs mt-2 ml-[60px]">
                               <span className={getIndividualScoreColor(track.scores.bpm, track.scores.bpm_max)}>
                                 BPM: {track.scores.bpm}/{track.scores.bpm_max}
                               </span>
@@ -381,51 +444,77 @@ const TrackSuggestionsTool = () => {
                                 Mood: {track.scores.mood}/{track.scores.mood_max}
                               </span>
                             </div>
-                          )}
-                          
-                          <p className="text-xs text-muted-foreground italic hidden sm:block">
-                            {track.match_reason}
-                          </p>
-                        </div>
 
-                        {/* Actions */}
-                        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 flex-shrink-0">
+                            {/* Mobile Collapsible Details */}
+                            <div className="sm:hidden mt-2">
+                              {isExpanded && (
+                                <div className="flex flex-wrap gap-x-3 gap-y-1 text-[11px] mb-3 ml-[52px]">
+                                  <span className={getIndividualScoreColor(track.scores.bpm, track.scores.bpm_max)}>
+                                    BPM: {track.scores.bpm}/{track.scores.bpm_max}
+                                  </span>
+                                  <span className={getIndividualScoreColor(track.scores.energy, track.scores.energy_max)}>
+                                    Energy: {track.scores.energy}/{track.scores.energy_max}
+                                  </span>
+                                  <span className={getIndividualScoreColor(track.scores.dance, track.scores.dance_max)}>
+                                    Dance: {track.scores.dance}/{track.scores.dance_max}
+                                  </span>
+                                  <span className={getIndividualScoreColor(track.scores.mood, track.scores.mood_max)}>
+                                    Mood: {track.scores.mood}/{track.scores.mood_max}
+                                  </span>
+                                </div>
+                              )}
+                              <button
+                                onClick={() => toggleTrackExpanded(track.track_id)}
+                                className="flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors ml-[52px]"
+                              >
+                                <Info className="w-3 h-3" />
+                                {isExpanded ? 'Hide Details' : 'Show Details'}
+                              </button>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Match Reason - Desktop only */}
+                        <p className="text-xs text-muted-foreground italic hidden sm:block mt-1 ml-[60px] line-clamp-1">
+                          {track.match_reason}
+                        </p>
+
+                        {/* Mobile Buttons - Full Width, Stacked */}
+                        <div className="flex flex-col gap-2 mt-3 sm:hidden">
                           <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2 text-muted-foreground hover:text-foreground hover:bg-secondary/80"
+                            variant="outline"
+                            className="w-full h-11 text-muted-foreground hover:text-foreground"
                             onClick={() => window.open(`https://open.spotify.com/track/${track.track_id}`, '_blank')}
                             aria-label={`Preview ${track.name} in Spotify`}
                           >
-                            <Play className="w-3.5 h-3.5 mr-1" />
-                            <span className="hidden sm:inline text-xs">Preview</span>
+                            <Play className="w-4 h-4 mr-2" />
+                            Preview in Spotify
                           </Button>
                           
                           <Button
-                            variant={isAdded ? "ghost" : "sonic"}
-                            size="sm"
+                            variant={isAdded ? "outline" : "sonic"}
+                            className={cn(
+                              "w-full h-11 transition-all",
+                              isAdded && "text-primary border-primary/30 bg-primary/10"
+                            )}
                             onClick={() => handleAddTrack(track)}
                             disabled={isAdding || isAdded}
-                            className={cn(
-                              "h-8 transition-all",
-                              isAdded && "text-primary bg-primary/10"
-                            )}
                             aria-label={`Add ${track.name} to playlist`}
                           >
                             {isAdding ? (
                               <>
-                                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
-                                <span className="text-xs">Adding...</span>
+                                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                                Adding...
                               </>
                             ) : isAdded ? (
                               <>
-                                <Check className="w-3.5 h-3.5 mr-1" />
-                                <span className="text-xs">Added</span>
+                                <Check className="w-4 h-4 mr-2" />
+                                Added to Playlist
                               </>
                             ) : (
                               <>
-                                <Plus className="w-3.5 h-3.5 mr-1" />
-                                <span className="text-xs">Add</span>
+                                <Plus className="w-4 h-4 mr-2" />
+                                Add to Playlist
                               </>
                             )}
                           </Button>
