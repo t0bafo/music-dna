@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import SmartDiscoveryEngine from '@/components/SmartDiscoveryEngine';
 import ContextPlaylistGenerator from '@/components/ContextPlaylistGenerator';
 import TrackSuggestionsTool from '@/components/TrackSuggestionsTool';
@@ -132,7 +133,10 @@ const CurationLab = () => {
               </div>
             </nav>
           </div>
-          <UserProfile />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <UserProfile />
+          </div>
         </div>
       </header>
 

@@ -9,6 +9,7 @@ import BottomNav from '@/components/BottomNav';
 import PlaylistGrid from '@/components/PlaylistGrid';
 import TopAlbumsGrid from '@/components/TopAlbumsGrid';
 import TopSongsGrid from '@/components/TopSongsGrid';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion } from 'framer-motion';
 import { calculateArchetype, Archetype, MusicProfile } from '@/lib/music-archetypes';
 import { useTopTracks, usePlaylists, TrackWithFeatures } from '@/hooks/use-music-intelligence';
@@ -127,7 +128,10 @@ const Home = () => {
               </Link>
             </nav>
           </div>
-          <UserProfile />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <UserProfile />
+          </div>
         </div>
       </header>
 

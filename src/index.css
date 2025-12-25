@@ -5,73 +5,73 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
 
 @layer base {
+  /* Light mode (default for :root now, dark applied via class) */
   :root {
-    /* Dark theme as default for music studio aesthetic */
-    --background: 240 10% 4%;
-    --foreground: 0 0% 98%;
+    --background: 210 20% 98%;
+    --foreground: 240 10% 4%;
 
-    --card: 240 10% 8%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 4%;
 
-    --popover: 240 10% 10%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
 
-    --primary: 156 100% 50%;
-    --primary-foreground: 240 10% 4%;
+    --primary: 156 100% 40%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 240 10% 14%;
-    --secondary-foreground: 0 0% 85%;
+    --secondary: 210 20% 93%;
+    --secondary-foreground: 240 10% 20%;
 
-    --muted: 240 10% 16%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 210 20% 93%;
+    --muted-foreground: 240 10% 40%;
 
-    --accent: 156 100% 50%;
-    --accent-foreground: 240 10% 4%;
+    --accent: 156 100% 40%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 10% 18%;
-    --input: 240 10% 18%;
-    --ring: 156 100% 50%;
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 156 100% 40%;
 
     --radius: 1rem;
 
     /* Custom tokens - Sonic green palette */
-    --sonic-green: 156 100% 50%;
-    --sonic-green-glow: 156 100% 60%;
-    --sonic-green-dark: 156 100% 35%;
+    --sonic-green: 156 100% 40%;
+    --sonic-green-glow: 156 100% 50%;
+    --sonic-green-dark: 156 100% 30%;
     
     /* Chart gradient colors */
     --chart-purple: 262 83% 58%;
     --chart-blue: 217 91% 60%;
     --chart-cyan: 192 91% 43%;
     
-    /* Glassmorphism tokens */
-    --glass-bg: 240 10% 10% / 0.85;
-    --glass-border: 0 0% 100% / 0.08;
-    --glass-border-hover: 0 0% 100% / 0.15;
-    --glass-glow: 156 100% 50% / 0.2;
+    /* Glassmorphism tokens - Light mode */
+    --glass-bg: 0 0% 100% / 0.8;
+    --glass-border: 0 0% 0% / 0.08;
+    --glass-border-hover: 0 0% 0% / 0.15;
+    --glass-glow: 156 100% 40% / 0.15;
     
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.5), 0 4px 6px -4px hsl(0 0% 0% / 0.4);
-    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.6), 0 8px 10px -6px hsl(0 0% 0% / 0.5);
-    --shadow-glow: 0 0 20px hsl(var(--sonic-green) / 0.3);
-    --shadow-glow-intense: 0 0 30px hsl(var(--sonic-green) / 0.5);
+    /* Shadows - Light mode */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.08), 0 2px 4px -2px hsl(0 0% 0% / 0.06);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.08), 0 4px 6px -4px hsl(0 0% 0% / 0.06);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.1), 0 8px 10px -6px hsl(0 0% 0% / 0.08);
+    --shadow-glow: 0 0 20px hsl(var(--sonic-green) / 0.2);
+    --shadow-glow-intense: 0 0 30px hsl(var(--sonic-green) / 0.3);
 
-    --sidebar-background: 240 10% 6%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 156 100% 50%;
-    --sidebar-primary-foreground: 240 10% 4%;
-    --sidebar-accent: 240 10% 14%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 240 10% 15%;
-    --sidebar-ring: 156 100% 50%;
+    --sidebar-background: 210 20% 98%;
+    --sidebar-foreground: 240 10% 20%;
+    --sidebar-primary: 156 100% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 93%;
+    --sidebar-accent-foreground: 240 10% 20%;
+    --sidebar-border: 210 20% 88%;
+    --sidebar-ring: 156 100% 40%;
   }
 
-  /* Keep dark class for compatibility but same values */
+  /* Dark mode */
   .dark {
     --background: 240 10% 4%;
     --foreground: 0 0% 98%;
@@ -101,6 +101,25 @@
     --input: 240 10% 18%;
     --ring: 156 100% 50%;
 
+    /* Custom tokens - Sonic green palette (dark) */
+    --sonic-green: 156 100% 50%;
+    --sonic-green-glow: 156 100% 60%;
+    --sonic-green-dark: 156 100% 35%;
+    
+    /* Glassmorphism tokens - Dark mode */
+    --glass-bg: 240 10% 10% / 0.85;
+    --glass-border: 0 0% 100% / 0.08;
+    --glass-border-hover: 0 0% 100% / 0.15;
+    --glass-glow: 156 100% 50% / 0.2;
+    
+    /* Shadows - Dark mode */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.5), 0 4px 6px -4px hsl(0 0% 0% / 0.4);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.6), 0 8px 10px -6px hsl(0 0% 0% / 0.5);
+    --shadow-glow: 0 0 20px hsl(var(--sonic-green) / 0.3);
+    --shadow-glow-intense: 0 0 30px hsl(var(--sonic-green) / 0.5);
+
     --sidebar-background: 240 10% 6%;
     --sidebar-foreground: 0 0% 90%;
     --sidebar-primary: 156 100% 50%;
@@ -117,6 +136,18 @@
     @apply border-border;
   }
 
+  html {
+    @apply scroll-smooth;
+  }
+
+  /* Smooth theme transitions */
+  html.transitioning,
+  html.transitioning *,
+  html.transitioning *::before,
+  html.transitioning *::after {
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+  }
+
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
@@ -126,12 +157,22 @@
     font-family: 'Space Grotesk', system-ui, sans-serif;
     letter-spacing: -0.02em;
   }
+
+  /* Respect reduced motion preference */
+  @media (prefers-reduced-motion: reduce) {
+    html.transitioning,
+    html.transitioning *,
+    html.transitioning *::before,
+    html.transitioning *::after {
+      transition: none !important;
+    }
+  }
 }
 
 @layer utilities {
-  /* Dark gradient background */
+  /* Gradient background - adapts to theme */
   .gradient-bg {
-    background: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(240 10% 6%) 100%);
+    @apply bg-gradient-to-b from-background to-muted/30;
   }
   
   /* Glassmorphic card styling */

@@ -4,6 +4,7 @@ import { motion, AnimatePresence, type Easing } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { Music, Dna, Palette, Gem, Shield, Loader2, ArrowRight, Zap, Users, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import {
   RadarChart,
   PolarGrid,
@@ -152,6 +153,11 @@ const Landing = () => {
 
   return (
     <div className="min-h-screen gradient-bg relative overflow-hidden">
+      {/* Theme Toggle - Top Right */}
+      <div className="absolute top-4 right-4 z-50">
+        <ThemeToggle />
+      </div>
+
       {/* Animated Background glow effects */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div 
