@@ -526,7 +526,7 @@ serve(async (req) => {
           
           try {
             const reccoResponse = await fetch(
-              `https://api.reccobeats.com/v1/audio-features?ids=${idsParam}`
+              `https://reccobeats.com/api/audio-features?ids=${idsParam}`
             )
             
             if (reccoResponse.ok) {
