@@ -9,13 +9,14 @@ import {
   SpotifyPlaylist,
   AudioFeatures,
 } from '@/lib/spotify-api';
-import { Music, Loader2, AlertCircle, RefreshCw, Brain, Home as HomeIcon, SlidersHorizontal, ListMusic, ArrowRight, ExternalLink, BarChart3, Sparkles, Target, Search } from 'lucide-react';
+import { Music, Loader2, AlertCircle, RefreshCw, Brain, Home as HomeIcon, SlidersHorizontal, ListMusic, ArrowRight, BarChart3, Sparkles, Target, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
 import PlaylistGrid from '@/components/PlaylistGrid';
 import TopAlbumsGrid from '@/components/TopAlbumsGrid';
+import TopSongsGrid from '@/components/TopSongsGrid';
 import { motion } from 'framer-motion';
 import { calculateArchetype, Archetype, MusicProfile } from '@/lib/music-archetypes';
 
@@ -255,67 +256,18 @@ const Home = () => {
             </Card>
           </motion.div>
 
-          {/* 3. Your Top Songs (Simple List) */}
-          <motion.section
+          {/* 3. Your Top Songs (Visual Cards) */}
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.2 }}
           >
-            <h2 className="font-display text-lg lg:text-xl font-bold text-foreground mb-4">
-              🎵 Your Top Songs
-            </h2>
-            <Card className="bg-card/80 backdrop-blur-xl border-border/50">
-              <CardContent className="p-4 lg:p-6">
-                {loadingTopTracks ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3, 4, 5].map(i => (
-                      <div key={i} className="flex items-center gap-4 animate-pulse">
-                        <div className="w-6 h-6 bg-muted rounded" />
-                        <div className="flex-1">
-                          <div className="h-4 bg-muted rounded w-3/4 mb-2" />
-                          <div className="h-3 bg-muted rounded w-1/2" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : topTracks.length > 0 ? (
-                  <>
-                    <ol className="space-y-3" aria-label="Top 5 songs">
-                      {topTracks.slice(0, 5).map((track, index) => (
-                        <li key={track.id} className="flex items-start gap-4 py-2">
-                          <span className="text-lg font-semibold text-muted-foreground w-6 text-right tabular-nums">
-                            {index + 1}
-                          </span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-base font-medium text-foreground truncate">
-                              {track.name}
-                            </p>
-                            <p className="text-sm text-muted-foreground truncate">
-                              {track.artists.map(a => a.name).join(', ')}
-                            </p>
-                          </div>
-                        </li>
-                      ))}
-                    </ol>
-                    <div className="text-center mt-6">
-                      <Link
-                        to="/intelligence#top-songs"
-                        className="inline-flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors text-sm font-medium"
-                        aria-label="View all 50 top tracks on Intelligence page"
-                      >
-                        See All 50 Tracks
-                        <ArrowRight className="w-4 h-4" />
-                      </Link>
-                    </div>
-                  </>
-                ) : (
-                  <p className="text-center text-muted-foreground py-8">
-                    No top tracks found. Listen to more music on Spotify!
-                  </p>
-                )}
-              </CardContent>
-            </Card>
-          </motion.section>
+            <TopSongsGrid 
+              tracks={topTracks} 
+              isLoading={loadingTopTracks} 
+              maxTracks={5} 
+            />
+          </motion.div>
 
           {/* 4. Your Current Favorites (Albums) */}
           <TopAlbumsGrid

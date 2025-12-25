@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
+import { getTopTracks, getAudioFeaturesFromReccoBeats, SpotifyTrack, AudioFeatures } from '@/lib/spotify-api';
+import {
   Brain, 
   Loader2, 
   Download, 
@@ -26,7 +27,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
 import TopListenedArtistsCard from '@/components/charts/TopListenedArtistsCard';
-import YourMusicYearSection from '@/components/music-year/YourMusicYearSection';
+import TopSongsTable from '@/components/TopSongsTable';
 import BpmDistributionCard from '@/components/charts/BpmDistributionCard';
 import EnergyDanceScatterCard from '@/components/charts/EnergyDanceScatterCard';
 import ListeningPatternsCard from '@/components/charts/ListeningPatternsCard';
@@ -80,6 +81,10 @@ const MusicIntelligence = () => {
 
   // New chart data state
   const [libraryTracks, setLibraryTracks] = useState<TrackData[]>([]);
+  
+  // Top 50 tracks with audio features for the table
+  const [topTracksWithFeatures, setTopTracksWithFeatures] = useState<(SpotifyTrack & { audioFeatures?: AudioFeatures | null })[]>([]);
+  const [topTracksLoading, setTopTracksLoading] = useState(false);
   
   const [bpmData, setBpmData] = useState<{ distribution: Array<{ range: string; count: number; percentage: number }>; sweetSpot: { min: number; max: number } | null }>({ distribution: [], sweetSpot: null });
   const [scatterData, setScatterData] = useState<{ data: Array<{ x: number; y: number; z: number; isMainstream: boolean }>; clusterInfo: { avgDance: number; avgEnergy: number } | null }>({ data: [], clusterInfo: null });
@@ -142,6 +147,41 @@ const MusicIntelligence = () => {
       loadData();
     }
   }, [accessToken, loadData]);
+
+  // Fetch top 50 tracks with audio features for the table
+  const fetchTopTracks = useCallback(async () => {
+    if (!accessToken) return;
+    
+    setTopTracksLoading(true);
+    try {
+      const data = await getTopTracks(accessToken, 'medium_term', 50);
+      const tracks = data.items || [];
+      
+      // Fetch audio features
+      if (tracks.length > 0) {
+        const trackIds = tracks.map(t => t.id);
+        const features = await getAudioFeaturesFromReccoBeats(trackIds);
+        
+        // Merge features into tracks
+        const tracksWithFeatures = tracks.map(track => ({
+          ...track,
+          audioFeatures: features.get(track.id) || null,
+        }));
+        
+        setTopTracksWithFeatures(tracksWithFeatures);
+      }
+    } catch (err) {
+      console.error('Failed to fetch top tracks:', err);
+    } finally {
+      setTopTracksLoading(false);
+    }
+  }, [accessToken]);
+
+  useEffect(() => {
+    if (accessToken) {
+      fetchTopTracks();
+    }
+  }, [accessToken, fetchTopTracks]);
 
   // Handle anchor scroll for #top-songs
   useEffect(() => {
@@ -409,8 +449,11 @@ const MusicIntelligence = () => {
               </div>
             </section>
 
-            {/* Section 2: Your Music Year - Wrapped-style analytics */}
-            <YourMusicYearSection accessToken={accessToken!} />
+            {/* Section 2: Top Songs Table */}
+            <TopSongsTable 
+              tracks={topTracksWithFeatures} 
+              isLoading={topTracksLoading} 
+            />
 
             {/* Section 3: Listening Patterns */}
             <section>
