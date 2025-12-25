@@ -51,7 +51,7 @@ const TopSongsGrid = ({ tracks, isLoading, maxTracks = 5 }: TopSongsGridProps) =
       </h2>
       
       {/* Mobile: Horizontal scroll / Desktop: Grid */}
-      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide lg:grid lg:grid-cols-[repeat(auto-fit,minmax(140px,1fr))] lg:max-w-[800px] lg:overflow-visible">
+      <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide lg:grid lg:grid-cols-[repeat(auto-fit,minmax(140px,1fr))] lg:overflow-visible">
         {displayTracks.map((track) => (
           <a
             key={track.id}
@@ -92,7 +92,7 @@ const TopSongsGrid = ({ tracks, isLoading, maxTracks = 5 }: TopSongsGridProps) =
           className="flex-shrink-0 w-[120px] lg:w-auto flex items-center justify-center lg:justify-start"
           aria-label="View all 50 top tracks on Intelligence page"
         >
-          <span className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-primary/80 transition-colors whitespace-nowrap">
+          <span className="inline-flex items-center gap-1 text-sm font-bold text-primary hover:text-primary/80 transition-colors whitespace-nowrap">
             See All 50
             <ArrowRight className="w-4 h-4" />
           </span>
