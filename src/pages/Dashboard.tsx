@@ -195,6 +195,13 @@ const Dashboard = () => {
                 <span>Dashboard</span>
               </div>
               <Link 
+                to="/playlists" 
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                <Music className="w-4 h-4" />
+                <span>Playlists</span>
+              </Link>
+              <Link 
                 to="/intelligence" 
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
               >

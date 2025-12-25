@@ -10,23 +10,14 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
-  { path: '/dashboard', label: 'Playlists', icon: <ListMusic className="w-5 h-5" /> },
+  { path: '/playlists', label: 'Playlists', icon: <ListMusic className="w-5 h-5" /> },
   { path: '/curation', label: 'Curation', icon: <SlidersHorizontal className="w-5 h-5" /> },
 ];
 
 const BottomNav = () => {
   const location = useLocation();
   
-  const isActive = (path: string, label: string) => {
-    if (label === 'Playlists') {
-      return location.pathname === '/dashboard' && location.hash === '#playlists';
-    }
-    if (label === 'Dashboard') {
-      return location.pathname === '/dashboard' && location.hash !== '#playlists';
-    }
-    if (label === 'Curation') {
-      return location.pathname === '/curation';
-    }
+  const isActive = (path: string) => {
     return location.pathname === path;
   };
 
@@ -38,12 +29,12 @@ const BottomNav = () => {
       {/* Safe area padding for iPhone notch */}
       <div className="relative flex items-center justify-around px-4 py-2 pb-[env(safe-area-inset-bottom,8px)]">
         {navItems.map((item) => {
-          const active = isActive(item.path, item.label);
+          const active = isActive(item.path);
           
           return (
             <Link
               key={item.label}
-              to={item.label === 'Playlists' ? '/dashboard#playlists' : item.path}
+              to={item.path}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 py-2 px-4 rounded-xl transition-all duration-200 min-w-[72px] min-h-[56px]",
                 active 
