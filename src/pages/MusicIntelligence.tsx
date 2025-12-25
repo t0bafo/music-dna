@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   Brain, 
@@ -66,6 +66,7 @@ import {
 const MusicIntelligence = () => {
   const { isAuthenticated, isLoading: authLoading, accessToken, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // State
   const [isExtracting, setIsExtracting] = useState(false);
@@ -142,6 +143,20 @@ const MusicIntelligence = () => {
     }
   }, [accessToken, loadData]);
 
+  // Handle anchor scroll for #top-songs
+  useEffect(() => {
+    if (location.hash === '#top-songs' && !loading) {
+      // Small delay to ensure content is rendered
+      setTimeout(() => {
+        const element = document.getElementById('top-songs');
+        element?.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        });
+      }, 100);
+    }
+  }, [location.hash, loading]);
+
   // Handle extraction
   const handleExtract = async () => {
     if (!accessToken || !user?.id) return;
@@ -204,7 +219,7 @@ const MusicIntelligence = () => {
           <div className="flex items-center gap-4 lg:gap-6">
             <div 
               className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-primary to-sonic-dark rounded-xl flex items-center justify-center cursor-pointer shadow-glow"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/home')}
             >
               <Music className="w-4 h-4 lg:w-5 lg:h-5 text-primary-foreground" />
             </div>
@@ -212,12 +227,16 @@ const MusicIntelligence = () => {
             {/* Desktop Navigation - Hidden on mobile */}
             <nav className="hidden lg:flex items-center gap-1">
               <Link 
-                to="/dashboard" 
+                to="/home" 
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
               >
                 <Home className="w-4 h-4" />
-                <span>Dashboard</span>
+                <span>Home</span>
               </Link>
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 text-primary font-medium">
+                <Brain className="w-4 h-4" />
+                <span>Intelligence</span>
+              </div>
               <Link 
                 to="/playlists" 
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
@@ -225,10 +244,6 @@ const MusicIntelligence = () => {
                 <ListMusic className="w-4 h-4" />
                 <span>Playlists</span>
               </Link>
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 text-primary font-medium">
-                <Brain className="w-4 h-4" />
-                <span>Intelligence</span>
-              </div>
               <Link 
                 to="/curation" 
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"

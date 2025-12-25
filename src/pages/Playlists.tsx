@@ -70,16 +70,12 @@ const Playlists = () => {
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1">
               <Link 
-                to="/dashboard" 
+                to="/home" 
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
               >
                 <Home className="w-4 h-4" />
-                <span>Dashboard</span>
+                <span>Home</span>
               </Link>
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 text-primary font-medium">
-                <ListMusic className="w-4 h-4" />
-                <span>Playlists</span>
-              </div>
               <Link 
                 to="/intelligence" 
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
@@ -87,6 +83,10 @@ const Playlists = () => {
                 <Brain className="w-4 h-4" />
                 <span>Intelligence</span>
               </Link>
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 text-primary font-medium">
+                <ListMusic className="w-4 h-4" />
+                <span>Playlists</span>
+              </div>
               <Link 
                 to="/curation" 
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"

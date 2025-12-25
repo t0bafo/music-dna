@@ -2,12 +2,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 
 import Landing from "./pages/Landing";
 import Callback from "./pages/Callback";
-import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
 import Playlists from "./pages/Playlists";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import MusicIntelligence from "./pages/MusicIntelligence";
@@ -26,7 +26,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Landing />} />
             <Route path="/callback" element={<Callback />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/dashboard" element={<Navigate to="/home" replace />} />
             <Route path="/playlists" element={<Playlists />} />
             <Route path="/playlist/:playlistId" element={<PlaylistDetail />} />
             <Route path="/intelligence" element={<MusicIntelligence />} />
