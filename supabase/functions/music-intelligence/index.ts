@@ -432,7 +432,7 @@ serve(async (req) => {
       }
 
       case 'get_suggestions': {
-        // Get track suggestions for a playlist
+        // Get track suggestions for a playlist (legacy - used by PlaylistDetail)
         const { playlistTrackIds, playlistAverages } = data
         console.log(`[music-intelligence] Getting suggestions for user ${userId}`)
 
@@ -474,6 +474,190 @@ serve(async (req) => {
           .slice(0, 10)
 
         result = { data: suggestions }
+        break
+      }
+
+      case 'suggest_tracks_for_playlist': {
+        // Track Suggestions Tool - full flow with ReccoBeats
+        const { playlist_id } = data
+        console.log(`[music-intelligence] Suggesting tracks for playlist ${playlist_id} for user ${userId}`)
+
+        // Step 1: Fetch playlist tracks from Spotify
+        const playlistResponse = await fetch(
+          `https://api.spotify.com/v1/playlists/${playlist_id}/tracks?limit=100&fields=items(track(id,name,artists))`,
+          { headers: { 'Authorization': `Bearer ${spotifyToken}` } }
+        )
+
+        if (!playlistResponse.ok) {
+          console.error('[music-intelligence] Failed to fetch playlist tracks:', playlistResponse.status)
+          return new Response(
+            JSON.stringify({ error: 'Failed to fetch playlist tracks' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+
+        const playlistData = await playlistResponse.json()
+        const playlistTracks = playlistData.items
+          .map((item: any) => item.track)
+          .filter((track: any) => track && track.id)
+        
+        if (playlistTracks.length === 0) {
+          return new Response(
+            JSON.stringify({ 
+              data: { 
+                playlist_profile: { name: '', track_count: 0, avg_bpm: 0, avg_energy: 0, avg_danceability: 0, avg_valence: 0, bpm_range: [0, 0] },
+                suggestions: [] 
+              } 
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+
+        const playlistTrackIds = playlistTracks.map((t: any) => t.id)
+        console.log(`[music-intelligence] Playlist has ${playlistTrackIds.length} tracks`)
+
+        // Step 2: Get audio features from ReccoBeats API
+        const batchSize = 40
+        const allFeatures: Map<string, any> = new Map()
+
+        for (let i = 0; i < playlistTrackIds.length; i += batchSize) {
+          const batch = playlistTrackIds.slice(i, i + batchSize)
+          const idsParam = batch.join(',')
+          
+          try {
+            const reccoResponse = await fetch(
+              `https://api.reccobeats.com/v1/audio-features?ids=${idsParam}`
+            )
+            
+            if (reccoResponse.ok) {
+              const reccoData = await reccoResponse.json()
+              if (reccoData.audio_features) {
+                for (const feature of reccoData.audio_features) {
+                  if (feature && feature.id) {
+                    allFeatures.set(feature.id, feature)
+                  }
+                }
+              }
+            } else {
+              console.error(`[music-intelligence] ReccoBeats batch failed:`, reccoResponse.status)
+            }
+          } catch (err) {
+            console.error(`[music-intelligence] ReccoBeats error:`, err)
+          }
+        }
+
+        console.log(`[music-intelligence] Got features for ${allFeatures.size} tracks from ReccoBeats`)
+
+        // Step 3: Calculate playlist profile
+        const tracksWithFeatures = playlistTrackIds
+          .map((id: string) => allFeatures.get(id))
+          .filter((f: any) => f && f.tempo != null)
+
+        if (tracksWithFeatures.length === 0) {
+          return new Response(
+            JSON.stringify({ error: 'Unable to fetch audio features. Please try again.' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+
+        const avg = (arr: number[]) => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0
+        const tempos = tracksWithFeatures.map((f: any) => f.tempo)
+        const energies = tracksWithFeatures.map((f: any) => f.energy * 100)
+        const danceabilities = tracksWithFeatures.map((f: any) => f.danceability * 100)
+        const valences = tracksWithFeatures.map((f: any) => f.valence * 100)
+
+        const playlistProfile = {
+          name: '', // We don't need name in this context
+          track_count: playlistTrackIds.length,
+          avg_bpm: avg(tempos),
+          avg_energy: avg(energies),
+          avg_danceability: avg(danceabilities),
+          avg_valence: avg(valences),
+          bpm_range: [Math.min(...tempos), Math.max(...tempos)] as [number, number],
+        }
+
+        console.log(`[music-intelligence] Playlist profile:`, playlistProfile)
+
+        // Step 4: Query user's library for compatible tracks
+        const { data: libraryTracks, error: libraryError } = await supabaseAdmin
+          .from('music_library')
+          .select('track_id, name, artist, tempo, energy, danceability, valence, popularity')
+          .eq('user_id', userId)
+          .gte('tempo', playlistProfile.avg_bpm - 20)
+          .lte('tempo', playlistProfile.avg_bpm + 20)
+          .not('tempo', 'is', null)
+          .limit(200)
+
+        if (libraryError) throw libraryError
+
+        // Step 5: Filter out tracks already in playlist and score each candidate
+        const suggestions = (libraryTracks || [])
+          .filter((track: any) => !playlistTrackIds.includes(track.track_id))
+          .map((track: any) => {
+            // BPM Match (30 points max)
+            const bpmDiff = Math.abs(track.tempo - playlistProfile.avg_bpm)
+            let bpmScore = 0
+            if (bpmDiff <= 5) bpmScore = 30
+            else if (bpmDiff <= 10) bpmScore = 20
+            else if (bpmDiff <= 15) bpmScore = 10
+
+            // Energy Match (25 points max)
+            const energyVal = (track.energy || 0) * 100
+            const energyDiff = Math.abs(energyVal - playlistProfile.avg_energy)
+            const energyScore = 25 * (1 - energyDiff / 100)
+
+            // Danceability Match (20 points max)
+            const danceVal = (track.danceability || 0) * 100
+            const danceDiff = Math.abs(danceVal - playlistProfile.avg_danceability)
+            const danceScore = 20 * (1 - danceDiff / 100)
+
+            // Valence Match (15 points max)
+            const valenceVal = (track.valence || 0) * 100
+            const valenceDiff = Math.abs(valenceVal - playlistProfile.avg_valence)
+            const valenceScore = 15 * (1 - valenceDiff / 100)
+
+            // Popularity similarity (10 points max) - placeholder since we don't have playlist avg popularity
+            const popScore = 10
+
+            const totalScore = bpmScore + energyScore + danceScore + valenceScore + popScore
+
+            // Generate match reason
+            let reason = ''
+            if (bpmScore === 30) {
+              reason = `Perfect BPM match at ${Math.round(track.tempo)} BPM`
+            } else if (energyDiff < 10) {
+              reason = `Energy aligns perfectly with your playlist`
+            } else if ((track.popularity || 100) < 40) {
+              reason = `Underground gem that fits your vibe`
+            } else if (danceDiff < 10) {
+              reason = `Danceability matches your playlist flow`
+            } else {
+              reason = `Similar audio profile to your playlist`
+            }
+
+            return {
+              track_id: track.track_id,
+              name: track.name,
+              artist: track.artist,
+              score: totalScore,
+              bpm: track.tempo,
+              energy: energyVal,
+              danceability: danceVal,
+              valence: valenceVal,
+              match_reason: reason,
+            }
+          })
+          .sort((a: any, b: any) => b.score - a.score)
+          .slice(0, 20)
+
+        console.log(`[music-intelligence] Found ${suggestions.length} suggestions`)
+
+        result = { 
+          data: { 
+            playlist_profile: playlistProfile, 
+            suggestions 
+          } 
+        }
         break
       }
 
