@@ -290,19 +290,11 @@ const Home = () => {
                 <p className="text-muted-foreground">Loading your playlists...</p>
               </div>
             ) : playlists.length > 0 ? (
-              <div className="space-y-4">
-                <PlaylistGrid playlists={playlists.slice(0, 5)} />
-                {playlists.length > 5 && (
-                  <div className="text-center pt-2">
-                    <Link
-                      to="/playlists"
-                      className="inline-flex items-center gap-1 text-muted-foreground hover:text-primary transition-colors text-sm font-medium"
-                    >
-                      View All {playlists.length} Playlists →
-                    </Link>
-                  </div>
-                )}
-              </div>
+              <PlaylistGrid 
+                playlists={playlists.slice(0, 5)} 
+                showViewAll={playlists.length > 5}
+                totalCount={playlists.length}
+              />
             ) : (
               <div className="bg-card/60 backdrop-blur-xl rounded-2xl p-8 text-center border border-border/50">
                 <Music className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
