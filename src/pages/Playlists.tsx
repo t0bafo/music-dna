@@ -9,8 +9,10 @@ import BottomNav from '@/components/BottomNav';
 import PlaylistGrid from '@/components/PlaylistGrid';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion } from 'framer-motion';
+import { usePageTitle } from '@/hooks/use-page-title';
 
 const Playlists = () => {
+  usePageTitle('Your Playlists');
   const { isAuthenticated, isLoading: authLoading, accessToken, user } = useAuth();
   const navigate = useNavigate();
 

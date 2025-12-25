@@ -49,6 +49,7 @@ import OptimizePreviewModal from '@/components/OptimizePreviewModal';
 import SaveToSpotifyModal from '@/components/SaveToSpotifyModal';
 import TrackSuggestions from '@/components/TrackSuggestions';
 import { toast } from 'sonner';
+import { usePageTitle } from '@/hooks/use-page-title';
 
 // Fetch full track objects to get popularity scores
 const getTrackPopularity = async (
@@ -87,12 +88,15 @@ const PlaylistDetail = () => {
   const { playlistId } = useParams<{ playlistId: string }>();
   const navigate = useNavigate();
   const { accessToken, isAuthenticated, isLoading: authLoading } = useAuth();
-
+  
   const [playlist, setPlaylist] = useState<SpotifyPlaylist | null>(null);
   const [originalTracks, setOriginalTracks] = useState<TrackWithFeatures[]>([]);
   const [currentTracks, setCurrentTracks] = useState<TrackWithFeatures[]>([]);
   const [originalFlowScore, setOriginalFlowScore] = useState<FlowScore | null>(null);
   const [flowScore, setFlowScore] = useState<FlowScore | null>(null);
+  
+  // Dynamic page title based on playlist name
+  usePageTitle(playlist?.name ? `${playlist.name} - Analysis` : 'Playlist Analysis');
   const [insights, setInsights] = useState<FlowInsight[]>([]);
   const [bpmIssues, setBpmIssues] = useState<BpmIssue[]>([]);
   const [appealProfile, setAppealProfile] = useState<AppealProfile | null>(null);

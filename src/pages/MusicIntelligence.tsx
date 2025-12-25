@@ -44,6 +44,7 @@ import {
   useTopTracksWithFeatures,
   useInvalidateMusicCache,
 } from '@/hooks/use-music-intelligence';
+import { usePageTitle } from '@/hooks/use-page-title';
 import {
   RadarChart,
   PolarGrid,
@@ -60,6 +61,7 @@ import {
 } from 'recharts';
 
 const MusicIntelligence = () => {
+  usePageTitle('Music Intelligence');
   const { isAuthenticated, isLoading: authLoading, accessToken, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
