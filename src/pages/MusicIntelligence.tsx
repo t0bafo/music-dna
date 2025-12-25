@@ -32,6 +32,7 @@ import EnergyDanceScatterCard from '@/components/charts/EnergyDanceScatterCard';
 import ListeningPatternsCard from '@/components/charts/ListeningPatternsCard';
 import SmartDiscoveryEngine from '@/components/SmartDiscoveryEngine';
 import ContextPlaylistGenerator from '@/components/ContextPlaylistGenerator';
+import TrackSuggestionsTool from '@/components/TrackSuggestionsTool';
 import {
   extractMusicLibrary,
   getLibraryStats,
@@ -331,13 +332,14 @@ const MusicIntelligence = () => {
                 <Wrench className="w-4 h-4 lg:w-5 lg:h-5 text-primary" />
                 Curation Tools
               </h2>
-              <div className="grid gap-4 lg:gap-6 lg:grid-cols-2">
+              <div className="grid gap-4 lg:gap-6 lg:grid-cols-3">
                 <SmartDiscoveryEngine 
                   onSearch={(filters) => searchLibraryTracks(accessToken!, filters)}
                 />
                 <ContextPlaylistGenerator 
                   onGenerate={(context, duration) => generateContextPlaylist(accessToken!, context, duration)}
                 />
+                <TrackSuggestionsTool />
               </div>
             </section>
 
