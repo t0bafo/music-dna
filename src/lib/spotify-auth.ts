@@ -32,17 +32,29 @@ export const initiateSpotifyLogin = async (): Promise<void> => {
 
   sessionStorage.setItem('code_verifier', codeVerifier);
 
-  const authUrl = new URL('https://accounts.spotify.com/authorize');
-  const params = {
+  const redirectUri = getRedirectUri();
+  
+  const params = new URLSearchParams({
     client_id: SPOTIFY_CLIENT_ID,
     response_type: 'code',
-    redirect_uri: getRedirectUri(),
+    redirect_uri: redirectUri,
     scope: SPOTIFY_SCOPES,
     code_challenge_method: 'S256',
     code_challenge: codeChallenge,
-  };
-  authUrl.search = new URLSearchParams(params).toString();
-  window.location.href = authUrl.toString();
+    show_dialog: 'true', // Force consent screen for all users
+  });
+
+  const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
+  
+  // Debug logging for OAuth troubleshooting
+  console.log('🔐 Spotify OAuth Debug:', {
+    redirectUri,
+    origin: window.location.origin,
+    fullAuthUrl: authUrl,
+    clientId: SPOTIFY_CLIENT_ID,
+  });
+
+  window.location.href = authUrl;
 };
 
 export const exchangeCodeForTokens = async (code: string): Promise<{
