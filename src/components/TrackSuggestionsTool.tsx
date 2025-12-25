@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Target, Loader2, Play, Plus, ChevronDown, ChevronUp, Music2, ExternalLink, Check } from 'lucide-react';
+import { Target, Loader2, Play, Plus, ChevronDown, ChevronUp, Music2, Check } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,6 +20,17 @@ interface PlaylistProfile {
   bpm_range: [number, number];
 }
 
+interface ScoreBreakdown {
+  bpm: number;
+  bpm_max: number;
+  energy: number;
+  energy_max: number;
+  dance: number;
+  dance_max: number;
+  mood: number;
+  mood_max: number;
+}
+
 interface SuggestedTrack {
   track_id: string;
   name: string;
@@ -30,6 +41,8 @@ interface SuggestedTrack {
   danceability: number;
   valence: number;
   match_reason: string;
+  album_art: string | null;
+  scores: ScoreBreakdown;
 }
 
 interface SuggestTracksResponse {
@@ -151,6 +164,14 @@ const TrackSuggestionsTool = () => {
     if (score >= 90) return 'bg-primary text-primary-foreground';
     if (score >= 80) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
     return 'bg-muted text-muted-foreground';
+  };
+
+  // Get individual score color
+  const getIndividualScoreColor = (score: number, max: number): string => {
+    const percent = (score / max) * 100;
+    if (percent >= 90) return 'text-primary';
+    if (percent >= 70) return 'text-yellow-400';
+    return 'text-muted-foreground';
   };
 
   const displayedSuggestions = showAll ? suggestions : suggestions.slice(0, 10);
@@ -293,7 +314,7 @@ const TrackSuggestionsTool = () => {
             {/* Suggestions List */}
             {suggestions.length > 0 ? (
               <ScrollArea className="h-[320px] rounded-xl border border-border/50 bg-secondary/20">
-                <div className="p-4 space-y-2">
+                <div className="p-4 space-y-3">
                   {displayedSuggestions.map((track) => {
                     const isAdded = addedTracks.has(track.track_id);
                     const isAdding = addingTrackId === track.track_id;
@@ -302,28 +323,40 @@ const TrackSuggestionsTool = () => {
                       <div
                         key={track.track_id}
                         className={cn(
-                          "flex items-start gap-3 p-3 rounded-lg transition-all duration-200",
+                          "flex items-start gap-3 p-4 rounded-xl transition-all duration-200 group",
                           isAdded 
                             ? "bg-primary/5 border border-primary/20" 
-                            : "hover:bg-secondary/50 border border-transparent"
+                            : "hover:bg-secondary/50 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5 border border-border/30"
                         )}
                       >
-                        {/* Album Art Placeholder */}
-                        <div className="w-12 h-12 rounded-md bg-secondary/50 flex items-center justify-center flex-shrink-0">
-                          <Music2 className="w-5 h-5 text-muted-foreground" />
+                        {/* Album Art */}
+                        <div className="w-12 h-12 sm:w-12 sm:h-12 rounded-lg bg-secondary/50 flex items-center justify-center flex-shrink-0 overflow-hidden border border-border/30 group-hover:border-primary/30 transition-colors">
+                          {track.album_art ? (
+                            <img 
+                              src={track.album_art} 
+                              alt={`${track.name} album art`}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.currentTarget.style.display = 'none';
+                                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <Music2 className={cn("w-5 h-5 text-muted-foreground", track.album_art && "hidden")} />
                         </div>
 
                         {/* Track Info */}
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-0.5">
                             <p className="text-sm font-medium truncate text-foreground">{track.name}</p>
                           </div>
                           <p className="text-xs text-muted-foreground truncate mb-2">{track.artist}</p>
                           
+                          {/* Match Score & BPM */}
                           <div className="flex flex-wrap gap-1.5 mb-2">
                             <Badge 
                               variant="outline" 
-                              className={cn("text-xs", getScoreColorClass(track.score))}
+                              className={cn("text-xs font-semibold", getScoreColorClass(track.score))}
                             >
                               {Math.round(track.score)}% Match
                             </Badge>
@@ -331,44 +364,68 @@ const TrackSuggestionsTool = () => {
                               {Math.round(track.bpm)} BPM
                             </Badge>
                           </div>
+
+                          {/* Score Breakdown */}
+                          {track.scores && (
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] sm:text-xs mb-2">
+                              <span className={getIndividualScoreColor(track.scores.bpm, track.scores.bpm_max)}>
+                                BPM: {track.scores.bpm}/{track.scores.bpm_max}
+                              </span>
+                              <span className={getIndividualScoreColor(track.scores.energy, track.scores.energy_max)}>
+                                Energy: {track.scores.energy}/{track.scores.energy_max}
+                              </span>
+                              <span className={getIndividualScoreColor(track.scores.dance, track.scores.dance_max)}>
+                                Dance: {track.scores.dance}/{track.scores.dance_max}
+                              </span>
+                              <span className={getIndividualScoreColor(track.scores.mood, track.scores.mood_max)}>
+                                Mood: {track.scores.mood}/{track.scores.mood_max}
+                              </span>
+                            </div>
+                          )}
                           
-                          <p className="text-xs text-muted-foreground italic">
+                          <p className="text-xs text-muted-foreground italic hidden sm:block">
                             {track.match_reason}
                           </p>
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center gap-2 flex-shrink-0">
+                        <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2 flex-shrink-0">
                           <Button
                             variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
+                            size="sm"
+                            className="h-8 px-2 text-muted-foreground hover:text-foreground hover:bg-secondary/80"
                             onClick={() => window.open(`https://open.spotify.com/track/${track.track_id}`, '_blank')}
+                            aria-label={`Preview ${track.name} in Spotify`}
                           >
-                            <ExternalLink className="w-4 h-4" />
+                            <Play className="w-3.5 h-3.5 mr-1" />
+                            <span className="hidden sm:inline text-xs">Preview</span>
                           </Button>
                           
                           <Button
-                            variant={isAdded ? "ghost" : "outline"}
+                            variant={isAdded ? "ghost" : "sonic"}
                             size="sm"
                             onClick={() => handleAddTrack(track)}
                             disabled={isAdding || isAdded}
                             className={cn(
-                              "transition-all",
-                              isAdded && "text-primary"
+                              "h-8 transition-all",
+                              isAdded && "text-primary bg-primary/10"
                             )}
+                            aria-label={`Add ${track.name} to playlist`}
                           >
                             {isAdding ? (
-                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                                <span className="text-xs">Adding...</span>
+                              </>
                             ) : isAdded ? (
                               <>
-                                <Check className="w-4 h-4 mr-1" />
-                                Added
+                                <Check className="w-3.5 h-3.5 mr-1" />
+                                <span className="text-xs">Added</span>
                               </>
                             ) : (
                               <>
-                                <Plus className="w-4 h-4 mr-1" />
-                                Add
+                                <Plus className="w-3.5 h-3.5 mr-1" />
+                                <span className="text-xs">Add</span>
                               </>
                             )}
                           </Button>

@@ -609,7 +609,7 @@ serve(async (req) => {
         // Step 4: Query user's library for compatible tracks
         const { data: libraryTracks, error: libraryError } = await supabaseAdmin
           .from('music_library')
-          .select('track_id, name, artist, tempo, energy, danceability, valence, popularity')
+          .select('track_id, name, artist, album, tempo, energy, danceability, valence, popularity')
           .eq('user_id', userId)
           .gte('tempo', playlistProfile.avg_bpm - 20)
           .lte('tempo', playlistProfile.avg_bpm + 20)
@@ -619,7 +619,7 @@ serve(async (req) => {
         if (libraryError) throw libraryError
 
         // Step 5: Filter out tracks already in playlist and score each candidate
-        const suggestions = (libraryTracks || [])
+        const candidateTracks = (libraryTracks || [])
           .filter((track: any) => !playlistTrackIds.includes(track.track_id))
           .map((track: any) => {
             // BPM Match (30 points max)
@@ -632,19 +632,19 @@ serve(async (req) => {
             // Energy Match (25 points max)
             const energyVal = (track.energy || 0) * 100
             const energyDiff = Math.abs(energyVal - playlistProfile.avg_energy)
-            const energyScore = 25 * (1 - energyDiff / 100)
+            const energyScore = Math.round(25 * (1 - energyDiff / 100))
 
             // Danceability Match (20 points max)
             const danceVal = (track.danceability || 0) * 100
             const danceDiff = Math.abs(danceVal - playlistProfile.avg_danceability)
-            const danceScore = 20 * (1 - danceDiff / 100)
+            const danceScore = Math.round(20 * (1 - danceDiff / 100))
 
             // Valence Match (15 points max)
             const valenceVal = (track.valence || 0) * 100
             const valenceDiff = Math.abs(valenceVal - playlistProfile.avg_valence)
-            const valenceScore = 15 * (1 - valenceDiff / 100)
+            const valenceScore = Math.round(15 * (1 - valenceDiff / 100))
 
-            // Popularity similarity (10 points max) - placeholder since we don't have playlist avg popularity
+            // Popularity similarity (10 points max) - placeholder
             const popScore = 10
 
             const totalScore = bpmScore + energyScore + danceScore + valenceScore + popScore
@@ -673,10 +673,52 @@ serve(async (req) => {
               danceability: danceVal,
               valence: valenceVal,
               match_reason: reason,
+              // Individual scores for breakdown display
+              scores: {
+                bpm: bpmScore,
+                bpm_max: 30,
+                energy: energyScore,
+                energy_max: 25,
+                dance: danceScore,
+                dance_max: 20,
+                mood: valenceScore,
+                mood_max: 15,
+              },
             }
           })
           .sort((a: any, b: any) => b.score - a.score)
           .slice(0, 20)
+
+        // Step 6: Fetch album art from Spotify for top suggestions
+        const suggestionIds = candidateTracks.map((t: any) => t.track_id).slice(0, 20)
+        let albumArtMap: Map<string, string> = new Map()
+        
+        if (suggestionIds.length > 0) {
+          try {
+            const tracksResponse = await fetch(
+              `https://api.spotify.com/v1/tracks?ids=${suggestionIds.join(',')}`,
+              { headers: { 'Authorization': `Bearer ${spotifyToken}` } }
+            )
+            if (tracksResponse.ok) {
+              const tracksData = await tracksResponse.json()
+              for (const track of tracksData.tracks || []) {
+                if (track && track.id && track.album?.images?.length > 0) {
+                  // Get smallest image (64x64) for thumbnails
+                  const smallImage = track.album.images[track.album.images.length - 1]
+                  albumArtMap.set(track.id, smallImage.url)
+                }
+              }
+            }
+          } catch (err) {
+            console.error('[music-intelligence] Failed to fetch album art:', err)
+          }
+        }
+
+        // Add album art to suggestions
+        const suggestions = candidateTracks.map((track: any) => ({
+          ...track,
+          album_art: albumArtMap.get(track.track_id) || null,
+        }))
 
         console.log(`[music-intelligence] Found ${suggestions.length} suggestions`)
 
