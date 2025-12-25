@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { getTopTracks, getAudioFeaturesFromReccoBeats, SpotifyTrack, AudioFeatures } from '@/lib/spotify-api';
 import {
   Brain, 
   Loader2, 
@@ -13,7 +12,6 @@ import {
   Target,
   BarChart3,
   Clock,
-  CheckCircle2,
   AlertCircle,
   Home,
   ListMusic,
@@ -23,7 +21,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
 import TopListenedArtistsCard from '@/components/charts/TopListenedArtistsCard';
@@ -31,24 +28,21 @@ import TopSongsTable from '@/components/TopSongsTable';
 import BpmDistributionCard from '@/components/charts/BpmDistributionCard';
 import EnergyDanceScatterCard from '@/components/charts/EnergyDanceScatterCard';
 import ListeningPatternsCard from '@/components/charts/ListeningPatternsCard';
-import {
-  extractMusicLibrary,
-  getLibraryStats,
-  getTasteProfile,
-  getTasteSnapshots,
-  ExtractionProgress,
-  TasteProfile,
-  LibraryStats,
-  TasteSnapshot,
-} from '@/lib/music-intelligence';
-import { getLibrarySecure } from '@/lib/secure-database';
+import { extractMusicLibrary, ExtractionProgress } from '@/lib/music-intelligence';
 import {
   calculateBpmDistribution,
   calculateEnergyDanceScatter,
   calculateListeningPatterns,
   generateEnhancedInsights,
-  TrackData,
 } from '@/lib/music-analytics';
+import {
+  useLibraryStats,
+  useTasteProfile,
+  useTasteSnapshots,
+  useLibraryTracks,
+  useTopTracksWithFeatures,
+  useInvalidateMusicCache,
+} from '@/hooks/use-music-intelligence';
 import {
   RadarChart,
   PolarGrid,
@@ -69,26 +63,48 @@ const MusicIntelligence = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // State
+  // React Query hooks for cached data
+  const { data: libraryStats, isLoading: statsLoading } = useLibraryStats(accessToken);
+  const { data: tasteProfile, isLoading: profileLoading } = useTasteProfile(accessToken);
+  const { data: snapshots = [], isLoading: snapshotsLoading } = useTasteSnapshots(accessToken);
+  const { data: libraryTracks = [], isLoading: tracksLoading } = useLibraryTracks(accessToken);
+  const { data: topTracksWithFeatures = [], isLoading: topTracksLoading } = useTopTracksWithFeatures(accessToken);
+  
+  const invalidateCache = useInvalidateMusicCache();
+
+  // Extraction state
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractionProgress, setExtractionProgress] = useState<ExtractionProgress | null>(null);
-  const [libraryStats, setLibraryStats] = useState<LibraryStats | null>(null);
-  const [tasteProfile, setTasteProfile] = useState<TasteProfile | null>(null);
-  const [snapshots, setSnapshots] = useState<TasteSnapshot[]>([]);
-  const [insights, setInsights] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // New chart data state
-  const [libraryTracks, setLibraryTracks] = useState<TrackData[]>([]);
-  
-  // Top 50 tracks with audio features for the table
-  const [topTracksWithFeatures, setTopTracksWithFeatures] = useState<(SpotifyTrack & { audioFeatures?: AudioFeatures | null })[]>([]);
-  const [topTracksLoading, setTopTracksLoading] = useState(false);
-  
-  const [bpmData, setBpmData] = useState<{ distribution: Array<{ range: string; count: number; percentage: number }>; sweetSpot: { min: number; max: number } | null }>({ distribution: [], sweetSpot: null });
-  const [scatterData, setScatterData] = useState<{ data: Array<{ x: number; y: number; z: number; isMainstream: boolean }>; clusterInfo: { avgDance: number; avgEnergy: number } | null }>({ data: [], clusterInfo: null });
-  const [listeningPatterns, setListeningPatterns] = useState<{ data: Array<{ day: string; count: number }>; mostActiveDay: string | null }>({ data: [], mostActiveDay: null });
+  // Combined loading state (only for initial load, not refetches)
+  const loading = statsLoading || profileLoading || snapshotsLoading || tracksLoading;
+
+  // Computed chart data from libraryTracks
+  const { bpmData, scatterData, listeningPatterns, insights } = useMemo(() => {
+    if (!tasteProfile || libraryTracks.length === 0) {
+      return {
+        bpmData: { distribution: [], sweetSpot: null },
+        scatterData: { data: [], clusterInfo: null },
+        listeningPatterns: { data: [], mostActiveDay: null },
+        insights: [],
+      };
+    }
+
+    return {
+      bpmData: calculateBpmDistribution(libraryTracks),
+      scatterData: calculateEnergyDanceScatter(libraryTracks),
+      listeningPatterns: calculateListeningPatterns(libraryTracks),
+      insights: generateEnhancedInsights(libraryTracks, {
+        avgBpm: tasteProfile.avgBpm,
+        avgEnergy: tasteProfile.avgEnergy,
+        avgDanceability: tasteProfile.avgDanceability,
+        avgValence: tasteProfile.avgValence,
+        undergroundRatio: tasteProfile.undergroundRatio,
+        bpmRange: tasteProfile.bpmRange,
+      }),
+    };
+  }, [tasteProfile, libraryTracks]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -97,96 +113,9 @@ const MusicIntelligence = () => {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-  // Load existing data
-  const loadData = useCallback(async () => {
-    if (!accessToken) return;
-    
-    setLoading(true);
-    try {
-      const [stats, profile, snapshotData, tracks] = await Promise.all([
-        getLibraryStats(accessToken),
-        getTasteProfile(accessToken),
-        getTasteSnapshots(accessToken),
-        getLibrarySecure(accessToken),
-      ]);
-
-      setLibraryStats(stats);
-      setTasteProfile(profile);
-      setSnapshots(snapshotData);
-      setLibraryTracks(tracks || []);
-
-      if (profile && tracks && tracks.length > 0) {
-        // Generate enhanced insights
-        setInsights(generateEnhancedInsights(tracks, {
-          avgBpm: profile.avgBpm,
-          avgEnergy: profile.avgEnergy,
-          avgDanceability: profile.avgDanceability,
-          avgValence: profile.avgValence,
-          undergroundRatio: profile.undergroundRatio,
-          bpmRange: profile.bpmRange,
-        }));
-
-        // Calculate chart data
-        
-        setBpmData(calculateBpmDistribution(tracks));
-        setScatterData(calculateEnergyDanceScatter(tracks));
-        setListeningPatterns(calculateListeningPatterns(tracks));
-      }
-    } catch (err) {
-      console.error('Failed to load intelligence data:', err);
-      if (err instanceof Error && err.message.includes('Invalid Spotify token')) {
-        setError('Session expired. Please log in again.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [accessToken]);
-
-  useEffect(() => {
-    if (accessToken) {
-      loadData();
-    }
-  }, [accessToken, loadData]);
-
-  // Fetch top 50 tracks with audio features for the table
-  const fetchTopTracks = useCallback(async () => {
-    if (!accessToken) return;
-    
-    setTopTracksLoading(true);
-    try {
-      const data = await getTopTracks(accessToken, 'medium_term', 50);
-      const tracks = data.items || [];
-      
-      // Fetch audio features
-      if (tracks.length > 0) {
-        const trackIds = tracks.map(t => t.id);
-        const features = await getAudioFeaturesFromReccoBeats(trackIds);
-        
-        // Merge features into tracks
-        const tracksWithFeatures = tracks.map(track => ({
-          ...track,
-          audioFeatures: features.get(track.id) || null,
-        }));
-        
-        setTopTracksWithFeatures(tracksWithFeatures);
-      }
-    } catch (err) {
-      console.error('Failed to fetch top tracks:', err);
-    } finally {
-      setTopTracksLoading(false);
-    }
-  }, [accessToken]);
-
-  useEffect(() => {
-    if (accessToken) {
-      fetchTopTracks();
-    }
-  }, [accessToken, fetchTopTracks]);
-
   // Handle anchor scroll for #top-songs
   useEffect(() => {
     if (location.hash === '#top-songs' && !loading) {
-      // Small delay to ensure content is rendered
       setTimeout(() => {
         const element = document.getElementById('top-songs');
         element?.scrollIntoView({ 
@@ -197,7 +126,7 @@ const MusicIntelligence = () => {
     }
   }, [location.hash, loading]);
 
-  // Handle extraction
+  // Handle extraction and refresh
   const handleExtract = async () => {
     if (!accessToken || !user?.id) return;
 
@@ -206,7 +135,8 @@ const MusicIntelligence = () => {
 
     try {
       await extractMusicLibrary(accessToken, user.id, setExtractionProgress);
-      await loadData();
+      // Invalidate all cached queries to refetch fresh data
+      invalidateCache();
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Extraction failed');
     } finally {
@@ -333,7 +263,7 @@ const MusicIntelligence = () => {
         )}
 
         {/* Extraction Status / CTA */}
-        {(isExtracting || !hasData) && (
+        {(isExtracting || (!hasData && !loading)) && (
           <Card className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20">
             <CardContent className="p-6">
               {isExtracting ? (
@@ -356,7 +286,7 @@ const MusicIntelligence = () => {
               ) : loading ? (
                 <div className="flex items-center gap-3">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  <p className="text-muted-foreground">Checking for existing data...</p>
+                  <p className="text-muted-foreground">Loading your music data...</p>
                 </div>
               ) : (
                 <div className="text-center py-8">
@@ -373,6 +303,18 @@ const MusicIntelligence = () => {
                   </Button>
                 </div>
               )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Loading state for initial data */}
+        {loading && !isExtracting && (
+          <Card className="mb-8 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border-primary/20">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                <p className="text-muted-foreground">Loading your music data...</p>
+              </div>
             </CardContent>
           </Card>
         )}
