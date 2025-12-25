@@ -11,7 +11,7 @@ import {
   AudioFeatures,
   TimeRange,
 } from '@/lib/spotify-api';
-import { Music, Loader2, AlertCircle, ListMusic, RefreshCw, Brain, Home } from 'lucide-react';
+import { Music, Loader2, AlertCircle, ListMusic, RefreshCw, Brain, Home, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
@@ -195,6 +195,13 @@ const Dashboard = () => {
                 <Brain className="w-4 h-4" />
                 <span>Intelligence</span>
               </Link>
+              <Link 
+                to="/curation" 
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+                <span>Curation Lab</span>
+              </Link>
             </nav>
           </div>
           <UserProfile />
@@ -298,6 +305,27 @@ const Dashboard = () => {
                 <Button onClick={() => navigate('/intelligence')} className="w-full sm:w-auto gap-2">
                   <Brain className="w-4 h-4" />
                   Go to Intelligence
+                </Button>
+              </div>
+            </div>
+
+            {/* CTA to Curation Lab */}
+            <div className="mt-4 p-4 lg:p-6 bg-gradient-to-r from-chart-purple/10 via-chart-purple/5 to-transparent rounded-2xl border border-chart-purple/20">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-chart-purple/10 rounded-xl">
+                    <SlidersHorizontal className="w-6 h-6 lg:w-8 lg:h-8 text-chart-purple" />
+                  </div>
+                  <div>
+                    <h3 className="font-display font-semibold text-foreground">Want to curate playlists?</h3>
+                    <p className="text-xs lg:text-sm text-muted-foreground">
+                      AI-powered tools to discover and organize your music
+                    </p>
+                  </div>
+                </div>
+                <Button onClick={() => navigate('/curation')} variant="outline" className="w-full sm:w-auto gap-2">
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Go to Curation Lab
                 </Button>
               </div>
             </div>

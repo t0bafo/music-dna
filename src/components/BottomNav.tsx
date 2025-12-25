@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, ListMusic, Brain } from 'lucide-react';
+import { Home, ListMusic, SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -11,7 +11,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { path: '/dashboard', label: 'Dashboard', icon: <Home className="w-5 h-5" /> },
   { path: '/dashboard', label: 'Playlists', icon: <ListMusic className="w-5 h-5" /> },
-  { path: '/intelligence', label: 'Intelligence', icon: <Brain className="w-5 h-5" /> },
+  { path: '/curation', label: 'Curation', icon: <SlidersHorizontal className="w-5 h-5" /> },
 ];
 
 const BottomNav = () => {
@@ -23,6 +23,9 @@ const BottomNav = () => {
     }
     if (label === 'Dashboard') {
       return location.pathname === '/dashboard' && location.hash !== '#playlists';
+    }
+    if (label === 'Curation') {
+      return location.pathname === '/curation';
     }
     return location.pathname === path;
   };

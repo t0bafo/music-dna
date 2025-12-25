@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Search, Filter, Music2, Gem, PlayCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,9 +37,10 @@ export interface TrackResult {
 
 interface SmartDiscoveryEngineProps {
   onSearch: (filters: DiscoveryFilters) => Promise<TrackResult[]>;
+  fullWidth?: boolean;
 }
 
-const SmartDiscoveryEngine = ({ onSearch }: SmartDiscoveryEngineProps) => {
+const SmartDiscoveryEngine = ({ onSearch, fullWidth }: SmartDiscoveryEngineProps) => {
   const { accessToken } = useAuth();
   const [filters, setFilters] = useState<DiscoveryFilters>({
     minBpm: 90,
@@ -98,7 +100,10 @@ const SmartDiscoveryEngine = ({ onSearch }: SmartDiscoveryEngineProps) => {
   }, [accessToken, results, filters]);
 
   return (
-    <Card className="border-primary/20 bg-gradient-to-br from-card/80 via-card/60 to-primary/5 backdrop-blur-xl">
+    <Card className={cn(
+      "border-primary/20 bg-gradient-to-br from-card/80 via-card/60 to-primary/5 backdrop-blur-xl",
+      fullWidth && "shadow-none border-0 bg-transparent"
+    )}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <div className="p-2 bg-primary/10 rounded-lg">

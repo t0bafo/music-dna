@@ -10,6 +10,7 @@ import Callback from "./pages/Callback";
 import Dashboard from "./pages/Dashboard";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import MusicIntelligence from "./pages/MusicIntelligence";
+import CurationLab from "./pages/CurationLab";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/playlist/:playlistId" element={<PlaylistDetail />} />
             <Route path="/intelligence" element={<MusicIntelligence />} />
+            <Route path="/curation" element={<CurationLab />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
