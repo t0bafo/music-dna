@@ -1,14 +1,6 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  getTopTracks, 
-  getUserPlaylists, 
-  getAudioFeaturesFromReccoBeats,
-  SpotifyTrack,
-  SpotifyPlaylist,
-  AudioFeatures,
-} from '@/lib/spotify-api';
 import { Music, Loader2, AlertCircle, RefreshCw, Brain, Home as HomeIcon, SlidersHorizontal, ListMusic, ArrowRight, BarChart3, Sparkles, Target, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,23 +11,27 @@ import TopAlbumsGrid from '@/components/TopAlbumsGrid';
 import TopSongsGrid from '@/components/TopSongsGrid';
 import { motion } from 'framer-motion';
 import { calculateArchetype, Archetype, MusicProfile } from '@/lib/music-archetypes';
-
-interface TrackWithFeatures extends Omit<SpotifyTrack, 'popularity'>, Partial<AudioFeatures> {
-  artist: string;
-  albumImage?: string;
-  popularity: number;
-}
+import { useTopTracks, usePlaylists, TrackWithFeatures } from '@/hooks/use-music-intelligence';
+import { AudioFeatures } from '@/lib/spotify-api';
 
 const Home = () => {
   const { isAuthenticated, isLoading: authLoading, accessToken, user } = useAuth();
   const navigate = useNavigate();
 
-  // State
-  const [topTracks, setTopTracks] = useState<TrackWithFeatures[]>([]);
-  const [loadingTopTracks, setLoadingTopTracks] = useState(false);
-  const [playlists, setPlaylists] = useState<SpotifyPlaylist[]>([]);
-  const [loadingPlaylists, setLoadingPlaylists] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // React Query hooks for cached data
+  const { 
+    data: topTracks = [], 
+    isLoading: loadingTopTracks,
+    error: topTracksError,
+    refetch: refetchTopTracks
+  } = useTopTracks(accessToken, 'medium_term', 50);
+  
+  const { 
+    data: playlists = [], 
+    isLoading: loadingPlaylists 
+  } = usePlaylists(accessToken, 50);
+
+  const error = topTracksError ? (topTracksError instanceof Error ? topTracksError.message : 'Failed to fetch top tracks') : null;
 
   // Calculate underground count
   const undergroundCount = useMemo(() => {
@@ -47,7 +43,7 @@ const Home = () => {
     if (topTracks.length === 0) return null;
     
     const getAvg = (key: keyof AudioFeatures) => {
-      const values = topTracks.map(t => t[key]).filter((v): v is number => v != null);
+      const values = topTracks.map(t => t[key as keyof TrackWithFeatures]).filter((v): v is number => v != null);
       return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
     };
 
@@ -80,63 +76,6 @@ const Home = () => {
       navigate('/', { replace: true });
     }
   }, [authLoading, isAuthenticated, navigate]);
-
-  // Fetch user's top tracks (always Last 6 Months)
-  const fetchTopTracks = useCallback(async () => {
-    if (!accessToken) return;
-
-    setLoadingTopTracks(true);
-    setError(null);
-
-    try {
-      const data = await getTopTracks(accessToken, 'medium_term', 50);
-      const tracks: TrackWithFeatures[] = data.items.map(track => ({
-        ...track,
-        artist: track.artists[0]?.name || 'Unknown',
-        albumImage: track.album.images?.[2]?.url || track.album.images?.[0]?.url,
-        popularity: track.popularity,
-      }));
-
-      // Fetch audio features
-      const trackIds = tracks.map(t => t.id);
-      const features = await getAudioFeaturesFromReccoBeats(trackIds);
-
-      // Merge features
-      tracks.forEach(track => {
-        const f = features.get(track.id);
-        if (f) Object.assign(track, f);
-      });
-
-      setTopTracks(tracks);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch top tracks');
-    } finally {
-      setLoadingTopTracks(false);
-    }
-  }, [accessToken]);
-
-  // Fetch user's playlists
-  const fetchPlaylists = useCallback(async () => {
-    if (!accessToken) return;
-
-    setLoadingPlaylists(true);
-    try {
-      const data = await getUserPlaylists(accessToken, 50);
-      setPlaylists(data.items);
-    } catch (err) {
-      console.error('Failed to fetch playlists:', err);
-    } finally {
-      setLoadingPlaylists(false);
-    }
-  }, [accessToken]);
-
-  // Initial data fetch
-  useEffect(() => {
-    if (accessToken) {
-      fetchTopTracks();
-      fetchPlaylists();
-    }
-  }, [accessToken, fetchTopTracks, fetchPlaylists]);
 
   if (authLoading) {
     return (
@@ -214,7 +153,7 @@ const Home = () => {
           <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl p-4 mb-6 flex items-center gap-3">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <p className="text-sm flex-1">{error}</p>
-            <Button size="sm" variant="outline" onClick={fetchTopTracks}>
+            <Button size="sm" variant="outline" onClick={() => refetchTopTracks()}>
               <RefreshCw className="w-4 h-4 mr-2" />
               Retry
             </Button>
