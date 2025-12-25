@@ -23,6 +23,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import TopListenedArtistsCard from '@/components/charts/TopListenedArtistsCard';
 import TopSongsTable from '@/components/TopSongsTable';
 import BpmDistributionCard from '@/components/charts/BpmDistributionCard';
@@ -223,7 +224,10 @@ const MusicIntelligence = () => {
               </Link>
             </nav>
           </div>
-          <UserProfile />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <UserProfile />
+          </div>
         </div>
       </header>
 

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
 import PlaylistGrid from '@/components/PlaylistGrid';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion } from 'framer-motion';
 
 const Playlists = () => {
@@ -96,7 +97,10 @@ const Playlists = () => {
               </Link>
             </nav>
           </div>
-          <UserProfile />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <UserProfile />
+          </div>
         </div>
       </header>
 
