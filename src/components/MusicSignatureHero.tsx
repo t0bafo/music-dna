@@ -60,8 +60,8 @@ const MusicSignatureHero = ({
       { feature: 'Dance', value: stats.danceability.avg * 100 },
       { feature: 'Valence', value: stats.valence.avg * 100 },
       { feature: 'Acoustic', value: stats.acousticness.avg * 100 },
-      { feature: 'Instrumental', value: stats.instrumentalness.avg * 100 },
-      { feature: 'Liveness', value: stats.liveness.avg * 100 },
+      { feature: 'Instrum.', value: stats.instrumentalness.avg * 100 },
+      { feature: 'Live', value: stats.liveness.avg * 100 },
     ];
   }, [stats]);
 
