@@ -23,6 +23,7 @@ import TrackSuggestionsTool from '@/components/TrackSuggestionsTool';
 import { searchLibraryTracks, generateContextPlaylist } from '@/lib/curation-tools';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePageTitle } from '@/hooks/use-page-title';
 
 type ToolType = 'suggestions' | 'smart' | 'context';
 
@@ -33,6 +34,7 @@ const TOOLS: { id: ToolType; label: string; icon: React.ReactNode }[] = [
 ];
 
 const CurationLab = () => {
+  usePageTitle('Curation Lab');
   const { isAuthenticated, isLoading: authLoading, accessToken } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();

@@ -14,8 +14,10 @@ import { motion } from 'framer-motion';
 import { calculateArchetype, Archetype, MusicProfile } from '@/lib/music-archetypes';
 import { useTopTracks, usePlaylists, TrackWithFeatures } from '@/hooks/use-music-intelligence';
 import { AudioFeatures } from '@/lib/spotify-api';
+import { usePageTitle } from '@/hooks/use-page-title';
 
 const Home = () => {
+  usePageTitle('Your Music DNA');
   const { isAuthenticated, isLoading: authLoading, accessToken, user } = useAuth();
   const navigate = useNavigate();
 
