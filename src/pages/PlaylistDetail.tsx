@@ -393,9 +393,12 @@ const PlaylistDetail = () => {
                   Dashboard
                 </Link>
                 <ChevronRight className="w-4 h-4" />
-                <span className="hover:text-foreground transition-colors">
+                <Link 
+                  to="/playlists" 
+                  className="hover:text-foreground transition-colors"
+                >
                   My Playlists
-                </span>
+                </Link>
                 <ChevronRight className="w-4 h-4" />
                 <span className="text-foreground font-medium truncate max-w-[200px]">
                   {playlist.name}
@@ -405,7 +408,7 @@ const PlaylistDetail = () => {
               {/* Back Button */}
               <Button
                 variant="ghost"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/playlists')}
                 className="text-muted-foreground hover:text-foreground mb-4"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
