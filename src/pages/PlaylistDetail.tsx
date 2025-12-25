@@ -387,10 +387,10 @@ const PlaylistDetail = () => {
               {/* Breadcrumb Navigation */}
               <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
                 <Link 
-                  to="/dashboard" 
+                  to="/home" 
                   className="hover:text-foreground transition-colors"
                 >
-                  Dashboard
+                  Home
                 </Link>
                 <ChevronRight className="w-4 h-4" />
                 <Link 

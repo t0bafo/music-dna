@@ -23,12 +23,12 @@ import { searchLibraryTracks, generateContextPlaylist } from '@/lib/curation-too
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type ToolType = 'smart' | 'context' | 'suggestions';
+type ToolType = 'suggestions' | 'smart' | 'context';
 
 const TOOLS: { id: ToolType; label: string; icon: React.ReactNode }[] = [
+  { id: 'suggestions', label: 'Track Suggestions', icon: <Target className="w-4 h-4" /> },
   { id: 'smart', label: 'Smart Discovery', icon: <Search className="w-4 h-4" /> },
   { id: 'context', label: 'Context Generator', icon: <Sparkles className="w-4 h-4" /> },
-  { id: 'suggestions', label: 'Track Suggestions', icon: <Target className="w-4 h-4" /> },
 ];
 
 const CurationLab = () => {
@@ -36,17 +36,17 @@ const CurationLab = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   
-  // Get tool from URL or localStorage, default to 'smart'
+  // Get tool from URL or localStorage, default to 'suggestions'
   const getInitialTool = (): ToolType => {
     const urlTool = searchParams.get('tool') as ToolType;
-    if (urlTool && ['smart', 'context', 'suggestions'].includes(urlTool)) {
+    if (urlTool && ['suggestions', 'smart', 'context'].includes(urlTool)) {
       return urlTool;
     }
     const stored = localStorage.getItem('curationLabLastTool') as ToolType;
-    if (stored && ['smart', 'context', 'suggestions'].includes(stored)) {
+    if (stored && ['suggestions', 'smart', 'context'].includes(stored)) {
       return stored;
     }
-    return 'smart';
+    return 'suggestions';
   };
 
   const [activeTool, setActiveTool] = useState<ToolType>(getInitialTool);
@@ -70,7 +70,7 @@ const CurationLab = () => {
   // Handle browser back/forward
   useEffect(() => {
     const urlTool = searchParams.get('tool') as ToolType;
-    if (urlTool && ['smart', 'context', 'suggestions'].includes(urlTool) && urlTool !== activeTool) {
+    if (urlTool && ['suggestions', 'smart', 'context'].includes(urlTool) && urlTool !== activeTool) {
       setActiveTool(urlTool);
     }
   }, [searchParams]);
@@ -96,9 +96,9 @@ const CurationLab = () => {
       <header className="bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4 lg:gap-6">
-            <div 
+          <div 
               className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-primary to-sonic-dark rounded-xl flex items-center justify-center cursor-pointer shadow-glow"
-              onClick={() => navigate('/dashboard')}
+              onClick={() => navigate('/home')}
             >
               <Music className="w-4 h-4 lg:w-5 lg:h-5 text-primary-foreground" />
             </div>
@@ -106,18 +106,11 @@ const CurationLab = () => {
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1">
               <Link 
-                to="/dashboard" 
+                to="/home" 
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
               >
                 <Home className="w-4 h-4" />
-                <span>Dashboard</span>
-              </Link>
-              <Link 
-                to="/playlists" 
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-              >
-                <ListMusic className="w-4 h-4" />
-                <span>Playlists</span>
+                <span>Home</span>
               </Link>
               <Link 
                 to="/intelligence" 
@@ -125,6 +118,13 @@ const CurationLab = () => {
               >
                 <Brain className="w-4 h-4" />
                 <span>Intelligence</span>
+              </Link>
+              <Link 
+                to="/playlists" 
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                <ListMusic className="w-4 h-4" />
+                <span>Playlists</span>
               </Link>
               <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 text-primary font-medium">
                 <SlidersHorizontal className="w-4 h-4" />
@@ -204,6 +204,9 @@ const CurationLab = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
           >
+            {activeTool === 'suggestions' && (
+              <TrackSuggestionsTool fullWidth />
+            )}
             {activeTool === 'smart' && (
               <SmartDiscoveryEngine 
                 onSearch={(filters) => searchLibraryTracks(accessToken!, filters)}
@@ -215,9 +218,6 @@ const CurationLab = () => {
                 onGenerate={(context, duration) => generateContextPlaylist(accessToken!, context, duration)}
                 fullWidth
               />
-            )}
-            {activeTool === 'suggestions' && (
-              <TrackSuggestionsTool fullWidth />
             )}
           </motion.div>
         </AnimatePresence>
