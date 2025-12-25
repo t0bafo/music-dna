@@ -517,32 +517,60 @@ serve(async (req) => {
         console.log(`[music-intelligence] Playlist has ${playlistTrackIds.length} tracks`)
 
         // Step 2: Get audio features from ReccoBeats API
-        const batchSize = 40
         const allFeatures: Map<string, any> = new Map()
 
-        for (let i = 0; i < playlistTrackIds.length; i += batchSize) {
-          const batch = playlistTrackIds.slice(i, i + batchSize)
-          const idsParam = batch.join(',')
-          
-          try {
-            const reccoResponse = await fetch(
-              `https://reccobeats.com/api/audio-features?ids=${idsParam}`
-            )
-            
-            if (reccoResponse.ok) {
-              const reccoData = await reccoResponse.json()
-              if (reccoData.audio_features) {
-                for (const feature of reccoData.audio_features) {
-                  if (feature && feature.id) {
-                    allFeatures.set(feature.id, feature)
-                  }
-                }
-              }
-            } else {
-              console.error(`[music-intelligence] ReccoBeats batch failed:`, reccoResponse.status)
+        // First, try to get features from user's library (already stored)
+        const { data: libraryFeatures } = await supabaseAdmin
+          .from('music_library')
+          .select('track_id, tempo, energy, danceability, valence, acousticness, speechiness, instrumentalness, liveness, popularity')
+          .eq('user_id', userId)
+          .in('track_id', playlistTrackIds)
+
+        if (libraryFeatures && libraryFeatures.length > 0) {
+          for (const track of libraryFeatures) {
+            if (track.tempo != null) {
+              allFeatures.set(track.track_id, {
+                id: track.track_id,
+                tempo: track.tempo,
+                energy: track.energy,
+                danceability: track.danceability,
+                valence: track.valence,
+                acousticness: track.acousticness,
+                speechiness: track.speechiness,
+                instrumentalness: track.instrumentalness,
+                liveness: track.liveness
+              })
             }
-          } catch (err) {
-            console.error(`[music-intelligence] ReccoBeats error:`, err)
+          }
+          console.log(`[music-intelligence] Got ${allFeatures.size} tracks from library`)
+        }
+
+        // For tracks not in library, fetch from ReccoBeats individually (parallel)
+        const missingIds = playlistTrackIds.filter((id: string) => !allFeatures.has(id))
+        
+        if (missingIds.length > 0) {
+          console.log(`[music-intelligence] Fetching ${missingIds.length} tracks from ReccoBeats`)
+          
+          const fetchPromises = missingIds.slice(0, 20).map(async (trackId: string) => {
+            try {
+              const response = await fetch(
+                `https://api.reccobeats.com/v1/track/${trackId}/audio-features`
+              )
+              if (response.ok) {
+                const data = await response.json()
+                return { id: trackId, ...data }
+              }
+            } catch (err) {
+              // Silent fail for individual tracks
+            }
+            return null
+          })
+          
+          const results = await Promise.all(fetchPromises)
+          for (const feature of results) {
+            if (feature && feature.tempo != null) {
+              allFeatures.set(feature.id, feature)
+            }
           }
         }
 
