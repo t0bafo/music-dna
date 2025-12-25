@@ -343,6 +343,20 @@ const Landing = () => {
           </motion.div>
         </motion.section>
 
+        {/* ============ TRANSITION SUBHEADING ============ */}
+        <motion.div
+          className="text-center mt-16 lg:mt-20 mb-12 lg:mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
+          transition={{ duration: 0.5, ease: smoothEase }}
+        >
+          <div className="w-16 h-px bg-primary/60 mx-auto mb-4" />
+          <h2 className="font-display text-2xl lg:text-[32px] font-semibold text-foreground/90">
+            Here's What You'll Get
+          </h2>
+        </motion.div>
+
         {/* ============ FEATURES SECTION ============ */}
         <motion.section
           className="mb-16 lg:mb-24"
