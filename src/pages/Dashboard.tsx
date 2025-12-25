@@ -1,19 +1,17 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   getTopTracks, 
   getUserPlaylists, 
-  getPlaylistTracks,
   getAudioFeaturesFromReccoBeats,
   SpotifyTrack,
   SpotifyPlaylist,
   AudioFeatures,
   TimeRange,
 } from '@/lib/spotify-api';
-import { Music, Loader2, AlertCircle, ListMusic, RefreshCw, Brain, Home, SlidersHorizontal } from 'lucide-react';
+import { Music, Loader2, AlertCircle, RefreshCw, Brain, Home, SlidersHorizontal, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -21,15 +19,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
-import AudioDNACard from '@/components/AudioDNACard';
-import PlaylistGrid from '@/components/PlaylistGrid';
 import TrackTable from '@/components/TrackTable';
+import PlaylistGrid from '@/components/PlaylistGrid';
+import MusicSignatureHero from '@/components/MusicSignatureHero';
+import TopAlbumsGrid from '@/components/TopAlbumsGrid';
+import SimplifiedMetricsGrid from '@/components/SimplifiedMetricsGrid';
+import ActionCards from '@/components/ActionCards';
+import { motion } from 'framer-motion';
 
-interface TrackWithFeatures extends SpotifyTrack, Partial<AudioFeatures> {
+interface TrackWithFeatures extends Omit<SpotifyTrack, 'popularity'>, Partial<AudioFeatures> {
   artist: string;
   albumImage?: string;
+  popularity: number;
 }
 
 interface Stats {
@@ -69,19 +74,20 @@ const Dashboard = () => {
   const { isAuthenticated, isLoading: authLoading, accessToken, user } = useAuth();
   const navigate = useNavigate();
 
-  // My Audio DNA state
+  // State
   const [timeRange, setTimeRange] = useState<TimeRange>('medium_term');
   const [topTracks, setTopTracks] = useState<TrackWithFeatures[]>([]);
   const [userStats, setUserStats] = useState<Stats | null>(null);
   const [loadingTopTracks, setLoadingTopTracks] = useState(false);
-
-  // My Playlists state
   const [playlists, setPlaylists] = useState<SpotifyPlaylist[]>([]);
-  const [selectedPlaylist, setSelectedPlaylist] = useState<SpotifyPlaylist | null>(null);
   const [loadingPlaylists, setLoadingPlaylists] = useState(false);
-
-  // Errors
   const [error, setError] = useState<string | null>(null);
+  const [tracksTableOpen, setTracksTableOpen] = useState(false);
+
+  // Calculate underground count
+  const undergroundCount = useMemo(() => {
+    return topTracks.filter(t => t.popularity < 50).length;
+  }, [topTracks]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -103,6 +109,7 @@ const Dashboard = () => {
         ...track,
         artist: track.artists[0]?.name || 'Unknown',
         albumImage: track.album.images?.[2]?.url || track.album.images?.[0]?.url,
+        popularity: track.popularity,
       }));
 
       // Fetch audio features
@@ -129,7 +136,6 @@ const Dashboard = () => {
     if (!accessToken) return;
 
     setLoadingPlaylists(true);
-
     try {
       const data = await getUserPlaylists(accessToken, 50);
       setPlaylists(data.items);
@@ -182,7 +188,7 @@ const Dashboard = () => {
               <Music className="w-4 h-4 lg:w-5 lg:h-5 text-primary-foreground" />
             </div>
             
-            {/* Desktop Navigation - Hidden on mobile */}
+            {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1">
               <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 text-primary font-medium">
                 <Home className="w-4 h-4" />
@@ -210,15 +216,32 @@ const Dashboard = () => {
 
       {/* Main Content */}
       <main className="container mx-auto px-4 lg:px-8 py-6 lg:py-8 max-w-6xl">
-        {/* Welcome */}
-        <div className="mb-6 lg:mb-8 animate-fade-in">
-          <h1 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-2">
-            Welcome back, {user?.display_name?.split(' ')[0] || 'there'}! 👋
-          </h1>
-          <p className="text-sm lg:text-base text-muted-foreground">
-            Explore your music DNA and analyze your playlists.
-          </p>
-        </div>
+        {/* Welcome + Time Range Selector */}
+        <motion.div 
+          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 lg:mb-8"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <div>
+            <h1 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1">
+              Welcome back, {user?.display_name?.split(' ')[0] || 'there'}! 👋
+            </h1>
+            <p className="text-sm lg:text-base text-muted-foreground">
+              Here's your music personality snapshot.
+            </p>
+          </div>
+          <Select value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
+            <SelectTrigger className="w-full sm:w-[160px] bg-secondary/50 border-border/50">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border-border/50">
+              <SelectItem value="short_term">Last 4 Weeks</SelectItem>
+              <SelectItem value="medium_term">Last 6 Months</SelectItem>
+              <SelectItem value="long_term">All Time</SelectItem>
+            </SelectContent>
+          </Select>
+        </motion.div>
 
         {/* Error */}
         {error && (
@@ -232,131 +255,97 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Tabs - Simplified to 2 tabs */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full max-w-sm grid-cols-2 gap-2 h-auto p-1 bg-secondary/30">
-            <TabsTrigger value="overview" className="flex items-center gap-2 py-3 text-sm data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
-              <Home className="w-4 h-4" />
-              <span>Overview</span>
-            </TabsTrigger>
-            <TabsTrigger value="playlists" className="flex items-center gap-2 py-3 text-sm data-[state=active]:bg-primary/10 data-[state=active]:text-primary">
-              <ListMusic className="w-4 h-4" />
-              <span>Playlists</span>
-            </TabsTrigger>
-          </TabsList>
+        <div className="space-y-6 lg:space-y-8">
+          {/* 1. HERO - Music Signature */}
+          <MusicSignatureHero
+            stats={userStats}
+            trackCount={topTracks.length}
+            undergroundCount={undergroundCount}
+            isLoading={loadingTopTracks}
+            onExplore={() => navigate('/intelligence')}
+          />
 
-          {/* Tab 1: Overview (Your Audio DNA) */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="flex flex-col gap-4">
-              <h2 className="font-display text-lg lg:text-xl font-bold text-foreground">Your Audio DNA Profile</h2>
-              <Select value={timeRange} onValueChange={(v) => setTimeRange(v as TimeRange)}>
-                <SelectTrigger className="w-full sm:w-[180px] bg-secondary/50 border-border/50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-popover border-border/50">
-                  <SelectItem value="short_term">Last 4 Weeks</SelectItem>
-                  <SelectItem value="medium_term">Last 6 Months</SelectItem>
-                  <SelectItem value="long_term">All Time</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          {/* 2. Quick Stats - Simplified Metrics */}
+          <section>
+            <h2 className="font-display text-lg lg:text-xl font-bold text-foreground mb-4">
+              📊 Quick Stats ({timeRangeLabels[timeRange]})
+            </h2>
+            <SimplifiedMetricsGrid
+              stats={userStats}
+              undergroundCount={undergroundCount}
+              totalTracks={topTracks.length}
+              isLoading={loadingTopTracks}
+            />
+          </section>
 
-            {loadingTopTracks ? (
-              <div className="bg-card/60 backdrop-blur-xl rounded-2xl p-8 lg:p-12 text-center border border-border/50">
-                <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
-                <p className="text-muted-foreground">Analyzing your top tracks...</p>
-              </div>
-            ) : userStats ? (
-              <>
-                <AudioDNACard
-                  title={`Your ${timeRangeLabels[timeRange]} DNA`}
-                  subtitle="Based on your most-played tracks"
-                  stats={userStats}
-                  trackCount={topTracks.length}
-                />
+          {/* 3. Top Albums Grid */}
+          <TopAlbumsGrid
+            tracks={topTracks}
+            isLoading={loadingTopTracks}
+          />
 
-                <div>
-                  <h3 className="font-display text-base lg:text-lg font-bold text-foreground mb-4">Your Top 50 Tracks</h3>
-                  <TrackTable tracks={topTracks} />
-                </div>
-              </>
-            ) : (
-              <div className="bg-card/60 backdrop-blur-xl rounded-2xl p-8 lg:p-12 text-center border border-border/50">
-                <Music className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="font-display text-lg font-semibold text-foreground mb-2">No listening data yet</h3>
-                <p className="text-muted-foreground">Start listening to music on Spotify and come back!</p>
-              </div>
-            )}
+          {/* 4. Top 50 Tracks (Collapsible) */}
+          {topTracks.length > 0 && (
+            <Collapsible open={tracksTableOpen} onOpenChange={setTracksTableOpen}>
+              <Card className="bg-card/80 backdrop-blur-xl border-border/50">
+                <CardHeader className="p-4 lg:p-6">
+                  <CollapsibleTrigger asChild>
+                    <button className="flex items-center justify-between w-full text-left">
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        🎵 Your Top 50 Tracks
+                      </CardTitle>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span>{tracksTableOpen ? 'Hide' : 'Show'}</span>
+                        {tracksTableOpen ? (
+                          <ChevronUp className="w-4 h-4" />
+                        ) : (
+                          <ChevronDown className="w-4 h-4" />
+                        )}
+                      </div>
+                    </button>
+                  </CollapsibleTrigger>
+                </CardHeader>
+                <CollapsibleContent>
+                  <CardContent className="p-4 lg:p-6 pt-0">
+                    <TrackTable tracks={topTracks} />
+                  </CardContent>
+                </CollapsibleContent>
+              </Card>
+            </Collapsible>
+          )}
 
-            {/* CTA to Intelligence */}
-            <div className="mt-6 lg:mt-8 p-4 lg:p-6 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent rounded-2xl border border-primary/20">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-xl">
-                    <Brain className="w-6 h-6 lg:w-8 lg:h-8 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-display font-semibold text-foreground">Want deeper insights?</h3>
-                    <p className="text-xs lg:text-sm text-muted-foreground">
-                      Analyze your entire library with Music Intelligence
-                    </p>
-                  </div>
-                </div>
-                <Button onClick={() => navigate('/intelligence')} className="w-full sm:w-auto gap-2">
-                  <Brain className="w-4 h-4" />
-                  Go to Intelligence
-                </Button>
-              </div>
-            </div>
-
-            {/* CTA to Curation Lab */}
-            <div className="mt-4 p-4 lg:p-6 bg-gradient-to-r from-chart-purple/10 via-chart-purple/5 to-transparent rounded-2xl border border-chart-purple/20">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-chart-purple/10 rounded-xl">
-                    <SlidersHorizontal className="w-6 h-6 lg:w-8 lg:h-8 text-chart-purple" />
-                  </div>
-                  <div>
-                    <h3 className="font-display font-semibold text-foreground">Want to curate playlists?</h3>
-                    <p className="text-xs lg:text-sm text-muted-foreground">
-                      AI-powered tools to discover and organize your music
-                    </p>
-                  </div>
-                </div>
-                <Button onClick={() => navigate('/curation')} variant="outline" className="w-full sm:w-auto gap-2">
-                  <SlidersHorizontal className="w-4 h-4" />
-                  Go to Curation Lab
-                </Button>
-              </div>
-            </div>
-          </TabsContent>
-
-          {/* Tab 2: My Playlists */}
-          <TabsContent value="playlists" className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <h2 className="font-display text-lg lg:text-xl font-bold text-foreground">Your Playlists</h2>
-              <p className="text-xs lg:text-sm text-muted-foreground">Click a playlist to analyze its flow</p>
-            </div>
-
+          {/* 5. Your Playlists */}
+          <section>
+            <h2 className="font-display text-lg lg:text-xl font-bold text-foreground mb-4">
+              📀 Your Playlists
+            </h2>
             {loadingPlaylists ? (
               <div className="bg-card/60 backdrop-blur-xl rounded-2xl p-8 lg:p-12 text-center border border-border/50">
                 <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
                 <p className="text-muted-foreground">Loading your playlists...</p>
               </div>
             ) : playlists.length > 0 ? (
-              <PlaylistGrid
-                playlists={playlists}
-                selectedPlaylistId={selectedPlaylist?.id}
-              />
+              <PlaylistGrid playlists={playlists} />
             ) : (
-              <div className="bg-card/60 backdrop-blur-xl rounded-2xl p-8 lg:p-12 text-center border border-border/50">
-                <ListMusic className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+              <div className="bg-card/60 backdrop-blur-xl rounded-2xl p-8 text-center border border-border/50">
+                <Music className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="font-display text-lg font-semibold text-foreground mb-2">No playlists found</h3>
                 <p className="text-muted-foreground">Create some playlists on Spotify to see them here.</p>
               </div>
             )}
-          </TabsContent>
-        </Tabs>
+          </section>
+
+          {/* 6. Action Cards */}
+          <section>
+            <h2 className="font-display text-lg lg:text-xl font-bold text-foreground mb-4">
+              🚀 What's Next?
+            </h2>
+            <ActionCards
+              onNavigateIntelligence={() => navigate('/intelligence')}
+              onNavigateCuration={() => navigate('/curation')}
+            />
+          </section>
+        </div>
       </main>
       
       {/* Mobile Bottom Navigation */}
