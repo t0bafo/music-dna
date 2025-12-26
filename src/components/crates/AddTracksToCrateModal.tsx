@@ -86,30 +86,42 @@ const AddTracksToCrateModal = ({
   });
 
   // Fetch user's actual top 50 tracks from Spotify
-  const { data: topTracks = [] } = useTopTracks(accessToken, 'medium_term', 50);
-  const topTrackIds = useMemo(() => new Set(topTracks.map(t => t.id)), [topTracks]);
+  const { data: topTracks = [], isLoading: topTracksLoading } = useTopTracks(accessToken, 'medium_term', 50);
 
   const existingSet = useMemo(() => new Set(existingTrackIds), [existingTrackIds]);
 
+  // Convert top tracks to library format for consistent display
+  const topTracksAsLibrary = useMemo(() => {
+    return topTracks.map(t => ({
+      track_id: t.id,
+      name: t.name,
+      artist: t.artist,
+      album: t.album?.name || '',
+      tempo: t.tempo,
+      energy: t.energy,
+      danceability: t.danceability,
+      valence: t.valence,
+      popularity: t.popularity
+    }));
+  }, [topTracks]);
+
   // Apply filters and search - NO artificial limits, show ALL tracks
   const filteredTracks = useMemo(() => {
-    let tracks = library;
+    let tracks: any[];
 
-    // Apply filter
+    // Apply filter - use different source based on filter type
     switch (activeFilter) {
       case 'top50':
-        // Use actual top 50 most-played tracks from Spotify
-        if (topTrackIds.size > 0) {
-          tracks = tracks.filter((t) => topTrackIds.has(t.track_id));
-        } else {
-          // Fallback: show first 50 from library
-          tracks = tracks.slice(0, 50);
-        }
+        // Use actual top 50 most-played tracks DIRECTLY from Spotify API
+        // Don't filter through library - show ALL top tracks even if not saved
+        tracks = topTracksAsLibrary;
         break;
       case 'deepcuts':
-        tracks = tracks.filter((t) => (t.popularity || 100) < 50);
+        tracks = library.filter((t) => (t.popularity || 100) < 50);
         break;
-      // 'all' filter: show ALL tracks, no limit
+      default:
+        // 'all' filter: show ALL library tracks
+        tracks = library;
     }
 
     // Apply search
@@ -124,7 +136,7 @@ const AddTracksToCrateModal = ({
 
     // Return ALL matching tracks - no artificial limit
     return tracks;
-  }, [library, activeFilter, searchQuery, topTrackIds]);
+  }, [library, activeFilter, searchQuery, topTracksAsLibrary]);
 
   const toggleTrack = useCallback((track: any) => {
     // Don't allow selecting tracks already in crate
