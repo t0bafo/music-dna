@@ -63,7 +63,7 @@ const CrateDetail = () => {
   const updateCrate = useUpdateCrate();
   const reorderTracks = useReorderCrateTracks();
 
-  // Drag and drop sensors
+  // Drag and drop sensors - optimized for mobile scrolling
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -72,8 +72,8 @@ const CrateDetail = () => {
     }),
     useSensor(TouchSensor, {
       activationConstraint: {
-        delay: 250,
-        tolerance: 5,
+        delay: 500, // Longer delay to avoid interfering with scroll
+        tolerance: 8, // More tolerance for touch movement
       },
     }),
     useSensor(KeyboardSensor, {
@@ -333,6 +333,10 @@ const CrateDetail = () => {
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             className="space-y-2"
+            style={{
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehaviorY: 'contain',
+            }}
           >
             <DndContext
               sensors={sensors}
