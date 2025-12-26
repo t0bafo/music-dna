@@ -91,7 +91,7 @@ const AddTracksToCrateModal = ({
 
   const existingSet = useMemo(() => new Set(existingTrackIds), [existingTrackIds]);
 
-  // Apply filters and search
+  // Apply filters and search - NO artificial limits, show ALL tracks
   const filteredTracks = useMemo(() => {
     let tracks = library;
 
@@ -109,6 +109,7 @@ const AddTracksToCrateModal = ({
       case 'deepcuts':
         tracks = tracks.filter((t) => (t.popularity || 100) < 50);
         break;
+      // 'all' filter: show ALL tracks, no limit
     }
 
     // Apply search
@@ -121,8 +122,8 @@ const AddTracksToCrateModal = ({
       );
     }
 
-    // Limit for performance
-    return tracks.slice(0, 100);
+    // Return ALL matching tracks - no artificial limit
+    return tracks;
   }, [library, activeFilter, searchQuery, topTrackIds]);
 
   const toggleTrack = useCallback((track: any) => {
@@ -259,12 +260,20 @@ const AddTracksToCrateModal = ({
           </Button>
         </div>
 
-        {/* Selected count */}
-        {selectedTracks.size > 0 && (
-          <div className="text-sm text-primary font-medium">
-            {selectedTracks.size} track{selectedTracks.size !== 1 ? 's' : ''} selected
-          </div>
-        )}
+        {/* Track counts */}
+        <div className="flex items-center justify-between text-sm">
+          <span className="text-muted-foreground">
+            {filteredTracks.length.toLocaleString()} track{filteredTracks.length !== 1 ? 's' : ''} 
+            {library.length > 0 && filteredTracks.length !== library.length && (
+              <span className="text-muted-foreground/60"> of {library.length.toLocaleString()}</span>
+            )}
+          </span>
+          {selectedTracks.size > 0 && (
+            <span className="text-primary font-medium">
+              {selectedTracks.size} selected
+            </span>
+          )}
+        </div>
 
         {/* Track list */}
         <ScrollArea className="h-[400px] -mx-6 px-6">
