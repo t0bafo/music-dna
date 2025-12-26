@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCrate, useRemoveTrackFromCrate, useDeleteCrate, useUpdateCrate } from '@/hooks/use-crates';
+import { useCrate, useRemoveTrackFromCrate, useDeleteCrate, useUpdateCrate, useReorderCrateTracks } from '@/hooks/use-crates';
 import { 
   Music, Loader2, ArrowLeft, Plus, Trash2, MoreVertical, Package, 
   Share2, Pencil, Clock, Link as LinkIcon 
@@ -24,12 +24,29 @@ import { Label } from '@/components/ui/label';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
 import AddTracksToCrateModal from '@/components/crates/AddTracksToCrateModal';
+import { SortableTrackRow } from '@/components/crates/SortableTrackRow';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { CRATE_EMOJIS, CRATE_COLORS } from '@/lib/crates-api';
 import { motion } from 'framer-motion';
 import { usePageTitle } from '@/hooks/use-page-title';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 const CrateDetail = () => {
   const { crateId } = useParams<{ crateId: string }>();
@@ -44,6 +61,56 @@ const CrateDetail = () => {
   const removeTrack = useRemoveTrackFromCrate();
   const deleteCrate = useDeleteCrate();
   const updateCrate = useUpdateCrate();
+  const reorderTracks = useReorderCrateTracks();
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  // Local tracks state for optimistic reordering
+  const [localTracks, setLocalTracks] = useState<typeof crate.tracks | null>(null);
+  
+  // Sync local tracks with server data
+  useEffect(() => {
+    if (crate?.tracks) {
+      setLocalTracks(crate.tracks);
+    }
+  }, [crate?.tracks]);
+
+  const displayTracks = localTracks || crate?.tracks || [];
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    
+    if (!over || active.id === over.id || !crate) return;
+    
+    const oldIndex = displayTracks.findIndex(t => t.id === active.id);
+    const newIndex = displayTracks.findIndex(t => t.id === over.id);
+    
+    if (oldIndex === -1 || newIndex === -1) return;
+    
+    // Optimistic update
+    const reordered = arrayMove(displayTracks, oldIndex, newIndex);
+    setLocalTracks(reordered);
+    
+    // Persist to database
+    const trackIds = reordered.map(t => t.track_id);
+    reorderTracks.mutate({ crateId: crate.id, trackIds });
+  };
 
   // Edit form state
   const [editName, setEditName] = useState('');
@@ -261,82 +328,32 @@ const CrateDetail = () => {
         </div>
 
         {/* Tracks List */}
-        {crate.tracks && crate.tracks.length > 0 ? (
+        {displayTracks.length > 0 ? (
           <motion.div 
             initial={{ opacity: 0 }} 
             animate={{ opacity: 1 }} 
             className="space-y-2"
           >
-            {crate.tracks.map((track, index) => (
-              <div 
-                key={track.id} 
-                className="flex items-center gap-3 lg:gap-4 p-3 lg:p-4 bg-card/40 rounded-xl border border-border/30 hover:border-border/60 hover:bg-card/60 transition-all group"
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={displayTracks.map(t => t.id)}
+                strategy={verticalListSortingStrategy}
               >
-                {/* Position Number */}
-                <span className="text-sm text-muted-foreground/70 w-6 text-center font-mono">
-                  {index + 1}
-                </span>
-
-                {/* Album Art */}
-                <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-md bg-secondary/50 shrink-0 overflow-hidden">
-                  {track.album_art_url ? (
-                    <img 
-                      src={track.album_art_url} 
-                      alt={track.album_name || 'Album art'}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <Music className="w-5 h-5 text-muted-foreground/50" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Track Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-foreground truncate">
-                    {track.name || 'Unknown Track'}
-                  </p>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <span className="truncate">{track.artist_name || 'Unknown Artist'}</span>
-                    {track.duration_ms && (
-                      <>
-                        <span className="text-border">•</span>
-                        <span className="shrink-0">{formatDuration(track.duration_ms)}</span>
-                      </>
-                    )}
-                    {track.bpm && (
-                      <>
-                        <span className="text-border hidden sm:inline">•</span>
-                        <span className="shrink-0 hidden sm:inline">{Math.round(track.bpm)} BPM</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {/* Actions Menu */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shrink-0"
-                    >
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border/50">
-                    <DropdownMenuItem 
-                      onClick={() => handleRemoveTrack(track.track_id, track.name || 'Track')}
-                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Remove from crate
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            ))}
+                {displayTracks.map((track, index) => (
+                  <SortableTrackRow
+                    key={track.id}
+                    track={track}
+                    index={index}
+                    onRemove={handleRemoveTrack}
+                    formatDuration={formatDuration}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           </motion.div>
         ) : (
           /* Empty State */
