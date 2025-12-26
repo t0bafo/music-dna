@@ -1,22 +1,26 @@
-import { useState, useMemo } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { useState, useMemo, useCallback } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Search, Plus, Music } from 'lucide-react';
+import { Loader2, Search, Plus, Music, Check } from 'lucide-react';
 import { useAddTracksToCrate } from '@/hooks/use-crates';
 import { useAuth } from '@/contexts/AuthContext';
 import { getLibrarySecure } from '@/lib/secure-database';
 import { useQuery } from '@tanstack/react-query';
 import { TrackToAdd } from '@/lib/crates-api';
+import { cn } from '@/lib/utils';
 
 interface AddTracksToCrateModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   crateId: string;
+  crateName?: string;
   existingTrackIds: string[];
 }
+
+type FilterType = 'all' | 'top50' | 'deepcuts';
 
 // Fetch track details from Spotify API including duration and album art
 async function fetchSpotifyTrackDetails(
@@ -25,7 +29,6 @@ async function fetchSpotifyTrackDetails(
 ): Promise<Map<string, { duration_ms: number; album_art_url: string }>> {
   const details = new Map<string, { duration_ms: number; album_art_url: string }>();
   
-  // Spotify API allows max 50 tracks per request
   const chunks: string[][] = [];
   for (let i = 0; i < trackIds.length; i += 50) {
     chunks.push(trackIds.slice(i, i + 50));
@@ -42,7 +45,7 @@ async function fetchSpotifyTrackDetails(
         const data = await response.json();
         for (const track of data.tracks || []) {
           if (track && track.id) {
-            const albumArt = track.album?.images?.[0]?.url || '';
+            const albumArt = track.album?.images?.[1]?.url || track.album?.images?.[0]?.url || '';
             details.set(track.id, {
               duration_ms: track.duration_ms || 0,
               album_art_url: albumArt
@@ -58,11 +61,18 @@ async function fetchSpotifyTrackDetails(
   return details;
 }
 
-const AddTracksToCrateModal = ({ open, onOpenChange, crateId, existingTrackIds }: AddTracksToCrateModalProps) => {
+const AddTracksToCrateModal = ({ 
+  open, 
+  onOpenChange, 
+  crateId, 
+  crateName,
+  existingTrackIds 
+}: AddTracksToCrateModalProps) => {
   const { accessToken } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTracks, setSelectedTracks] = useState<Map<string, any>>(new Map());
   const [isFetchingDetails, setIsFetchingDetails] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   const addTracks = useAddTracksToCrate();
 
@@ -74,46 +84,62 @@ const AddTracksToCrateModal = ({ open, onOpenChange, crateId, existingTrackIds }
     staleTime: 1000 * 60 * 5,
   });
 
-  // Filter tracks not already in crate and matching search
-  const filteredTracks = useMemo(() => {
-    const existingSet = new Set(existingTrackIds);
-    
-    return library
-      .filter((track) => !existingSet.has(track.track_id))
-      .filter((track) => {
-        if (!searchQuery.trim()) return true;
-        const query = searchQuery.toLowerCase();
-        return (
-          track.name?.toLowerCase().includes(query) ||
-          track.artist?.toLowerCase().includes(query) ||
-          track.album?.toLowerCase().includes(query)
-        );
-      })
-      .slice(0, 100); // Limit for performance
-  }, [library, existingTrackIds, searchQuery]);
+  const existingSet = useMemo(() => new Set(existingTrackIds), [existingTrackIds]);
 
-  const toggleTrack = (track: any) => {
-    const newSelected = new Map(selectedTracks);
-    
-    if (newSelected.has(track.track_id)) {
-      newSelected.delete(track.track_id);
-    } else {
-      // Store basic info, will fetch duration/album art on submit
-      newSelected.set(track.track_id, {
-        track_id: track.track_id,
-        name: track.name,
-        artist_name: track.artist,
-        album_name: track.album,
-        bpm: track.tempo,
-        energy: track.energy,
-        danceability: track.danceability,
-        valence: track.valence,
-        popularity: track.popularity
-      });
+  // Apply filters and search
+  const filteredTracks = useMemo(() => {
+    let tracks = library;
+
+    // Apply filter
+    switch (activeFilter) {
+      case 'top50':
+        tracks = tracks.filter((t) => (t.popularity || 0) >= 50);
+        break;
+      case 'deepcuts':
+        tracks = tracks.filter((t) => (t.popularity || 100) < 50);
+        break;
     }
-    
-    setSelectedTracks(newSelected);
-  };
+
+    // Apply search
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      tracks = tracks.filter((track) =>
+        track.name?.toLowerCase().includes(query) ||
+        track.artist?.toLowerCase().includes(query) ||
+        track.album?.toLowerCase().includes(query)
+      );
+    }
+
+    // Limit for performance
+    return tracks.slice(0, 100);
+  }, [library, activeFilter, searchQuery]);
+
+  const toggleTrack = useCallback((track: any) => {
+    // Don't allow selecting tracks already in crate
+    if (existingSet.has(track.track_id)) return;
+
+    setSelectedTracks((prev) => {
+      const newSelected = new Map(prev);
+      
+      if (newSelected.has(track.track_id)) {
+        newSelected.delete(track.track_id);
+      } else {
+        newSelected.set(track.track_id, {
+          track_id: track.track_id,
+          name: track.name,
+          artist_name: track.artist,
+          album_name: track.album,
+          bpm: track.tempo,
+          energy: track.energy,
+          danceability: track.danceability,
+          valence: track.valence,
+          popularity: track.popularity
+        });
+      }
+      
+      return newSelected;
+    });
+  }, [existingSet]);
 
   const handleAdd = async () => {
     if (selectedTracks.size === 0 || !accessToken) return;
@@ -150,33 +176,76 @@ const AddTracksToCrateModal = ({ open, onOpenChange, crateId, existingTrackIds }
 
       setSelectedTracks(new Map());
       setSearchQuery('');
+      setActiveFilter('all');
       onOpenChange(false);
     } finally {
       setIsFetchingDetails(false);
     }
   };
 
+  const handleClose = () => {
+    setSelectedTracks(new Map());
+    setSearchQuery('');
+    setActiveFilter('all');
+    onOpenChange(false);
+  };
+
   const isPending = addTracks.isPending || isFetchingDetails;
 
+  // Format duration
+  const formatDuration = (ms: number | undefined) => {
+    if (!ms) return '';
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg max-h-[80vh] flex flex-col">
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col bg-card/95 backdrop-blur-xl">
         <DialogHeader>
-          <DialogTitle className="font-display text-xl">Add Tracks to Crate</DialogTitle>
-          <DialogDescription>
-            Search your library and select tracks to add.
-          </DialogDescription>
+          <DialogTitle className="font-display text-xl">
+            Add to {crateName ? `"${crateName}"` : 'Crate'}
+          </DialogTitle>
         </DialogHeader>
 
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search your library..."
+            placeholder="Search tracks..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 bg-secondary/30"
           />
+        </div>
+
+        {/* Filters */}
+        <div className="flex gap-2">
+          <Button
+            variant={activeFilter === 'all' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('all')}
+            className="text-xs"
+          >
+            All Tracks
+          </Button>
+          <Button
+            variant={activeFilter === 'top50' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('top50')}
+            className="text-xs"
+          >
+            Top 50
+          </Button>
+          <Button
+            variant={activeFilter === 'deepcuts' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveFilter('deepcuts')}
+            className="text-xs"
+          >
+            Deep Cuts
+          </Button>
         </div>
 
         {/* Selected count */}
@@ -187,7 +256,7 @@ const AddTracksToCrateModal = ({ open, onOpenChange, crateId, existingTrackIds }
         )}
 
         {/* Track list */}
-        <ScrollArea className="flex-1 -mx-6 px-6">
+        <ScrollArea className="flex-1 max-h-[400px] -mx-6 px-6">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
@@ -205,26 +274,75 @@ const AddTracksToCrateModal = ({ open, onOpenChange, crateId, existingTrackIds }
             </div>
           ) : (
             <div className="space-y-1 pb-4">
-              {filteredTracks.map((track) => (
-                <label
-                  key={track.track_id}
-                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-secondary/50 cursor-pointer transition-colors"
-                >
-                  <Checkbox
-                    checked={selectedTracks.has(track.track_id)}
-                    onCheckedChange={() => toggleTrack(track)}
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">{track.name}</p>
-                    <p className="text-sm text-muted-foreground truncate">{track.artist}</p>
+              {filteredTracks.map((track) => {
+                const isInCrate = existingSet.has(track.track_id);
+                const isSelected = selectedTracks.has(track.track_id);
+                
+                return (
+                  <div
+                    key={track.track_id}
+                    onClick={() => toggleTrack(track)}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer",
+                      isInCrate 
+                        ? "opacity-50 cursor-not-allowed bg-secondary/20" 
+                        : isSelected 
+                          ? "bg-primary/10 border border-primary/30" 
+                          : "hover:bg-secondary/50"
+                    )}
+                  >
+                    {/* Checkbox or Check icon */}
+                    <div className="shrink-0">
+                      {isInCrate ? (
+                        <div className="w-5 h-5 rounded-md bg-primary/20 flex items-center justify-center">
+                          <Check className="w-3.5 h-3.5 text-primary" />
+                        </div>
+                      ) : (
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={() => toggleTrack(track)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        />
+                      )}
+                    </div>
+
+                    {/* Album art placeholder */}
+                    <div className="w-10 h-10 rounded-md bg-secondary/50 shrink-0 flex items-center justify-center overflow-hidden">
+                      <Music className="w-5 h-5 text-muted-foreground/50" />
+                    </div>
+
+                    {/* Track info */}
+                    <div className="flex-1 min-w-0">
+                      <p className={cn(
+                        "font-medium truncate",
+                        isInCrate ? "text-muted-foreground" : "text-foreground"
+                      )}>
+                        {track.name}
+                      </p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <span className="truncate">{track.artist}</span>
+                      </div>
+                    </div>
+
+                    {/* Duration & BPM */}
+                    <div className="shrink-0 text-right text-xs text-muted-foreground/70">
+                      {track.tempo && (
+                        <div className="bg-secondary/50 px-2 py-0.5 rounded">
+                          {Math.round(track.tempo)} BPM
+                        </div>
+                      )}
+                    </div>
+
+                    {/* In crate indicator */}
+                    {isInCrate && (
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        In crate
+                      </span>
+                    )}
                   </div>
-                  {track.tempo && (
-                    <span className="text-xs text-muted-foreground/70 bg-secondary/50 px-2 py-0.5 rounded">
-                      {Math.round(track.tempo)} BPM
-                    </span>
-                  )}
-                </label>
-              ))}
+                );
+              })}
             </div>
           )}
         </ScrollArea>
@@ -234,7 +352,7 @@ const AddTracksToCrateModal = ({ open, onOpenChange, crateId, existingTrackIds }
           <Button
             variant="outline"
             className="flex-1"
-            onClick={() => onOpenChange(false)}
+            onClick={handleClose}
           >
             Cancel
           </Button>
@@ -248,7 +366,7 @@ const AddTracksToCrateModal = ({ open, onOpenChange, crateId, existingTrackIds }
             ) : (
               <Plus className="w-4 h-4" />
             )}
-            Add {selectedTracks.size > 0 ? selectedTracks.size : ''} Track{selectedTracks.size !== 1 ? 's' : ''}
+            Add {selectedTracks.size > 0 ? `${selectedTracks.size} track${selectedTracks.size !== 1 ? 's' : ''}` : 'tracks'}
           </Button>
         </div>
       </DialogContent>

@@ -343,7 +343,8 @@ const CrateDetail = () => {
       <AddTracksToCrateModal 
         open={showAddTracks} 
         onOpenChange={setShowAddTracks} 
-        crateId={crateId!} 
+        crateId={crateId!}
+        crateName={crate.name}
         existingTrackIds={existingTrackIds} 
       />
       
