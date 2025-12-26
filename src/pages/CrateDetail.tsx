@@ -96,6 +96,36 @@ const CrateDetail = () => {
     });
   };
 
+  const [pendingRemoval, setPendingRemoval] = useState<{ trackId: string; timeoutId: NodeJS.Timeout } | null>(null);
+
+  const handleRemoveTrack = (trackId: string, trackName: string) => {
+    // Cancel any pending removal
+    if (pendingRemoval) {
+      clearTimeout(pendingRemoval.timeoutId);
+    }
+
+    // Set up delayed removal
+    const timeoutId = setTimeout(() => {
+      removeTrack.mutate({ crateId: crate!.id, trackId });
+      setPendingRemoval(null);
+    }, 5000);
+
+    setPendingRemoval({ trackId, timeoutId });
+
+    toast('Track removed', {
+      description: `"${trackName}" removed from crate`,
+      action: {
+        label: 'Undo',
+        onClick: () => {
+          clearTimeout(timeoutId);
+          setPendingRemoval(null);
+          toast.success('Track restored');
+        }
+      },
+      duration: 5000
+    });
+  };
+
   // Calculate total duration
   const totalDuration = useMemo(() => {
     if (!crate?.tracks) return '0 min';
@@ -290,15 +320,15 @@ const CrateDetail = () => {
                     <Button 
                       variant="ghost" 
                       size="icon" 
-                      className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                      className="lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shrink-0"
                     >
                       <MoreVertical className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
+                  <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border/50">
                     <DropdownMenuItem 
-                      onClick={() => removeTrack.mutate({ crateId: crate.id, trackId: track.track_id })}
-                      className="text-destructive focus:text-destructive"
+                      onClick={() => handleRemoveTrack(track.track_id, track.name || 'Track')}
+                      className="text-destructive focus:text-destructive focus:bg-destructive/10"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
                       Remove from crate
