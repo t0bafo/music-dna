@@ -477,6 +477,97 @@ serve(async (req) => {
         break
       }
 
+      // ========== CRATES ACTIONS ==========
+      
+      case 'get_crates': {
+        console.log(`[music-intelligence] Fetching crates for user ${userId}`)
+        const { data: crates, error: cratesError } = await supabaseAdmin.from('crates').select('*').eq('user_id', userId).order('updated_at', { ascending: false })
+        if (cratesError) throw cratesError
+        const crateIds = (crates || []).map((c: any) => c.id)
+        let trackCounts: Record<string, number> = {}
+        if (crateIds.length > 0) {
+          const { data: counts } = await supabaseAdmin.from('crate_tracks').select('crate_id').in('crate_id', crateIds)
+          if (counts) { for (const row of counts) { trackCounts[row.crate_id] = (trackCounts[row.crate_id] || 0) + 1 } }
+        }
+        result = { data: (crates || []).map((c: any) => ({ ...c, track_count: trackCounts[c.id] || 0 })) }
+        break
+      }
+
+      case 'get_crate': {
+        const { crate_id } = data
+        const { data: crate, error: crateError } = await supabaseAdmin.from('crates').select('*').eq('id', crate_id).eq('user_id', userId).maybeSingle()
+        if (crateError) throw crateError
+        if (!crate) return new Response(JSON.stringify({ error: 'Crate not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        const { data: crateTracks } = await supabaseAdmin.from('crate_tracks').select('*').eq('crate_id', crate_id).order('position', { ascending: true })
+        const trackIds = (crateTracks || []).map((ct: any) => ct.track_id)
+        let trackDetails: Record<string, any> = {}
+        if (trackIds.length > 0) {
+          const { data: cached } = await supabaseAdmin.from('track_cache').select('*').in('track_id', trackIds)
+          if (cached) { for (const t of cached) { trackDetails[t.track_id] = t } }
+        }
+        result = { data: { ...crate, tracks: (crateTracks || []).map((ct: any) => ({ ...ct, ...trackDetails[ct.track_id] })) } }
+        break
+      }
+
+      case 'create_crate': {
+        const { name, description, emoji, color } = data
+        const { data: crate, error: createError } = await supabaseAdmin.from('crates').insert({ user_id: userId, name, description: description || null, emoji: emoji || '📦', color: color || '#1DB954' }).select().single()
+        if (createError) throw createError
+        result = { data: { ...crate, track_count: 0 } }
+        break
+      }
+
+      case 'update_crate': {
+        const { crate_id, name, description, emoji, color } = data
+        const { data: crate, error: updateError } = await supabaseAdmin.from('crates').update({ name, description, emoji, color }).eq('id', crate_id).eq('user_id', userId).select().single()
+        if (updateError) throw updateError
+        result = { data: crate }
+        break
+      }
+
+      case 'delete_crate': {
+        const { crate_id } = data
+        const { error: deleteError } = await supabaseAdmin.from('crates').delete().eq('id', crate_id).eq('user_id', userId)
+        if (deleteError) throw deleteError
+        result = { data: { deleted: true } }
+        break
+      }
+
+      case 'add_tracks_to_crate': {
+        const { crate_id, tracks } = data
+        const { data: crate } = await supabaseAdmin.from('crates').select('id').eq('id', crate_id).eq('user_id', userId).maybeSingle()
+        if (!crate) return new Response(JSON.stringify({ error: 'Crate not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        const { data: maxPos } = await supabaseAdmin.from('crate_tracks').select('position').eq('crate_id', crate_id).order('position', { ascending: false }).limit(1)
+        let position = (maxPos && maxPos.length > 0) ? maxPos[0].position + 1 : 0
+        const trackCacheData = tracks.map((t: any) => ({ track_id: t.track_id, name: t.name, artist_name: t.artist_name, album_name: t.album_name, album_art_url: t.album_art_url, duration_ms: t.duration_ms, popularity: t.popularity, bpm: t.bpm, energy: t.energy, danceability: t.danceability, valence: t.valence, fetched_at: new Date().toISOString() }))
+        await supabaseAdmin.from('track_cache').upsert(trackCacheData, { onConflict: 'track_id' })
+        await supabaseAdmin.from('crate_tracks').delete().eq('crate_id', crate_id).in('track_id', tracks.map((t: any) => t.track_id))
+        const crateTrackData = tracks.map((t: any, i: number) => ({ crate_id, track_id: t.track_id, position: position + i }))
+        await supabaseAdmin.from('crate_tracks').insert(crateTrackData)
+        await supabaseAdmin.from('crates').update({ updated_at: new Date().toISOString() }).eq('id', crate_id)
+        result = { data: { added: tracks.length } }
+        break
+      }
+
+      case 'remove_track_from_crate': {
+        const { crate_id, track_id } = data
+        const { data: crate } = await supabaseAdmin.from('crates').select('id').eq('id', crate_id).eq('user_id', userId).maybeSingle()
+        if (!crate) return new Response(JSON.stringify({ error: 'Crate not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        await supabaseAdmin.from('crate_tracks').delete().eq('crate_id', crate_id).eq('track_id', track_id)
+        await supabaseAdmin.from('crates').update({ updated_at: new Date().toISOString() }).eq('id', crate_id)
+        result = { data: { removed: true } }
+        break
+      }
+
+      case 'reorder_crate_tracks': {
+        const { crate_id, track_ids } = data
+        const { data: crate } = await supabaseAdmin.from('crates').select('id').eq('id', crate_id).eq('user_id', userId).maybeSingle()
+        if (!crate) return new Response(JSON.stringify({ error: 'Crate not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        for (let i = 0; i < track_ids.length; i++) { await supabaseAdmin.from('crate_tracks').update({ position: i }).eq('crate_id', crate_id).eq('track_id', track_ids[i]) }
+        result = { data: { reordered: true } }
+        break
+      }
+
       case 'suggest_tracks_for_playlist': {
         // Track Suggestions Tool - full flow with ReccoBeats
         const { playlist_id } = data

@@ -14,6 +14,71 @@ export type Database = {
   }
   public: {
     Tables: {
+      crate_tracks: {
+        Row: {
+          added_at: string
+          crate_id: string
+          id: string
+          position: number
+          track_id: string
+        }
+        Insert: {
+          added_at?: string
+          crate_id: string
+          id?: string
+          position?: number
+          track_id: string
+        }
+        Update: {
+          added_at?: string
+          crate_id?: string
+          id?: string
+          position?: number
+          track_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crate_tracks_crate_id_fkey"
+            columns: ["crate_id"]
+            isOneToOne: false
+            referencedRelation: "crates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crates: {
+        Row: {
+          color: string | null
+          created_at: string
+          description: string | null
+          emoji: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          emoji?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       listening_events: {
         Row: {
           event_type: string
@@ -104,6 +169,47 @@ export type Database = {
         }
         Relationships: []
       }
+      tag_assignments: {
+        Row: {
+          approved: boolean | null
+          confidence: number | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          source: string
+          tag_id: string
+        }
+        Insert: {
+          approved?: boolean | null
+          confidence?: number | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          source?: string
+          tag_id: string
+        }
+        Update: {
+          approved?: boolean | null
+          confidence?: number | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          source?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tag_assignments_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "vibe_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       taste_snapshots: {
         Row: {
           avg_bpm: number | null
@@ -140,6 +246,72 @@ export type Database = {
           total_tracks?: number | null
           underground_ratio?: number | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      track_cache: {
+        Row: {
+          album_art_url: string | null
+          album_name: string | null
+          artist_name: string | null
+          bpm: number | null
+          danceability: number | null
+          duration_ms: number | null
+          energy: number | null
+          fetched_at: string
+          name: string
+          popularity: number | null
+          track_id: string
+          valence: number | null
+        }
+        Insert: {
+          album_art_url?: string | null
+          album_name?: string | null
+          artist_name?: string | null
+          bpm?: number | null
+          danceability?: number | null
+          duration_ms?: number | null
+          energy?: number | null
+          fetched_at?: string
+          name: string
+          popularity?: number | null
+          track_id: string
+          valence?: number | null
+        }
+        Update: {
+          album_art_url?: string | null
+          album_name?: string | null
+          artist_name?: string | null
+          bpm?: number | null
+          danceability?: number | null
+          duration_ms?: number | null
+          energy?: number | null
+          fetched_at?: string
+          name?: string
+          popularity?: number | null
+          track_id?: string
+          valence?: number | null
+        }
+        Relationships: []
+      }
+      vibe_tags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          tag_type: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          tag_type: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          tag_type?: string
         }
         Relationships: []
       }
