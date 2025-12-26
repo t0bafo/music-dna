@@ -1,17 +1,35 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useCrate, useRemoveTrackFromCrate, useDeleteCrate } from '@/hooks/use-crates';
-import { Music, Loader2, ArrowLeft, Plus, Trash2, MoreVertical, Package } from 'lucide-react';
+import { useCrate, useRemoveTrackFromCrate, useDeleteCrate, useUpdateCrate } from '@/hooks/use-crates';
+import { 
+  Music, Loader2, ArrowLeft, Plus, Trash2, MoreVertical, Package, 
+  Share2, Pencil, Clock, Link as LinkIcon 
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { 
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, 
+  DropdownMenuTrigger, DropdownMenuSeparator 
+} from '@/components/ui/dropdown-menu';
+import { 
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle 
+} from '@/components/ui/alert-dialog';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
 import AddTracksToCrateModal from '@/components/crates/AddTracksToCrateModal';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { CRATE_EMOJIS, CRATE_COLORS } from '@/lib/crates-api';
 import { motion } from 'framer-motion';
 import { usePageTitle } from '@/hooks/use-page-title';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 const CrateDetail = () => {
   const { crateId } = useParams<{ crateId: string }>();
@@ -20,10 +38,19 @@ const CrateDetail = () => {
   
   const [showAddTracks, setShowAddTracks] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const { data: crate, isLoading } = useCrate(crateId);
   const removeTrack = useRemoveTrackFromCrate();
   const deleteCrate = useDeleteCrate();
+  const updateCrate = useUpdateCrate();
+
+  // Edit form state
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editEmoji, setEditEmoji] = useState('');
+  const [editColor, setEditColor] = useState('');
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   usePageTitle(crate?.name || 'Crate');
 
@@ -33,10 +60,61 @@ const CrateDetail = () => {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
+  // Initialize edit form when crate loads
+  useEffect(() => {
+    if (crate) {
+      setEditName(crate.name);
+      setEditDescription(crate.description || '');
+      setEditEmoji(crate.emoji);
+      setEditColor(crate.color);
+    }
+  }, [crate]);
+
   const handleDeleteCrate = async () => {
     if (!crateId) return;
     await deleteCrate.mutateAsync(crateId);
     navigate('/crates', { replace: true });
+  };
+
+  const handleEditSubmit = async () => {
+    if (!crateId || !editName.trim()) return;
+    await updateCrate.mutateAsync({
+      crateId,
+      name: editName.trim(),
+      description: editDescription.trim() || null,
+      emoji: editEmoji,
+      color: editColor
+    });
+    setShowEditDialog(false);
+  };
+
+  const handleShareCrate = () => {
+    const shareUrl = `${window.location.origin}/crates/${crateId}/share`;
+    navigator.clipboard.writeText(shareUrl);
+    toast.success('Link copied! 🔗', {
+      description: 'Share this link with friends'
+    });
+  };
+
+  // Calculate total duration
+  const totalDuration = useMemo(() => {
+    if (!crate?.tracks) return '0 min';
+    const totalMs = crate.tracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0);
+    const totalMinutes = Math.floor(totalMs / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours > 0) {
+      return `${hours}h ${minutes}min`;
+    }
+    return `${totalMinutes} min`;
+  }, [crate?.tracks]);
+
+  // Format track duration
+  const formatDuration = (ms: number | undefined) => {
+    if (!ms) return '';
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
 
   if (authLoading || isLoading) {
@@ -70,10 +148,7 @@ const CrateDetail = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate('/crates')}>
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${crate.color}30` }}>
-              <span className="text-lg">{crate.emoji}</span>
-            </div>
-            <span className="font-display font-semibold text-foreground truncate max-w-[150px] sm:max-w-none">{crate.name}</span>
+            <span className="text-sm text-muted-foreground">Back to Crates</span>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -83,86 +158,323 @@ const CrateDetail = () => {
       </header>
 
       <main className="container mx-auto px-4 lg:px-8 py-6 lg:py-8 max-w-4xl">
-        {/* Crate Info */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-card/60 backdrop-blur-xl rounded-2xl p-6 border border-border/50 mb-6">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${crate.color}30` }}>
-                <span className="text-3xl">{crate.emoji}</span>
-              </div>
-              <div>
-                <h1 className="font-display text-xl lg:text-2xl font-bold text-foreground">{crate.name}</h1>
-                <p className="text-sm text-muted-foreground">{crate.tracks?.length || 0} tracks</p>
-                {crate.description && <p className="text-sm text-muted-foreground/70 mt-1">{crate.description}</p>}
+        {/* Crate Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 10 }} 
+          animate={{ opacity: 1, y: 0 }} 
+          className="bg-card/60 backdrop-blur-xl rounded-2xl p-6 lg:p-8 border border-border/50 mb-6"
+        >
+          <div className="flex flex-col sm:flex-row items-start gap-5">
+            {/* Large Emoji */}
+            <div 
+              className="w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center shrink-0 shadow-lg"
+              style={{ 
+                backgroundColor: `${crate.color}25`,
+                borderColor: crate.color,
+                borderWidth: 2
+              }}
+            >
+              <span className="text-4xl lg:text-5xl">{crate.emoji}</span>
+            </div>
+
+            {/* Crate Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h1 className="font-display text-2xl lg:text-3xl font-bold text-foreground mb-1">
+                    {crate.name}
+                  </h1>
+                  {crate.description && (
+                    <p className="text-muted-foreground text-sm lg:text-base mb-3">
+                      {crate.description}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <span className="flex items-center gap-1.5">
+                      <Music className="w-4 h-4" />
+                      {crate.tracks?.length || 0} tracks
+                    </span>
+                    <span className="text-border">•</span>
+                    <span className="flex items-center gap-1.5">
+                      <Clock className="w-4 h-4" />
+                      {totalDuration}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Edit Button */}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="gap-2 shrink-0"
+                  onClick={() => setShowEditDialog(true)}
+                >
+                  <Pencil className="w-4 h-4" />
+                  <span className="hidden sm:inline">Edit</span>
+                </Button>
               </div>
             </div>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon"><MoreVertical className="w-5 h-5" /></Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="text-destructive">
-                  <Trash2 className="w-4 h-4 mr-2" />Delete Crate
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </div>
         </motion.div>
 
-        {/* Actions */}
-        <div className="flex gap-3 mb-6">
+        {/* Actions Row */}
+        <div className="flex justify-between items-center mb-6">
           <Button onClick={() => setShowAddTracks(true)} className="gap-2">
-            <Plus className="w-4 h-4" />Add Tracks
+            <Plus className="w-4 h-4" />
+            Add Tracks
+          </Button>
+          
+          <Button variant="outline" onClick={handleShareCrate} className="gap-2">
+            <Share2 className="w-4 h-4" />
+            Share Crate
           </Button>
         </div>
 
         {/* Tracks List */}
         {crate.tracks && crate.tracks.length > 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="space-y-2"
+          >
             {crate.tracks.map((track, index) => (
-              <div key={track.id} className="flex items-center gap-3 p-3 bg-card/40 rounded-xl border border-border/30 hover:border-border/50 transition-colors group">
-                <span className="text-sm text-muted-foreground w-6 text-center">{index + 1}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-foreground truncate">{track.name || 'Unknown Track'}</p>
-                  <p className="text-sm text-muted-foreground truncate">{track.artist_name || 'Unknown Artist'}</p>
+              <div 
+                key={track.id} 
+                className="flex items-center gap-3 lg:gap-4 p-3 lg:p-4 bg-card/40 rounded-xl border border-border/30 hover:border-border/60 hover:bg-card/60 transition-all group"
+              >
+                {/* Position Number */}
+                <span className="text-sm text-muted-foreground/70 w-6 text-center font-mono">
+                  {index + 1}
+                </span>
+
+                {/* Album Art */}
+                <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-md bg-secondary/50 shrink-0 overflow-hidden">
+                  {track.album_art_url ? (
+                    <img 
+                      src={track.album_art_url} 
+                      alt={track.album_name || 'Album art'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Music className="w-5 h-5 text-muted-foreground/50" />
+                    </div>
+                  )}
                 </div>
-                {track.bpm && <span className="text-xs text-muted-foreground/70 bg-secondary/50 px-2 py-0.5 rounded">{Math.round(track.bpm)} BPM</span>}
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
-                  onClick={() => removeTrack.mutate({ crateId: crate.id, trackId: track.track_id })}
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+
+                {/* Track Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground truncate">
+                    {track.name || 'Unknown Track'}
+                  </p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span className="truncate">{track.artist_name || 'Unknown Artist'}</span>
+                    {track.duration_ms && (
+                      <>
+                        <span className="text-border">•</span>
+                        <span className="shrink-0">{formatDuration(track.duration_ms)}</span>
+                      </>
+                    )}
+                    {track.bpm && (
+                      <>
+                        <span className="text-border hidden sm:inline">•</span>
+                        <span className="shrink-0 hidden sm:inline">{Math.round(track.bpm)} BPM</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Actions Menu */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                    >
+                      <MoreVertical className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem 
+                      onClick={() => removeTrack.mutate({ crateId: crate.id, trackId: track.track_id })}
+                      className="text-destructive focus:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Remove from crate
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             ))}
           </motion.div>
         ) : (
-          <div className="bg-card/40 rounded-2xl p-12 text-center border border-border/30">
-            <Music className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
+          /* Empty State */
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card/40 rounded-2xl p-12 text-center border border-border/30"
+          >
+            <div className="text-5xl mb-4">🎵</div>
             <p className="text-muted-foreground mb-4">No tracks in this crate yet</p>
             <Button onClick={() => setShowAddTracks(true)} variant="outline" className="gap-2">
-              <Plus className="w-4 h-4" />Add Your First Track
+              <Plus className="w-4 h-4" />
+              Add Your First Track
             </Button>
-          </div>
+          </motion.div>
         )}
+
+        {/* Danger Zone */}
+        <div className="mt-12 pt-6 border-t border-border/30">
+          <Button 
+            variant="ghost" 
+            className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-2"
+            onClick={() => setShowDeleteDialog(true)}
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete Crate
+          </Button>
+        </div>
       </main>
 
       <BottomNav />
       
-      <AddTracksToCrateModal open={showAddTracks} onOpenChange={setShowAddTracks} crateId={crateId!} existingTrackIds={existingTrackIds} />
+      {/* Add Tracks Modal */}
+      <AddTracksToCrateModal 
+        open={showAddTracks} 
+        onOpenChange={setShowAddTracks} 
+        crateId={crateId!} 
+        existingTrackIds={existingTrackIds} 
+      />
       
+      {/* Edit Crate Dialog */}
+      <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+        <DialogContent className="sm:max-w-[500px] bg-card/95 backdrop-blur-xl">
+          <DialogHeader>
+            <DialogTitle className="font-display">Edit Crate</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-5 mt-2">
+            {/* Emoji Picker */}
+            <div className="space-y-2">
+              <Label>Emoji:</Label>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-secondary/50 hover:bg-secondary/70 transition-colors border border-border/50"
+                >
+                  <span className="text-2xl">{editEmoji}</span>
+                  <span className="text-sm text-muted-foreground">Click to change</span>
+                </button>
+                
+                {showEmojiPicker && (
+                  <div className="absolute top-full left-0 mt-2 p-3 bg-card/95 backdrop-blur-xl rounded-xl border border-border/50 shadow-xl z-50 animate-fade-in">
+                    <div className="grid grid-cols-6 gap-2">
+                      {CRATE_EMOJIS.map((emoji) => (
+                        <button
+                          key={emoji}
+                          type="button"
+                          onClick={() => {
+                            setEditEmoji(emoji);
+                            setShowEmojiPicker(false);
+                          }}
+                          className={cn(
+                            "w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all hover:scale-110",
+                            editEmoji === emoji
+                              ? "bg-primary/20 ring-2 ring-primary"
+                              : "hover:bg-secondary"
+                          )}
+                        >
+                          {emoji}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Name */}
+            <div className="space-y-2">
+              <Label>Crate Name:</Label>
+              <Input
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="e.g., Late Night Drives"
+                maxLength={50}
+                className="bg-secondary/30"
+              />
+            </div>
+
+            {/* Description */}
+            <div className="space-y-2">
+              <Label>Description (optional):</Label>
+              <Textarea
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="What's this crate for?"
+                maxLength={200}
+                rows={2}
+                className="bg-secondary/30 resize-none"
+              />
+            </div>
+
+            {/* Color */}
+            <div className="space-y-2">
+              <Label>Color:</Label>
+              <div className="flex gap-3">
+                {CRATE_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => setEditColor(color)}
+                    className={cn(
+                      "w-10 h-10 rounded-full transition-all",
+                      editColor === color
+                        ? "ring-2 ring-offset-2 ring-offset-background ring-foreground scale-110"
+                        : "hover:scale-105 opacity-80 hover:opacity-100"
+                    )}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
+              <Button variant="outline" className="flex-1" onClick={() => setShowEditDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                className="flex-1" 
+                onClick={handleEditSubmit}
+                disabled={!editName.trim() || updateCrate.isPending}
+              >
+                {updateCrate.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Changes'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete "{crate.name}"?</AlertDialogTitle>
-            <AlertDialogDescription>This will permanently delete this crate and remove all tracks from it. This cannot be undone.</AlertDialogDescription>
+            <AlertDialogDescription>
+              This will permanently delete this crate and remove all tracks from it. This cannot be undone.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteCrate} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+            <AlertDialogAction 
+              onClick={handleDeleteCrate} 
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
