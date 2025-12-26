@@ -9,7 +9,7 @@ import { useAddTracksToCrate } from '@/hooks/use-crates';
 import { useAuth } from '@/contexts/AuthContext';
 import { getLibrarySecure } from '@/lib/secure-database';
 import { useQuery } from '@tanstack/react-query';
-import { TrackToAdd, CrateTrack } from '@/lib/crates-api';
+import { TrackToAdd } from '@/lib/crates-api';
 
 interface AddTracksToCrateModalProps {
   open: boolean;
@@ -18,10 +18,51 @@ interface AddTracksToCrateModalProps {
   existingTrackIds: string[];
 }
 
+// Fetch track details from Spotify API including duration and album art
+async function fetchSpotifyTrackDetails(
+  trackIds: string[],
+  accessToken: string
+): Promise<Map<string, { duration_ms: number; album_art_url: string }>> {
+  const details = new Map<string, { duration_ms: number; album_art_url: string }>();
+  
+  // Spotify API allows max 50 tracks per request
+  const chunks: string[][] = [];
+  for (let i = 0; i < trackIds.length; i += 50) {
+    chunks.push(trackIds.slice(i, i + 50));
+  }
+
+  for (const chunk of chunks) {
+    try {
+      const response = await fetch(
+        `https://api.spotify.com/v1/tracks?ids=${chunk.join(',')}`,
+        { headers: { 'Authorization': `Bearer ${accessToken}` } }
+      );
+      
+      if (response.ok) {
+        const data = await response.json();
+        for (const track of data.tracks || []) {
+          if (track && track.id) {
+            const albumArt = track.album?.images?.[0]?.url || '';
+            details.set(track.id, {
+              duration_ms: track.duration_ms || 0,
+              album_art_url: albumArt
+            });
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch Spotify track details:', err);
+    }
+  }
+
+  return details;
+}
+
 const AddTracksToCrateModal = ({ open, onOpenChange, crateId, existingTrackIds }: AddTracksToCrateModalProps) => {
   const { accessToken } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTracks, setSelectedTracks] = useState<Map<string, TrackToAdd>>(new Map());
+  const [selectedTracks, setSelectedTracks] = useState<Map<string, any>>(new Map());
+  const [isFetchingDetails, setIsFetchingDetails] = useState(false);
 
   const addTracks = useAddTracksToCrate();
 
@@ -57,18 +98,17 @@ const AddTracksToCrateModal = ({ open, onOpenChange, crateId, existingTrackIds }
     if (newSelected.has(track.track_id)) {
       newSelected.delete(track.track_id);
     } else {
+      // Store basic info, will fetch duration/album art on submit
       newSelected.set(track.track_id, {
         track_id: track.track_id,
         name: track.name,
         artist_name: track.artist,
         album_name: track.album,
-        album_art_url: '', // Will be fetched when needed
-        duration_ms: track.duration_ms,
-        popularity: track.popularity,
         bpm: track.tempo,
         energy: track.energy,
         danceability: track.danceability,
-        valence: track.valence
+        valence: track.valence,
+        popularity: track.popularity
       });
     }
     
@@ -76,17 +116,47 @@ const AddTracksToCrateModal = ({ open, onOpenChange, crateId, existingTrackIds }
   };
 
   const handleAdd = async () => {
-    if (selectedTracks.size === 0) return;
+    if (selectedTracks.size === 0 || !accessToken) return;
 
-    await addTracks.mutateAsync({
-      crateId,
-      tracks: Array.from(selectedTracks.values())
-    });
+    setIsFetchingDetails(true);
+    
+    try {
+      // Fetch duration and album art from Spotify
+      const trackIds = Array.from(selectedTracks.keys());
+      const spotifyDetails = await fetchSpotifyTrackDetails(trackIds, accessToken);
 
-    setSelectedTracks(new Map());
-    setSearchQuery('');
-    onOpenChange(false);
+      // Build final track data with all details
+      const tracksToAdd: TrackToAdd[] = Array.from(selectedTracks.entries()).map(([trackId, track]) => {
+        const details = spotifyDetails.get(trackId);
+        return {
+          track_id: trackId,
+          name: track.name,
+          artist_name: track.artist_name,
+          album_name: track.album_name,
+          album_art_url: details?.album_art_url || '',
+          duration_ms: details?.duration_ms || 0,
+          popularity: track.popularity,
+          bpm: track.bpm,
+          energy: track.energy,
+          danceability: track.danceability,
+          valence: track.valence
+        };
+      });
+
+      await addTracks.mutateAsync({
+        crateId,
+        tracks: tracksToAdd
+      });
+
+      setSelectedTracks(new Map());
+      setSearchQuery('');
+      onOpenChange(false);
+    } finally {
+      setIsFetchingDetails(false);
+    }
   };
+
+  const isPending = addTracks.isPending || isFetchingDetails;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -170,10 +240,10 @@ const AddTracksToCrateModal = ({ open, onOpenChange, crateId, existingTrackIds }
           </Button>
           <Button
             className="flex-1 gap-2"
-            disabled={selectedTracks.size === 0 || addTracks.isPending}
+            disabled={selectedTracks.size === 0 || isPending}
             onClick={handleAdd}
           >
-            {addTracks.isPending ? (
+            {isPending ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <Plus className="w-4 h-4" />
