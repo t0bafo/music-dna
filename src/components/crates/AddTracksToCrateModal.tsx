@@ -11,6 +11,7 @@ import { getLibrarySecure } from '@/lib/secure-database';
 import { useQuery } from '@tanstack/react-query';
 import { TrackToAdd } from '@/lib/crates-api';
 import { cn } from '@/lib/utils';
+import { useTopTracks } from '@/hooks/use-music-intelligence';
 
 interface AddTracksToCrateModalProps {
   open: boolean;
@@ -84,6 +85,10 @@ const AddTracksToCrateModal = ({
     staleTime: 1000 * 60 * 5,
   });
 
+  // Fetch user's actual top 50 tracks from Spotify
+  const { data: topTracks = [] } = useTopTracks(accessToken, 'medium_term', 50);
+  const topTrackIds = useMemo(() => new Set(topTracks.map(t => t.id)), [topTracks]);
+
   const existingSet = useMemo(() => new Set(existingTrackIds), [existingTrackIds]);
 
   // Apply filters and search
@@ -93,7 +98,13 @@ const AddTracksToCrateModal = ({
     // Apply filter
     switch (activeFilter) {
       case 'top50':
-        tracks = tracks.filter((t) => (t.popularity || 0) >= 50);
+        // Use actual top 50 most-played tracks from Spotify
+        if (topTrackIds.size > 0) {
+          tracks = tracks.filter((t) => topTrackIds.has(t.track_id));
+        } else {
+          // Fallback: show first 50 from library
+          tracks = tracks.slice(0, 50);
+        }
         break;
       case 'deepcuts':
         tracks = tracks.filter((t) => (t.popularity || 100) < 50);
@@ -112,7 +123,7 @@ const AddTracksToCrateModal = ({
 
     // Limit for performance
     return tracks.slice(0, 100);
-  }, [library, activeFilter, searchQuery]);
+  }, [library, activeFilter, searchQuery, topTrackIds]);
 
   const toggleTrack = useCallback((track: any) => {
     // Don't allow selecting tracks already in crate
@@ -256,7 +267,7 @@ const AddTracksToCrateModal = ({
         )}
 
         {/* Track list */}
-        <ScrollArea className="flex-1 max-h-[400px] -mx-6 px-6">
+        <ScrollArea className="h-[400px] -mx-6 px-6">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
