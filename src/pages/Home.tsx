@@ -9,6 +9,7 @@ import BottomNav from '@/components/BottomNav';
 import PlaylistGrid from '@/components/PlaylistGrid';
 import TopAlbumsGrid from '@/components/TopAlbumsGrid';
 import TopSongsGrid from '@/components/TopSongsGrid';
+import HomeCratesSection from '@/components/HomeCratesSection';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion } from 'framer-motion';
 import { calculateArchetype, Archetype, MusicProfile } from '@/lib/music-archetypes';
@@ -227,7 +228,8 @@ const Home = () => {
             isLoading={loadingTopTracks}
           />
 
-          {/* 5. Your Playlists */}
+          {/* 5. Your Crates */}
+          <HomeCratesSection />
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -256,7 +258,7 @@ const Home = () => {
             )}
           </motion.section>
 
-          {/* 6. What's Next? Action Cards */}
+          {/* 7. What's Next? Action Cards */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
