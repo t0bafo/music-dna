@@ -11,6 +11,7 @@ import {
   Home,
   ListMusic,
   Brain,
+  Package,
   RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -121,6 +122,13 @@ const CurationLab = () => {
               >
                 <Brain className="w-4 h-4" />
                 <span>Intelligence</span>
+              </Link>
+              <Link
+                to="/crates"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                <Package className="w-4 h-4" />
+                <span>Crates</span>
               </Link>
               <Link 
                 to="/playlists" 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Music, Loader2, AlertCircle, RefreshCw, Brain, Home as HomeIcon, SlidersHorizontal, ListMusic, ArrowRight, BarChart3, Sparkles, Target, Search } from 'lucide-react';
+import { Music, Loader2, AlertCircle, RefreshCw, Brain, Home as HomeIcon, SlidersHorizontal, ListMusic, Package, ArrowRight, BarChart3, Sparkles, Target, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import UserProfile from '@/components/UserProfile';
@@ -113,6 +113,13 @@ const Home = () => {
               >
                 <Brain className="w-4 h-4" />
                 <span>Intelligence</span>
+              </Link>
+              <Link
+                to="/crates"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                <Package className="w-4 h-4" />
+                <span>Crates</span>
               </Link>
               <Link 
                 to="/playlists" 
