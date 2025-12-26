@@ -12,6 +12,8 @@ import Home from "./pages/Home";
 import Playlists from "./pages/Playlists";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import MusicIntelligence from "./pages/MusicIntelligence";
+import Crates from "./pages/Crates";
+import CrateDetail from "./pages/CrateDetail";
 import CurationLab from "./pages/CurationLab";
 import NotFound from "./pages/NotFound";
 
@@ -33,6 +35,8 @@ const App = () => (
               <Route path="/playlists" element={<Playlists />} />
               <Route path="/playlist/:playlistId" element={<PlaylistDetail />} />
               <Route path="/intelligence" element={<MusicIntelligence />} />
+              <Route path="/crates" element={<Crates />} />
+              <Route path="/crates/:crateId" element={<CrateDetail />} />
               <Route path="/curation" element={<CurationLab />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

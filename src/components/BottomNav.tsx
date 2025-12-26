@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, ListMusic, SlidersHorizontal, Brain } from 'lucide-react';
+import { Home, ListMusic, SlidersHorizontal, Brain, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface NavItem {
@@ -11,6 +11,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { path: '/home', label: 'Home', icon: <Home className="w-5 h-5" /> },
   { path: '/intelligence', label: 'Intelligence', icon: <Brain className="w-5 h-5" /> },
+  { path: '/crates', label: 'Crates', icon: <Package className="w-5 h-5" /> },
   { path: '/playlists', label: 'Playlists', icon: <ListMusic className="w-5 h-5" /> },
   { path: '/curation', label: 'Curation', icon: <SlidersHorizontal className="w-5 h-5" /> },
 ];
