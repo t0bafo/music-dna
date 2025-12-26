@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { getUserPlaylists, SpotifyPlaylist } from '@/lib/spotify-api';
-import { Music, Loader2, RefreshCw, Home, Brain, SlidersHorizontal, ListMusic } from 'lucide-react';
+import { Music, Loader2, RefreshCw, Home, Brain, SlidersHorizontal, ListMusic, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
@@ -69,7 +69,6 @@ const Playlists = () => {
             <div className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-primary to-sonic-dark rounded-xl flex items-center justify-center shadow-glow">
               <Music className="w-4 h-4 lg:w-5 lg:h-5 text-primary-foreground" />
             </div>
-            
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-1">
               <Link 
@@ -85,6 +84,13 @@ const Playlists = () => {
               >
                 <Brain className="w-4 h-4" />
                 <span>Intelligence</span>
+              </Link>
+              <Link
+                to="/crates"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
+              >
+                <Package className="w-4 h-4" />
+                <span>Crates</span>
               </Link>
               <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 text-primary font-medium">
                 <ListMusic className="w-4 h-4" />
