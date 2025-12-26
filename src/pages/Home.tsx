@@ -16,7 +16,7 @@ import { calculateArchetype, Archetype, MusicProfile } from '@/lib/music-archety
 import { useTopTracks, usePlaylists, TrackWithFeatures } from '@/hooks/use-music-intelligence';
 import { AudioFeatures } from '@/lib/spotify-api';
 import { usePageTitle } from '@/hooks/use-page-title';
-
+import { useLibrarySync } from '@/hooks/use-library-sync';
 const Home = () => {
   usePageTitle('Your Music DNA');
   const { isAuthenticated, isLoading: authLoading, accessToken, user } = useAuth();
@@ -34,6 +34,9 @@ const Home = () => {
     data: playlists = [], 
     isLoading: loadingPlaylists 
   } = usePlaylists(accessToken, 50);
+
+  // Auto-sync library if stale (runs in background, non-blocking)
+  useLibrarySync(true);
 
   const error = topTracksError ? (topTracksError instanceof Error ? topTracksError.message : 'Failed to fetch top tracks') : null;
 

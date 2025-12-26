@@ -16,7 +16,9 @@ import {
   Home,
   ListMusic,
   SlidersHorizontal,
-  Package
+  Package,
+  CheckCircle,
+  AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,6 +47,7 @@ import {
   useTopTracksWithFeatures,
   useInvalidateMusicCache,
 } from '@/hooks/use-music-intelligence';
+import { useLibrarySync, setLastUpdated } from '@/hooks/use-library-sync';
 import { usePageTitle } from '@/hooks/use-page-title';
 import {
   RadarChart,
@@ -75,6 +78,9 @@ const MusicIntelligence = () => {
   const { data: topTracksWithFeatures = [], isLoading: topTracksLoading } = useTopTracksWithFeatures(accessToken);
   
   const invalidateCache = useInvalidateMusicCache();
+  
+  // Library sync state (don't auto-refresh on Intelligence page - it's handled by Home)
+  const { daysSinceUpdate: syncDays, isStale, isSyncing } = useLibrarySync(false);
 
   // Extraction state
   const [isExtracting, setIsExtracting] = useState(false);
@@ -139,6 +145,8 @@ const MusicIntelligence = () => {
 
     try {
       await extractMusicLibrary(accessToken, user.id, setExtractionProgress);
+      // Update the sync timestamp
+      setLastUpdated();
       // Invalidate all cached queries to refetch fresh data
       invalidateCache();
     } catch (err) {
@@ -149,10 +157,10 @@ const MusicIntelligence = () => {
     }
   };
 
-  // Calculate days since last update
-  const daysSinceUpdate = libraryStats?.lastUpdated 
+  // Use sync days if available, fall back to library stats
+  const displayDays = syncDays ?? (libraryStats?.lastUpdated 
     ? Math.floor((Date.now() - libraryStats.lastUpdated.getTime()) / (1000 * 60 * 60 * 24))
-    : null;
+    : null);
 
   // Radar chart data
   const radarData = tasteProfile ? [
@@ -253,16 +261,44 @@ const MusicIntelligence = () => {
                 </h1>
               </div>
               {hasData && (
-                <p className="text-sm lg:text-base text-muted-foreground">
-                  {libraryStats.totalTracks.toLocaleString()} tracks analyzed • {libraryStats.tracksWithFeatures.toLocaleString()} with audio features
-                  {daysSinceUpdate !== null && ` • Updated ${daysSinceUpdate === 0 ? 'today' : `${daysSinceUpdate}d ago`}`}
-                </p>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <p className="text-sm lg:text-base text-muted-foreground">
+                    {libraryStats.totalTracks.toLocaleString()} tracks analyzed • {libraryStats.tracksWithFeatures.toLocaleString()} with audio features
+                  </p>
+                  {/* Staleness indicator */}
+                  {displayDays !== null && (
+                    <div className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-full ${
+                      isSyncing 
+                        ? 'bg-primary/10 text-primary'
+                        : isStale 
+                          ? 'bg-amber-500/10 text-amber-500' 
+                          : 'bg-emerald-500/10 text-emerald-500'
+                    }`}>
+                      {isSyncing ? (
+                        <>
+                          <RefreshCw className="w-3 h-3 animate-spin" />
+                          <span>Syncing...</span>
+                        </>
+                      ) : isStale ? (
+                        <>
+                          <AlertTriangle className="w-3 h-3" />
+                          <span>Updated {displayDays}d ago</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle className="w-3 h-3" />
+                          <span>Updated {displayDays === 0 ? 'today' : `${displayDays}d ago`}</span>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
               )}
             </div>
             {hasData && (
-              <Button onClick={handleExtract} variant="outline" size="sm" disabled={isExtracting} className="self-start lg:absolute lg:right-8 lg:top-24">
-                <RefreshCw className={`w-4 h-4 mr-2 ${isExtracting ? 'animate-spin' : ''}`} />
-                Refresh
+              <Button onClick={handleExtract} variant="outline" size="sm" disabled={isExtracting || isSyncing} className="self-start lg:absolute lg:right-8 lg:top-24">
+                <RefreshCw className={`w-4 h-4 mr-2 ${isExtracting || isSyncing ? 'animate-spin' : ''}`} />
+                {isSyncing ? 'Syncing...' : 'Refresh'}
               </Button>
             )}
           </div>
