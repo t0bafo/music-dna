@@ -168,26 +168,17 @@ export async function reorderCrateTracks(
   await callSecureEndpoint('reorder_crate_tracks', { crate_id: crateId, track_ids: trackIds }, spotifyToken);
 }
 
-// Emoji picker options
+// Emoji picker options - music-focused quick picks
 export const CRATE_EMOJIS = [
-  '📦', '🎵', '🎧', '🎸', '🎹', '🎺', '🎷', '🥁',
-  '🎤', '💿', '📻', '🔊', '🎶', '💫', '✨', '🌙',
-  '🌅', '🌊', '🔥', '❄️', '🌈', '💜', '💚', '🖤',
-  '🍀', '🌸', '🎭', '🎪', '🏝️', '🌃', '🚀', '⚡'
+  '🎵', '🎧', '🎶', '🌙', '⚡', '💎', '🔥', '✨', '🌊', '☀️', '🌴', '🎤'
 ];
 
-// Color picker options
+// Color picker options - 6 preset colors
 export const CRATE_COLORS = [
-  '#1DB954', // Spotify green
-  '#FF6B6B', // Coral red
-  '#4ECDC4', // Teal
-  '#A855F7', // Purple
-  '#F59E0B', // Amber
-  '#3B82F6', // Blue
-  '#EC4899', // Pink
-  '#10B981', // Emerald
-  '#6366F1', // Indigo
-  '#8B5CF6', // Violet
-  '#EF4444', // Red
-  '#14B8A6', // Cyan
+  '#00ff87', // Sonic green (default)
+  '#a855f7', // Purple
+  '#06b6d4', // Cyan
+  '#ec4899', // Pink
+  '#f97316', // Orange
+  '#3b82f6', // Blue
 ];
