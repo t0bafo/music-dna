@@ -91,17 +91,23 @@ const AddTracksToCrateModal = ({
   const existingSet = useMemo(() => new Set(existingTrackIds), [existingTrackIds]);
 
   // Convert top tracks to library format for consistent display
+  // Include all available metadata so tracks can be added even if not in library
   const topTracksAsLibrary = useMemo(() => {
     return topTracks.map(t => ({
       track_id: t.id,
       name: t.name,
       artist: t.artist,
       album: t.album?.name || '',
+      // Include album art for immediate display
+      album_art_url: t.album?.images?.[1]?.url || t.album?.images?.[0]?.url || '',
+      duration_ms: t.duration_ms,
       tempo: t.tempo,
       energy: t.energy,
       danceability: t.danceability,
       valence: t.valence,
-      popularity: t.popularity
+      popularity: t.popularity,
+      // Flag to identify top tracks (not from library)
+      isTopTrack: true
     }));
   }, [topTracks]);
 
@@ -148,11 +154,15 @@ const AddTracksToCrateModal = ({
       if (newSelected.has(track.track_id)) {
         newSelected.delete(track.track_id);
       } else {
+        // Store all available metadata including album art and duration
+        // This ensures tracks not in library (e.g., from Top 50) can still be added
         newSelected.set(track.track_id, {
           track_id: track.track_id,
           name: track.name,
           artist_name: track.artist,
           album_name: track.album,
+          album_art_url: track.album_art_url || '',
+          duration_ms: track.duration_ms || 0,
           bpm: track.tempo,
           energy: track.energy,
           danceability: track.danceability,
@@ -171,20 +181,28 @@ const AddTracksToCrateModal = ({
     setIsFetchingDetails(true);
     
     try {
-      // Fetch duration and album art from Spotify
-      const trackIds = Array.from(selectedTracks.keys());
-      const spotifyDetails = await fetchSpotifyTrackDetails(trackIds, accessToken);
+      // Identify tracks that need Spotify details (missing duration or album art)
+      const tracksMissingDetails = Array.from(selectedTracks.entries())
+        .filter(([_, track]) => !track.duration_ms || !track.album_art_url)
+        .map(([trackId]) => trackId);
 
-      // Build final track data with all details
+      // Only fetch from Spotify if we have missing details
+      let spotifyDetails = new Map<string, { duration_ms: number; album_art_url: string }>();
+      if (tracksMissingDetails.length > 0) {
+        spotifyDetails = await fetchSpotifyTrackDetails(tracksMissingDetails, accessToken);
+      }
+
+      // Build final track data - use stored data with Spotify fallback for missing fields
       const tracksToAdd: TrackToAdd[] = Array.from(selectedTracks.entries()).map(([trackId, track]) => {
-        const details = spotifyDetails.get(trackId);
+        const spotifyData = spotifyDetails.get(trackId);
         return {
           track_id: trackId,
           name: track.name,
           artist_name: track.artist_name,
           album_name: track.album_name,
-          album_art_url: details?.album_art_url || '',
-          duration_ms: details?.duration_ms || 0,
+          // Prefer stored data, fall back to Spotify fetch
+          album_art_url: track.album_art_url || spotifyData?.album_art_url || '',
+          duration_ms: track.duration_ms || spotifyData?.duration_ms || 0,
           popularity: track.popularity,
           bpm: track.bpm,
           energy: track.energy,
@@ -339,9 +357,17 @@ const AddTracksToCrateModal = ({
                       )}
                     </div>
 
-                    {/* Album art placeholder */}
+                    {/* Album art */}
                     <div className="w-10 h-10 rounded-md bg-secondary/50 shrink-0 flex items-center justify-center overflow-hidden">
-                      <Music className="w-5 h-5 text-muted-foreground/50" />
+                      {track.album_art_url ? (
+                        <img 
+                          src={track.album_art_url} 
+                          alt={track.album || 'Album art'} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Music className="w-5 h-5 text-muted-foreground/50" />
+                      )}
                     </div>
 
                     {/* Track info */}
