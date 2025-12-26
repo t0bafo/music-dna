@@ -51,24 +51,28 @@ export function SortableTrackRow({
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{
+        ...style,
+        touchAction: 'pan-y', // Allow vertical scrolling on the row
+      }}
       className={cn(
         "flex items-center gap-3 lg:gap-4 p-3 lg:p-4 bg-card/40 rounded-xl border border-border/30 hover:border-border/60 hover:bg-card/60 transition-all group",
         isDragging && "opacity-70 shadow-lg shadow-primary/10 border-primary/30 z-10 bg-card/80"
       )}
     >
-      {/* Drag Handle */}
+      {/* Drag Handle - touch-action:none to capture drag gestures */}
       <button
         {...attributes}
         {...listeners}
+        style={{ touchAction: 'none' }}
         className={cn(
-          "p-1 rounded cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground transition-all touch-none",
+          "p-2 -m-1 rounded cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground transition-all",
           "lg:opacity-0 lg:group-hover:opacity-100",
           isDragging && "cursor-grabbing opacity-100"
         )}
         aria-label="Drag to reorder"
       >
-        <GripVertical className="w-4 h-4" />
+        <GripVertical className="w-5 h-5" />
       </button>
 
       {/* Position Number */}
