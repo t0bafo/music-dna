@@ -62,6 +62,7 @@ export default {
           purple: "hsl(var(--chart-purple))",
           blue: "hsl(var(--chart-blue))",
           cyan: "hsl(var(--chart-cyan))",
+          orange: "hsl(var(--chart-orange))",
         },
         // Legacy spotify alias for compatibility
         spotify: {

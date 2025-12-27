@@ -141,7 +141,7 @@ const Studio = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 lg:px-8 py-6 lg:py-8 max-w-4xl">
+      <main className="container mx-auto px-4 lg:px-8 py-8 lg:py-12 max-w-4xl">
         <AnimatePresence mode="wait">
           {activeTool === 'none' ? (
             <motion.div
@@ -152,20 +152,20 @@ const Studio = () => {
               transition={{ duration: 0.2 }}
             >
               {/* Page Header */}
-              <div className="mb-8 lg:mb-10">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-3xl lg:text-4xl">🎨</span>
+              <div className="mb-10 lg:mb-12">
+                <div className="flex items-center gap-4 mb-3">
+                  <span className="text-4xl lg:text-5xl">🎨</span>
                   <h1 className="font-display text-2xl lg:text-3xl font-bold text-foreground">
                     Studio
                   </h1>
                 </div>
-                <p className="text-muted-foreground">
+                <p className="text-base lg:text-lg text-muted-foreground">
                   Tools to discover, analyze, and create
                 </p>
               </div>
 
               {/* Tool Cards */}
-              <div className="space-y-4 lg:space-y-6">
+              <div className="space-y-5 lg:space-y-6">
                 {TOOL_CARDS.map((tool, index) => (
                   <motion.div
                     key={tool.id}
@@ -175,34 +175,35 @@ const Studio = () => {
                   >
                     <Card 
                       className={cn(
-                        "bg-card/60 backdrop-blur-xl border-border/50 overflow-hidden cursor-pointer group",
-                        "hover:border-primary/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-200"
+                        "bg-card/70 backdrop-blur-xl border-border/40 overflow-hidden cursor-pointer group",
+                        "hover:border-primary/40 hover:-translate-y-1 hover:shadow-xl transition-all duration-200"
                       )}
                       onClick={() => handleToolClick(tool.id)}
                     >
                       <CardContent className="p-6 lg:p-8">
-                        <div className="flex items-start gap-4 lg:gap-6">
+                        <div className="flex items-start gap-5 lg:gap-6">
                           {/* Icon */}
                           <div className={cn(
-                            "w-14 h-14 lg:w-16 lg:h-16 rounded-2xl flex items-center justify-center flex-shrink-0",
+                            "w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center flex-shrink-0",
                             tool.color === 'primary' && "bg-primary/10 text-primary",
                             tool.color === 'chart-purple' && "bg-chart-purple/10 text-chart-purple",
                             tool.color === 'chart-cyan' && "bg-chart-cyan/10 text-chart-cyan"
                           )}>
-                            <span className="text-3xl lg:text-4xl">{tool.emoji}</span>
+                            <span className="text-4xl lg:text-5xl">{tool.emoji}</span>
                           </div>
                           
                           {/* Content */}
                           <div className="flex-1 min-w-0">
-                            <h3 className="font-display text-lg lg:text-xl font-semibold text-foreground mb-2">
+                            <h3 className="font-display text-xl lg:text-2xl font-bold text-foreground mb-2">
                               {tool.title}
                             </h3>
-                            <p className="text-sm lg:text-base text-muted-foreground mb-4">
+                            <p className="text-sm lg:text-base text-muted-foreground mb-5 leading-relaxed">
                               {tool.description}
                             </p>
                             <Button 
+                              size="lg"
                               className={cn(
-                                "gap-2 group-hover:gap-3 transition-all",
+                                "gap-2 group-hover:gap-3 transition-all btn-scale",
                                 tool.color === 'chart-purple' && "bg-chart-purple hover:bg-chart-purple/90",
                                 tool.color === 'chart-cyan' && "bg-chart-cyan hover:bg-chart-cyan/90 text-chart-cyan-foreground"
                               )}
@@ -234,7 +235,7 @@ const Studio = () => {
               <Button
                 variant="ghost"
                 onClick={handleBack}
-                className="mb-4 text-muted-foreground hover:text-foreground"
+                className="mb-6 text-muted-foreground hover:text-foreground"
               >
                 ← Back to Studio
               </Button>
@@ -242,11 +243,11 @@ const Studio = () => {
               {/* Tool Content */}
               {activeTool === 'analyzer' && (
                 <div>
-                  <div className="mb-6">
-                    <h2 className="font-display text-xl lg:text-2xl font-bold text-foreground flex items-center gap-2">
+                  <div className="mb-8">
+                    <h2 className="font-display text-2xl lg:text-3xl font-bold text-foreground flex items-center gap-3">
                       <span>📊</span> Playlist Analyzer
                     </h2>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-muted-foreground mt-2 text-base lg:text-lg">
                       Select a playlist to analyze its flow and get optimization suggestions
                     </p>
                   </div>
@@ -256,11 +257,11 @@ const Studio = () => {
               
               {activeTool === 'find' && (
                 <div>
-                  <div className="mb-6">
-                    <h2 className="font-display text-xl lg:text-2xl font-bold text-foreground flex items-center gap-2">
+                  <div className="mb-8">
+                    <h2 className="font-display text-2xl lg:text-3xl font-bold text-foreground flex items-center gap-3">
                       <span>🔍</span> Find Tracks
                     </h2>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-muted-foreground mt-2 text-base lg:text-lg">
                       Discover tracks in your library using smart filters
                     </p>
                   </div>
@@ -273,11 +274,11 @@ const Studio = () => {
               
               {activeTool === 'build' && (
                 <div>
-                  <div className="mb-6">
-                    <h2 className="font-display text-xl lg:text-2xl font-bold text-foreground flex items-center gap-2">
+                  <div className="mb-8">
+                    <h2 className="font-display text-2xl lg:text-3xl font-bold text-foreground flex items-center gap-3">
                       <span>🎯</span> Build a Set
                     </h2>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="text-muted-foreground mt-2 text-base lg:text-lg">
                       Generate playlists for specific events and moments
                     </p>
                   </div>

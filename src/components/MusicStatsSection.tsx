@@ -98,43 +98,43 @@ const MusicStatsSection = ({ topTracks, accessToken, isLoading }: MusicStatsSect
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <h2 className="font-display text-lg lg:text-xl font-bold text-foreground mb-4">
+      <h2 className="font-display text-xl lg:text-2xl font-bold text-foreground mb-5">
         📊 Your Music Stats
       </h2>
       
-      <Card className="bg-card/60 backdrop-blur-xl border-border/50 overflow-hidden">
-        <CardContent className="p-4 lg:p-6">
+      <Card className="bg-card/70 backdrop-blur-xl border-border/40 overflow-hidden">
+        <CardContent className="p-5 lg:p-8">
           {/* Compact Stats Grid */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 mb-4">
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-primary/5 border border-primary/10">
-              <Gem className="w-5 h-5 text-primary flex-shrink-0" />
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/10">
+              <Gem className="w-6 h-6 text-primary flex-shrink-0" />
               <div>
-                <p className="text-lg font-bold text-foreground">{stats.undergroundRatio}%</p>
-                <p className="text-xs text-muted-foreground">Underground</p>
+                <p className="text-xl lg:text-2xl font-bold text-foreground">{stats.undergroundRatio}%</p>
+                <p className="text-sm text-muted-foreground">Underground</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-chart-purple/5 border border-chart-purple/10">
-              <Music className="w-5 h-5 text-chart-purple flex-shrink-0" />
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-chart-purple/5 border border-chart-purple/10">
+              <Music className="w-6 h-6 text-chart-purple flex-shrink-0" />
               <div>
-                <p className="text-lg font-bold text-foreground">{stats.totalTracks.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground">Library Tracks</p>
+                <p className="text-xl lg:text-2xl font-bold text-foreground">{stats.totalTracks.toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Library Tracks</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-chart-cyan/5 border border-chart-cyan/10">
-              <Activity className="w-5 h-5 text-chart-cyan flex-shrink-0" />
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-chart-cyan/5 border border-chart-cyan/10">
+              <Activity className="w-6 h-6 text-chart-cyan flex-shrink-0" />
               <div>
-                <p className="text-lg font-bold text-foreground">{stats.avgBpm}</p>
-                <p className="text-xs text-muted-foreground">Avg BPM</p>
+                <p className="text-xl lg:text-2xl font-bold text-foreground">{stats.avgBpm}</p>
+                <p className="text-sm text-muted-foreground">Avg BPM</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-chart-orange/5 border border-chart-orange/10">
-              <Zap className="w-5 h-5 text-chart-orange flex-shrink-0" />
+            <div className="flex items-center gap-3 p-4 rounded-2xl bg-chart-orange/5 border border-chart-orange/10">
+              <Zap className="w-6 h-6 text-chart-orange flex-shrink-0" />
               <div>
-                <p className="text-lg font-bold text-foreground">{stats.avgEnergy}%</p>
-                <p className="text-xs text-muted-foreground">Avg Energy</p>
+                <p className="text-xl lg:text-2xl font-bold text-foreground">{stats.avgEnergy}%</p>
+                <p className="text-sm text-muted-foreground">Avg Energy</p>
               </div>
             </div>
           </div>

@@ -129,25 +129,25 @@ const Home = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 lg:px-8 py-6 lg:py-8 max-w-6xl">
+      <main className="container mx-auto px-4 lg:px-8 py-8 lg:py-12 max-w-6xl">
         {/* 1. Welcome Message */}
         <motion.div 
-          className="mb-6 lg:mb-8"
+          className="mb-10 lg:mb-12"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
         >
-          <h1 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1">
+          <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">
             Welcome back, {user?.display_name?.split(' ')[0] || 'there'}! 👋
           </h1>
-          <p className="text-sm lg:text-base text-muted-foreground">
+          <p className="text-base lg:text-lg text-muted-foreground">
             Here's your music identity snapshot.
           </p>
         </motion.div>
 
         {/* Error */}
         {error && (
-          <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-xl p-4 mb-6 flex items-center gap-3">
+          <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-2xl p-5 mb-8 flex items-center gap-3">
             <AlertCircle className="w-5 h-5 flex-shrink-0" />
             <p className="text-sm flex-1">{error}</p>
             <Button size="sm" variant="outline" onClick={() => refetchTopTracks()}>
@@ -157,36 +157,36 @@ const Home = () => {
           </div>
         )}
 
-        <div className="space-y-6 lg:space-y-8">
+        <div className="space-y-10 lg:space-y-12">
           {/* 2. Personality Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
           >
-            <Card className="bg-gradient-to-br from-card/90 via-card/80 to-primary/5 backdrop-blur-xl border-primary/20 shadow-2xl overflow-hidden">
-              <CardContent className="py-12 px-8 lg:py-16 lg:px-12 flex flex-col items-center relative">
+            <Card className="bg-gradient-to-br from-card/95 via-card/90 to-primary/5 backdrop-blur-xl border-primary/20 shadow-2xl overflow-hidden">
+              <CardContent className="py-14 px-8 lg:py-20 lg:px-12 flex flex-col items-center relative">
                 {/* Decorative glow */}
-                <div className="absolute inset-0 bg-gradient-radial from-primary/5 via-transparent to-transparent pointer-events-none" />
+                <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent pointer-events-none" />
                 
                 {loadingTopTracks ? (
                   <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                    <p className="text-muted-foreground">Analyzing your music...</p>
+                    <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                    <p className="text-muted-foreground text-lg">Analyzing your music...</p>
                   </div>
                 ) : archetype ? (
                   <>
-                    <p className="text-lg lg:text-xl text-muted-foreground mb-2">You're a</p>
-                    <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-primary flex items-center justify-center gap-3 mb-4">
-                      <span>{archetype.emoji}</span>
+                    <p className="text-lg lg:text-xl text-muted-foreground mb-3">You're a</p>
+                    <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-primary flex items-center justify-center gap-4 mb-5">
+                      <span className="text-4xl lg:text-5xl">{archetype.emoji}</span>
                       <span>{archetype.name}</span>
                     </h2>
-                    <p className="text-base lg:text-lg text-muted-foreground text-center max-w-md">
+                    <p className="text-base lg:text-lg text-muted-foreground text-center max-w-lg leading-relaxed">
                       {archetype.traits.join(' • ')}
                     </p>
                   </>
                 ) : (
-                  <p className="text-muted-foreground">Listen to more music to discover your archetype</p>
+                  <p className="text-muted-foreground text-lg">Listen to more music to discover your archetype</p>
                 )}
               </CardContent>
             </Card>
@@ -208,21 +208,21 @@ const Home = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}
           >
-            <h2 className="font-display text-lg lg:text-xl font-bold text-foreground mb-4">
+            <h2 className="font-display text-xl lg:text-2xl font-bold text-foreground mb-5">
               🚀 What's Next?
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
               {/* Create a Crate */}
               <Link to="/crates">
-                <Card className="bg-card/60 backdrop-blur-xl border-border/50 hover:border-primary/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 h-full group">
-                  <CardContent className="p-5 lg:p-6 flex flex-col items-center text-center">
-                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
-                      <span className="text-2xl">🗂️</span>
+                <Card className="bg-card/70 backdrop-blur-xl border-border/40 hover:border-primary/40 hover:-translate-y-1 hover:shadow-xl transition-all duration-200 h-full group">
+                  <CardContent className="p-6 lg:p-8 flex flex-col items-center text-center">
+                    <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                      <span className="text-3xl lg:text-4xl">🗂️</span>
                     </div>
-                    <h3 className="font-display font-semibold text-foreground mb-1">
+                    <h3 className="font-display text-lg font-bold text-foreground mb-2">
                       Create a Crate
                     </h3>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       Organize music by vibe
                     </p>
                   </CardContent>
@@ -231,15 +231,15 @@ const Home = () => {
 
               {/* Discover Tracks */}
               <Link to="/studio">
-                <Card className="bg-card/60 backdrop-blur-xl border-border/50 hover:border-chart-purple/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 h-full group">
-                  <CardContent className="p-5 lg:p-6 flex flex-col items-center text-center">
-                    <div className="w-12 h-12 rounded-xl bg-chart-purple/10 flex items-center justify-center mb-3 group-hover:bg-chart-purple/20 transition-colors">
-                      <Search className="w-6 h-6 text-chart-purple" />
+                <Card className="bg-card/70 backdrop-blur-xl border-border/40 hover:border-chart-purple/40 hover:-translate-y-1 hover:shadow-xl transition-all duration-200 h-full group">
+                  <CardContent className="p-6 lg:p-8 flex flex-col items-center text-center">
+                    <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-chart-purple/10 flex items-center justify-center mb-4 group-hover:bg-chart-purple/20 transition-colors">
+                      <Search className="w-7 h-7 lg:w-8 lg:h-8 text-chart-purple" />
                     </div>
-                    <h3 className="font-display font-semibold text-foreground mb-1">
+                    <h3 className="font-display text-lg font-bold text-foreground mb-2">
                       Discover Tracks
                     </h3>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       Find music in your library
                     </p>
                   </CardContent>
@@ -248,15 +248,15 @@ const Home = () => {
 
               {/* Analyze Playlist */}
               <Link to="/studio">
-                <Card className="bg-card/60 backdrop-blur-xl border-border/50 hover:border-chart-cyan/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 h-full group">
-                  <CardContent className="p-5 lg:p-6 flex flex-col items-center text-center">
-                    <div className="w-12 h-12 rounded-xl bg-chart-cyan/10 flex items-center justify-center mb-3 group-hover:bg-chart-cyan/20 transition-colors">
-                      <BarChart3 className="w-6 h-6 text-chart-cyan" />
+                <Card className="bg-card/70 backdrop-blur-xl border-border/40 hover:border-chart-cyan/40 hover:-translate-y-1 hover:shadow-xl transition-all duration-200 h-full group">
+                  <CardContent className="p-6 lg:p-8 flex flex-col items-center text-center">
+                    <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-chart-cyan/10 flex items-center justify-center mb-4 group-hover:bg-chart-cyan/20 transition-colors">
+                      <BarChart3 className="w-7 h-7 lg:w-8 lg:h-8 text-chart-cyan" />
                     </div>
-                    <h3 className="font-display font-semibold text-foreground mb-1">
+                    <h3 className="font-display text-lg font-bold text-foreground mb-2">
                       Analyze a Playlist
                     </h3>
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
                       See flow and optimize
                     </p>
                   </CardContent>
