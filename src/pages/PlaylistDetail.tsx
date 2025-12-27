@@ -397,13 +397,6 @@ const PlaylistDetail = () => {
                   Home
                 </Link>
                 <ChevronRight className="w-4 h-4" />
-                <Link 
-                  to="/playlists" 
-                  className="hover:text-foreground transition-colors"
-                >
-                  My Playlists
-                </Link>
-                <ChevronRight className="w-4 h-4" />
                 <span className="text-foreground font-medium truncate max-w-[200px]">
                   {playlist.name}
                 </span>
@@ -412,11 +405,11 @@ const PlaylistDetail = () => {
               {/* Back Button */}
               <Button
                 variant="ghost"
-                onClick={() => navigate('/playlists')}
+                onClick={() => navigate('/home')}
                 className="text-muted-foreground hover:text-foreground mb-4"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Playlists
+                Back to Home
               </Button>
             </div>
           </header>
@@ -609,10 +602,10 @@ const PlaylistDetail = () => {
         <div className="flex flex-wrap gap-4 justify-center pb-8">
           <Button
             variant="outline"
-            onClick={() => navigate('/playlists')}
+            onClick={() => navigate('/home')}
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Analyze Another Playlist
+            Back to Home
           </Button>
         </div>
       </main>
