@@ -11,19 +11,19 @@ const CrateCard = ({ crate }: CrateCardProps) => {
   return (
     <Link to={`/crates/${crate.id}`}>
       <Card 
-        className="group bg-card/60 backdrop-blur-xl border-border/50 hover:border-primary/30 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg overflow-hidden cursor-pointer h-full"
+        className="group bg-card/70 backdrop-blur-xl border-border/40 hover:border-primary/40 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl overflow-hidden cursor-pointer h-full"
       >
-        <CardContent className="p-4 lg:p-5">
+        <CardContent className="p-5 lg:p-6">
           {/* Emoji & Color Header */}
           <div 
-            className="w-full aspect-square rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-105"
-            style={{ backgroundColor: `${crate.color}20` }}
+            className="w-full aspect-square rounded-2xl flex items-center justify-center mb-4 transition-transform duration-200 group-hover:scale-[1.02]"
+            style={{ backgroundColor: `${crate.color}18` }}
           >
-            <span className="text-4xl lg:text-5xl">{crate.emoji}</span>
+            <span className="text-5xl lg:text-6xl">{crate.emoji}</span>
           </div>
 
           {/* Name */}
-          <h3 className="font-display font-semibold text-foreground truncate mb-1 group-hover:text-primary transition-colors">
+          <h3 className="font-display text-lg lg:text-xl font-bold text-foreground truncate mb-1.5 group-hover:text-primary transition-colors">
             {crate.name}
           </h3>
 
@@ -35,7 +35,7 @@ const CrateCard = ({ crate }: CrateCardProps) => {
 
           {/* Description Preview */}
           {crate.description && (
-            <p className="text-xs text-muted-foreground/70 mt-2 line-clamp-2">
+            <p className="text-sm text-muted-foreground/80 mt-2.5 line-clamp-2 leading-relaxed">
               {crate.description}
             </p>
           )}

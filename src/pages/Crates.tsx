@@ -63,13 +63,13 @@ const Crates = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 lg:px-8 py-6 lg:py-8 max-w-6xl">
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-6">
+      <main className="container mx-auto px-4 lg:px-8 py-8 lg:py-12 max-w-6xl">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="font-display text-xl sm:text-2xl lg:text-3xl font-bold text-foreground mb-1">📦 Your Crates</h1>
-            <p className="text-sm lg:text-base text-muted-foreground">Organize your music by vibe, mood, or meaning.</p>
+            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">📦 Your Crates</h1>
+            <p className="text-base lg:text-lg text-muted-foreground">Organize your music by vibe, mood, or meaning.</p>
           </div>
-          <Button onClick={() => setShowCreateModal(true)} className="gap-2">
+          <Button onClick={() => setShowCreateModal(true)} size="lg" className="gap-2 btn-scale">
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">New Crate</span>
           </Button>

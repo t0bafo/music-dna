@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @layer base {
   /* Light mode (default for :root now, dark applied via class) */
@@ -23,7 +23,7 @@
     --secondary-foreground: 240 10% 20%;
 
     --muted: 210 20% 93%;
-    --muted-foreground: 240 10% 40%;
+    --muted-foreground: 220 10% 45%;
 
     --accent: 156 100% 40%;
     --accent-foreground: 0 0% 100%;
@@ -46,20 +46,21 @@
     --chart-purple: 262 83% 58%;
     --chart-blue: 217 91% 60%;
     --chart-cyan: 192 91% 43%;
+    --chart-orange: 24 95% 53%;
     
     /* Glassmorphism tokens - Light mode */
-    --glass-bg: 0 0% 100% / 0.8;
-    --glass-border: 0 0% 0% / 0.08;
-    --glass-border-hover: 0 0% 0% / 0.15;
+    --glass-bg: 0 0% 100% / 0.85;
+    --glass-border: 0 0% 0% / 0.06;
+    --glass-border-hover: 0 0% 0% / 0.12;
     --glass-glow: 156 100% 40% / 0.15;
     
     /* Shadows - Light mode */
     --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.05);
     --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.08), 0 2px 4px -2px hsl(0 0% 0% / 0.06);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.08), 0 4px 6px -4px hsl(0 0% 0% / 0.06);
-    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.1), 0 8px 10px -6px hsl(0 0% 0% / 0.08);
-    --shadow-glow: 0 0 20px hsl(var(--sonic-green) / 0.2);
-    --shadow-glow-intense: 0 0 30px hsl(var(--sonic-green) / 0.3);
+    --shadow-lg: 0 10px 20px -5px hsl(0 0% 0% / 0.1), 0 4px 8px -4px hsl(0 0% 0% / 0.08);
+    --shadow-xl: 0 20px 30px -8px hsl(0 0% 0% / 0.15), 0 8px 12px -6px hsl(0 0% 0% / 0.1);
+    --shadow-glow: 0 0 24px hsl(var(--sonic-green) / 0.25);
+    --shadow-glow-intense: 0 0 40px hsl(var(--sonic-green) / 0.4);
 
     --sidebar-background: 210 20% 98%;
     --sidebar-foreground: 240 10% 20%;
@@ -73,60 +74,66 @@
 
   /* Dark mode */
   .dark {
-    --background: 240 10% 4%;
+    --background: 228 15% 5%;
     --foreground: 0 0% 98%;
 
-    --card: 240 10% 8%;
+    --card: 228 15% 8%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 10% 10%;
+    --popover: 228 15% 10%;
     --popover-foreground: 0 0% 98%;
 
     --primary: 156 100% 50%;
-    --primary-foreground: 240 10% 4%;
+    --primary-foreground: 228 15% 5%;
 
-    --secondary: 240 10% 14%;
+    --secondary: 228 15% 14%;
     --secondary-foreground: 0 0% 85%;
 
-    --muted: 240 10% 16%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 228 15% 16%;
+    --muted-foreground: 220 10% 55%;
 
     --accent: 156 100% 50%;
-    --accent-foreground: 240 10% 4%;
+    --accent-foreground: 228 15% 5%;
 
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 10% 18%;
-    --input: 240 10% 18%;
+    --border: 228 15% 16%;
+    --input: 228 15% 16%;
     --ring: 156 100% 50%;
 
     /* Custom tokens - Sonic green palette (dark) */
     --sonic-green: 156 100% 50%;
-    --sonic-green-glow: 156 100% 60%;
+    --sonic-green-glow: 156 100% 65%;
     --sonic-green-dark: 156 100% 35%;
     
+    /* Chart gradient colors - dark mode (slightly brighter) */
+    --chart-purple: 262 83% 62%;
+    --chart-blue: 217 91% 65%;
+    --chart-cyan: 192 91% 50%;
+    --chart-orange: 24 95% 58%;
+    
     /* Glassmorphism tokens - Dark mode */
-    --glass-bg: 240 10% 10% / 0.85;
-    --glass-border: 0 0% 100% / 0.08;
-    --glass-border-hover: 0 0% 100% / 0.15;
-    --glass-glow: 156 100% 50% / 0.2;
+    --glass-bg: 228 15% 8% / 0.9;
+    --glass-border: 0 0% 100% / 0.06;
+    --glass-border-hover: 0 0% 100% / 0.12;
+    --glass-glow: 156 100% 50% / 0.25;
     
     /* Shadows - Dark mode */
-    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
-    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.4), 0 2px 4px -2px hsl(0 0% 0% / 0.3);
-    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.5), 0 4px 6px -4px hsl(0 0% 0% / 0.4);
-    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.6), 0 8px 10px -6px hsl(0 0% 0% / 0.5);
-    --shadow-glow: 0 0 20px hsl(var(--sonic-green) / 0.3);
-    --shadow-glow-intense: 0 0 30px hsl(var(--sonic-green) / 0.5);
+    --shadow-sm: 0 1px 3px 0 hsl(0 0% 0% / 0.4);
+    --shadow-md: 0 4px 8px -2px hsl(0 0% 0% / 0.5), 0 2px 4px -2px hsl(0 0% 0% / 0.4);
+    --shadow-lg: 0 12px 24px -6px hsl(0 0% 0% / 0.6), 0 6px 10px -4px hsl(0 0% 0% / 0.5);
+    --shadow-xl: 0 24px 40px -10px hsl(0 0% 0% / 0.7), 0 10px 16px -8px hsl(0 0% 0% / 0.6);
+    --shadow-glow: 0 0 28px hsl(var(--sonic-green) / 0.35);
+    --shadow-glow-intense: 0 0 50px hsl(var(--sonic-green) / 0.55);
 
-    --sidebar-background: 240 10% 6%;
+    --sidebar-background: 228 15% 6%;
     --sidebar-foreground: 0 0% 90%;
     --sidebar-primary: 156 100% 50%;
-    --sidebar-primary-foreground: 240 10% 4%;
-    --sidebar-accent: 240 10% 14%;
+    --sidebar-primary-foreground: 228 15% 5%;
+    --sidebar-accent: 228 15% 14%;
     --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 240 10% 15%;
+    --sidebar-border: 228 15% 14%;
     --sidebar-ring: 156 100% 50%;
   }
 }
@@ -145,17 +152,36 @@
   html.transitioning *,
   html.transitioning *::before,
   html.transitioning *::after {
-    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease !important;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+    line-height: 1.6;
   }
   
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', system-ui, sans-serif;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+  
+  h1 {
+    @apply text-2xl sm:text-3xl lg:text-4xl font-bold;
+  }
+  
+  h2 {
+    @apply text-xl sm:text-2xl lg:text-3xl font-bold;
+  }
+  
+  h3 {
+    @apply text-lg sm:text-xl font-semibold;
+  }
+  
+  p {
+    line-height: 1.65;
   }
 
   /* Respect reduced motion preference */
@@ -172,26 +198,42 @@
 @layer utilities {
   /* Gradient background - adapts to theme */
   .gradient-bg {
-    @apply bg-gradient-to-b from-background to-muted/30;
+    @apply bg-gradient-to-b from-background via-background to-muted/20;
   }
   
   /* Glassmorphic card styling */
   .glass-card {
     background: hsl(var(--glass-bg));
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border: 1px solid hsl(var(--glass-border));
     box-shadow: var(--shadow-lg);
   }
   
   .glass-card-hover {
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .glass-card-hover:hover {
     transform: translateY(-4px);
     border-color: hsl(var(--glass-border-hover));
-    box-shadow: var(--shadow-xl), 0 0 40px hsl(var(--sonic-green) / 0.1);
+    box-shadow: var(--shadow-xl), 0 0 50px hsl(var(--sonic-green) / 0.12);
+  }
+  
+  /* Premium card styling */
+  .premium-card {
+    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.9) 100%);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid hsl(var(--glass-border));
+    box-shadow: var(--shadow-lg);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .premium-card:hover {
+    transform: translateY(-4px);
+    border-color: hsl(var(--primary) / 0.3);
+    box-shadow: var(--shadow-xl), var(--shadow-glow);
   }
   
   /* Glow effects */
@@ -233,10 +275,10 @@
   /* Sonic green glow pulse */
   @keyframes glow-pulse {
     0%, 100% {
-      box-shadow: 0 0 20px hsl(var(--sonic-green) / 0.3);
+      box-shadow: 0 0 24px hsl(var(--sonic-green) / 0.3);
     }
     50% {
-      box-shadow: 0 0 30px hsl(var(--sonic-green) / 0.5);
+      box-shadow: 0 0 36px hsl(var(--sonic-green) / 0.5);
     }
   }
   
@@ -263,5 +305,28 @@
     );
     background-size: 200% 100%;
     animation: shimmer 1.5s ease-in-out infinite;
+  }
+  
+  /* Button hover scale */
+  .btn-scale {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .btn-scale:hover {
+    transform: scale(1.02);
+  }
+  
+  .btn-scale:active {
+    transform: scale(0.98);
+  }
+  
+  /* Hide scrollbar utility */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
