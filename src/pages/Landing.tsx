@@ -137,7 +137,7 @@ const Landing = () => {
           
           {/* Description */}
           <motion.p 
-            className="text-base lg:text-lg text-muted-foreground max-w-[650px] mb-10 leading-relaxed"
+            className="text-base lg:text-lg text-muted-foreground max-w-[650px] mb-12 leading-relaxed"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
@@ -147,7 +147,7 @@ const Landing = () => {
 
           {/* Crate Cards Visual */}
           <motion.div
-            className="mb-10 relative w-full max-w-[380px] h-[280px] lg:h-[320px]"
+            className="mb-8 relative w-full max-w-[380px] h-[280px] lg:h-[320px]"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.25, ease: smoothEase }}
@@ -183,9 +183,9 @@ const Landing = () => {
             ))}
           </motion.div>
 
-          {/* CTA Buttons */}
+          {/* CTA Button */}
           <motion.div 
-            className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto mb-8"
+            className="w-full sm:w-auto mb-4"
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, delay: 0.35, ease: smoothEase }}
@@ -207,14 +207,6 @@ const Landing = () => {
                   <ArrowRight className="w-5 h-5" />
                 </>
               )}
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="w-full sm:w-auto border-2 border-primary text-primary hover:bg-primary/10 font-bold px-8 h-14 text-base rounded-xl"
-              onClick={() => navigate('/home')}
-            >
-              See a Demo First
             </Button>
           </motion.div>
 
