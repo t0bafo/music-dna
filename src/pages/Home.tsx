@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Music, Loader2, AlertCircle, RefreshCw, Brain, Home as HomeIcon, SlidersHorizontal, ListMusic, Package, ArrowRight, BarChart3, Sparkles, Target, Search } from 'lucide-react';
+import { Music, Loader2, AlertCircle, RefreshCw, Home as HomeIcon, SlidersHorizontal, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import UserProfile from '@/components/UserProfile';
@@ -10,6 +10,7 @@ import PlaylistGrid from '@/components/PlaylistGrid';
 import TopAlbumsGrid from '@/components/TopAlbumsGrid';
 import TopSongsGrid from '@/components/TopSongsGrid';
 import HomeCratesSection from '@/components/HomeCratesSection';
+import MusicStatsSection from '@/components/MusicStatsSection';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion } from 'framer-motion';
 import { calculateArchetype, Archetype, MusicProfile } from '@/lib/music-archetypes';
@@ -111,13 +112,6 @@ const Home = () => {
                 <HomeIcon className="w-4 h-4" />
                 <span>Home</span>
               </div>
-              <Link 
-                to="/intelligence" 
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-              >
-                <Brain className="w-4 h-4" />
-                <span>Intelligence</span>
-              </Link>
               <Link
                 to="/crates"
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
@@ -130,7 +124,7 @@ const Home = () => {
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
               >
                 <SlidersHorizontal className="w-4 h-4" />
-                <span>Curation Lab</span>
+                <span>Studio</span>
               </Link>
             </nav>
           </div>
@@ -226,6 +220,15 @@ const Home = () => {
 
           {/* 5. Your Crates */}
           <HomeCratesSection />
+
+          {/* 6. Music Stats */}
+          <MusicStatsSection 
+            topTracks={topTracks}
+            accessToken={accessToken}
+            isLoading={loadingTopTracks}
+          />
+
+          {/* 7. Your Playlists */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -252,96 +255,6 @@ const Home = () => {
             )}
           </motion.section>
 
-          {/* 7. What's Next? Action Cards */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.5 }}
-          >
-            <h2 className="font-display text-lg lg:text-xl font-bold text-foreground mb-4">
-              🚀 What's Next?
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-              {/* Intelligence Card */}
-              <Card className="bg-gradient-to-br from-card/90 via-card/80 to-primary/5 border-primary/20 h-full hover:border-primary/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-200">
-                <CardContent className="p-6 lg:p-8 flex flex-col h-full">
-                  <div className="p-3 bg-primary/10 rounded-xl w-fit mb-4">
-                    <Brain className="w-8 h-8 text-primary" />
-                  </div>
-                  
-                  <h3 className="font-display text-xl font-bold text-foreground mb-2">
-                    🧬 Dive Deeper
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Explore your complete music intelligence with detailed analytics, charts, and insights about your listening habits.
-                  </p>
-                  
-                  <ul className="space-y-2 mb-6 flex-1">
-                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <BarChart3 className="w-4 h-4 text-primary" />
-                      Audio Evolution Over Time
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Sparkles className="w-4 h-4 text-primary" />
-                      BPM & Energy Patterns
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Target className="w-4 h-4 text-primary" />
-                      Discovery Statistics
-                    </li>
-                  </ul>
-                  
-                  <Button 
-                    onClick={() => navigate('/intelligence')} 
-                    className="w-full gap-2 group"
-                  >
-                    Go to Intelligence
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Curation Lab Card */}
-              <Card className="bg-gradient-to-br from-card/90 via-card/80 to-chart-purple/5 border-chart-purple/20 h-full hover:border-chart-purple/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-200">
-                <CardContent className="p-6 lg:p-8 flex flex-col h-full">
-                  <div className="p-3 bg-chart-purple/10 rounded-xl w-fit mb-4">
-                    <SlidersHorizontal className="w-8 h-8 text-chart-purple" />
-                  </div>
-                  
-                  <h3 className="font-display text-xl font-bold text-foreground mb-2">
-                    🎨 Create Playlists
-                  </h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Use AI-powered tools to discover tracks and build perfect playlists for any mood or event.
-                  </p>
-                  
-                  <ul className="space-y-2 mb-6 flex-1">
-                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Target className="w-4 h-4 text-chart-purple" />
-                      Track Suggestions
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Search className="w-4 h-4 text-chart-purple" />
-                      Smart Discovery Engine
-                    </li>
-                    <li className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Sparkles className="w-4 h-4 text-chart-purple" />
-                      Context Generator
-                    </li>
-                  </ul>
-                  
-                  <Button 
-                    onClick={() => navigate('/curation')} 
-                    variant="outline"
-                    className="w-full gap-2 group border-chart-purple/30 hover:border-chart-purple/50 hover:bg-chart-purple/5"
-                  >
-                    Go to Curation Lab
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </motion.section>
         </div>
       </main>
       

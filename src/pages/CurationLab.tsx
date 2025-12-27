@@ -9,8 +9,6 @@ import {
   Target,
   Music,
   Home,
-  ListMusic,
-  Brain,
   Package,
   RefreshCw
 } from 'lucide-react';
@@ -116,13 +114,6 @@ const CurationLab = () => {
                 <Home className="w-4 h-4" />
                 <span>Home</span>
               </Link>
-              <Link 
-                to="/intelligence" 
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-              >
-                <Brain className="w-4 h-4" />
-                <span>Intelligence</span>
-              </Link>
               <Link
                 to="/crates"
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
@@ -132,7 +123,7 @@ const CurationLab = () => {
               </Link>
               <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 text-primary font-medium">
                 <SlidersHorizontal className="w-4 h-4" />
-                <span>Curation Lab</span>
+                <span>Studio</span>
               </div>
             </nav>
           </div>
