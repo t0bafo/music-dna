@@ -1,17 +1,13 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Search, Plus, Music, Check } from 'lucide-react';
+import { Loader2, Search, Plus, Music, Check, Lightbulb } from 'lucide-react';
 import { useAddTracksToCrate } from '@/hooks/use-crates';
 import { useAuth } from '@/contexts/AuthContext';
-import { getLibrarySecure } from '@/lib/secure-database';
-import { useQuery } from '@tanstack/react-query';
 import { TrackToAdd } from '@/lib/crates-api';
 import { cn } from '@/lib/utils';
-import { useTopTracks } from '@/hooks/use-music-intelligence';
 
 interface AddTracksToCrateModalProps {
   open: boolean;
@@ -21,45 +17,64 @@ interface AddTracksToCrateModalProps {
   existingTrackIds: string[];
 }
 
-type FilterType = 'all' | 'top50' | 'deepcuts';
+interface SpotifyTrack {
+  id: string;
+  name: string;
+  artists: { name: string }[];
+  album: {
+    name: string;
+    images: { url: string }[];
+  };
+  duration_ms: number;
+  popularity: number;
+}
 
-// Fetch track details from Spotify API including duration and album art
-async function fetchSpotifyTrackDetails(
-  trackIds: string[],
-  accessToken: string
-): Promise<Map<string, { duration_ms: number; album_art_url: string }>> {
-  const details = new Map<string, { duration_ms: number; album_art_url: string }>();
-  
-  const chunks: string[][] = [];
-  for (let i = 0; i < trackIds.length; i += 50) {
-    chunks.push(trackIds.slice(i, i + 50));
-  }
+// Search ALL of Spotify using the Search API
+async function searchSpotifyTracks(query: string, accessToken: string): Promise<SpotifyTrack[]> {
+  if (!query || query.trim().length === 0) return [];
 
-  for (const chunk of chunks) {
-    try {
-      const response = await fetch(
-        `https://api.spotify.com/v1/tracks?ids=${chunk.join(',')}`,
-        { headers: { 'Authorization': `Bearer ${accessToken}` } }
-      );
-      
-      if (response.ok) {
-        const data = await response.json();
-        for (const track of data.tracks || []) {
-          if (track && track.id) {
-            const albumArt = track.album?.images?.[1]?.url || track.album?.images?.[0]?.url || '';
-            details.set(track.id, {
-              duration_ms: track.duration_ms || 0,
-              album_art_url: albumArt
-            });
-          }
-        }
+  const response = await fetch(
+    `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=50`,
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
       }
-    } catch (err) {
-      console.error('Failed to fetch Spotify track details:', err);
     }
+  );
+
+  if (!response.ok) {
+    throw new Error('Search failed');
   }
 
-  return details;
+  const data = await response.json();
+  return data.tracks?.items || [];
+}
+
+// Sort results to prioritize artist name matches
+function sortSearchResults(tracks: SpotifyTrack[], searchQuery: string): SpotifyTrack[] {
+  const query = searchQuery.toLowerCase().trim();
+
+  return [...tracks].sort((a, b) => {
+    const aArtist = a.artists[0]?.name.toLowerCase() || '';
+    const bArtist = b.artists[0]?.name.toLowerCase() || '';
+
+    // Exact artist name match gets highest priority
+    const aExactMatch = aArtist === query;
+    const bExactMatch = bArtist === query;
+
+    if (aExactMatch && !bExactMatch) return -1;
+    if (!aExactMatch && bExactMatch) return 1;
+
+    // Partial artist name match gets second priority
+    const aPartialMatch = aArtist.includes(query);
+    const bPartialMatch = bArtist.includes(query);
+
+    if (aPartialMatch && !bPartialMatch) return -1;
+    if (!aPartialMatch && bPartialMatch) return 1;
+
+    // Keep Spotify's default relevance order for everything else
+    return 0;
+  });
 }
 
 const AddTracksToCrateModal = ({ 
@@ -71,104 +86,74 @@ const AddTracksToCrateModal = ({
 }: AddTracksToCrateModalProps) => {
   const { accessToken } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTracks, setSelectedTracks] = useState<Map<string, any>>(new Map());
-  const [isFetchingDetails, setIsFetchingDetails] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SpotifyTrack[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+  const [selectedTracks, setSelectedTracks] = useState<Map<string, SpotifyTrack>>(new Map());
 
   const addTracks = useAddTracksToCrate();
 
-  // Fetch user's library
-  const { data: library = [], isLoading } = useQuery({
-    queryKey: ['library-for-crate', accessToken],
-    queryFn: () => getLibrarySecure(accessToken!),
-    enabled: !!accessToken && open,
-    staleTime: 1000 * 60 * 5,
-  });
-
-  // Fetch user's actual top 50 tracks from Spotify
-  const { data: topTracks = [], isLoading: topTracksLoading } = useTopTracks(accessToken, 'medium_term', 50);
-
   const existingSet = useMemo(() => new Set(existingTrackIds), [existingTrackIds]);
 
-  // Convert top tracks to library format for consistent display
-  // Include all available metadata so tracks can be added even if not in library
-  const topTracksAsLibrary = useMemo(() => {
-    return topTracks.map(t => ({
-      track_id: t.id,
-      name: t.name,
-      artist: t.artist,
-      album: t.album?.name || '',
-      // Include album art for immediate display
-      album_art_url: t.album?.images?.[1]?.url || t.album?.images?.[0]?.url || '',
-      duration_ms: t.duration_ms,
-      tempo: t.tempo,
-      energy: t.energy,
-      danceability: t.danceability,
-      valence: t.valence,
-      popularity: t.popularity,
-      // Flag to identify top tracks (not from library)
-      isTopTrack: true
-    }));
-  }, [topTracks]);
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
 
-  // Apply filters and search - NO artificial limits, show ALL tracks
-  const filteredTracks = useMemo(() => {
-    let tracks: any[];
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-    // Apply filter - use different source based on filter type
-    switch (activeFilter) {
-      case 'top50':
-        // Use actual top 50 most-played tracks DIRECTLY from Spotify API
-        // Don't filter through library - show ALL top tracks even if not saved
-        tracks = topTracksAsLibrary;
-        break;
-      case 'deepcuts':
-        tracks = library.filter((t) => (t.popularity || 100) < 50);
-        break;
-      default:
-        // 'all' filter: show ALL library tracks
-        tracks = library;
+  // Perform search when debounced query changes
+  useEffect(() => {
+    if (!debouncedQuery.trim() || !accessToken) {
+      setSearchResults([]);
+      setSearchError(null);
+      return;
     }
 
-    // Apply search
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      tracks = tracks.filter((track) =>
-        track.name?.toLowerCase().includes(query) ||
-        track.artist?.toLowerCase().includes(query) ||
-        track.album?.toLowerCase().includes(query)
-      );
+    const performSearch = async () => {
+      setIsSearching(true);
+      setSearchError(null);
+
+      try {
+        const results = await searchSpotifyTracks(debouncedQuery, accessToken);
+        const sorted = sortSearchResults(results, debouncedQuery);
+        setSearchResults(sorted);
+      } catch (err) {
+        console.error('Search failed:', err);
+        setSearchError('Search failed. Please try again.');
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    };
+
+    performSearch();
+  }, [debouncedQuery, accessToken]);
+
+  // Reset state when modal closes
+  useEffect(() => {
+    if (!open) {
+      setSearchQuery('');
+      setDebouncedQuery('');
+      setSearchResults([]);
+      setSelectedTracks(new Map());
+      setSearchError(null);
     }
+  }, [open]);
 
-    // Return ALL matching tracks - no artificial limit
-    return tracks;
-  }, [library, activeFilter, searchQuery, topTracksAsLibrary]);
-
-  const toggleTrack = useCallback((track: any) => {
-    // Don't allow selecting tracks already in crate
-    if (existingSet.has(track.track_id)) return;
+  const toggleTrack = useCallback((track: SpotifyTrack) => {
+    if (existingSet.has(track.id)) return;
 
     setSelectedTracks((prev) => {
       const newSelected = new Map(prev);
       
-      if (newSelected.has(track.track_id)) {
-        newSelected.delete(track.track_id);
+      if (newSelected.has(track.id)) {
+        newSelected.delete(track.id);
       } else {
-        // Store all available metadata including album art and duration
-        // This ensures tracks not in library (e.g., from Top 50) can still be added
-        newSelected.set(track.track_id, {
-          track_id: track.track_id,
-          name: track.name,
-          artist_name: track.artist,
-          album_name: track.album,
-          album_art_url: track.album_art_url || '',
-          duration_ms: track.duration_ms || 0,
-          bpm: track.tempo,
-          energy: track.energy,
-          danceability: track.danceability,
-          valence: track.valence,
-          popularity: track.popularity
-        });
+        newSelected.set(track.id, track);
       }
       
       return newSelected;
@@ -178,69 +163,48 @@ const AddTracksToCrateModal = ({
   const handleAdd = async () => {
     if (selectedTracks.size === 0 || !accessToken) return;
 
-    setIsFetchingDetails(true);
-    
     try {
-      // Identify tracks that need Spotify details (missing duration or album art)
-      const tracksMissingDetails = Array.from(selectedTracks.entries())
-        .filter(([_, track]) => !track.duration_ms || !track.album_art_url)
-        .map(([trackId]) => trackId);
-
-      // Only fetch from Spotify if we have missing details
-      let spotifyDetails = new Map<string, { duration_ms: number; album_art_url: string }>();
-      if (tracksMissingDetails.length > 0) {
-        spotifyDetails = await fetchSpotifyTrackDetails(tracksMissingDetails, accessToken);
-      }
-
-      // Build final track data - use stored data with Spotify fallback for missing fields
-      const tracksToAdd: TrackToAdd[] = Array.from(selectedTracks.entries()).map(([trackId, track]) => {
-        const spotifyData = spotifyDetails.get(trackId);
-        return {
-          track_id: trackId,
-          name: track.name,
-          artist_name: track.artist_name,
-          album_name: track.album_name,
-          // Prefer stored data, fall back to Spotify fetch
-          album_art_url: track.album_art_url || spotifyData?.album_art_url || '',
-          duration_ms: track.duration_ms || spotifyData?.duration_ms || 0,
-          popularity: track.popularity,
-          bpm: track.bpm,
-          energy: track.energy,
-          danceability: track.danceability,
-          valence: track.valence
-        };
-      });
+      // Build track data from selected Spotify tracks
+      const tracksToAdd: TrackToAdd[] = Array.from(selectedTracks.values()).map((track) => ({
+        track_id: track.id,
+        name: track.name,
+        artist_name: track.artists[0]?.name || 'Unknown Artist',
+        album_name: track.album.name,
+        album_art_url: track.album.images[1]?.url || track.album.images[0]?.url || '',
+        duration_ms: track.duration_ms,
+        popularity: track.popularity,
+        // Audio features can be fetched later if needed
+        bpm: undefined,
+        energy: undefined,
+        danceability: undefined,
+        valence: undefined
+      }));
 
       await addTracks.mutateAsync({
         crateId,
         tracks: tracksToAdd
       });
 
-      setSelectedTracks(new Map());
-      setSearchQuery('');
-      setActiveFilter('all');
       onOpenChange(false);
-    } finally {
-      setIsFetchingDetails(false);
+    } catch (err) {
+      console.error('Failed to add tracks:', err);
     }
   };
 
   const handleClose = () => {
-    setSelectedTracks(new Map());
-    setSearchQuery('');
-    setActiveFilter('all');
     onOpenChange(false);
   };
 
-  const isPending = addTracks.isPending || isFetchingDetails;
+  const isPending = addTracks.isPending;
 
   // Format duration
-  const formatDuration = (ms: number | undefined) => {
-    if (!ms) return '';
+  const formatDuration = (ms: number) => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
     return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   };
+
+  const showEmptyState = !searchQuery.trim() && searchResults.length === 0;
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
@@ -252,85 +216,80 @@ const AddTracksToCrateModal = ({
         </DialogHeader>
 
         {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search tracks..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-secondary/30"
-          />
-        </div>
-
-        {/* Filters */}
-        <div className="flex gap-2">
-          <Button
-            variant={activeFilter === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveFilter('all')}
-            className="text-xs"
-          >
-            All Tracks
-          </Button>
-          <Button
-            variant={activeFilter === 'top50' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveFilter('top50')}
-            className="text-xs"
-          >
-            Top 50
-          </Button>
-          <Button
-            variant={activeFilter === 'deepcuts' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveFilter('deepcuts')}
-            className="text-xs"
-          >
-            Deep Cuts
-          </Button>
-        </div>
-
-        {/* Track counts */}
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">
-            {filteredTracks.length.toLocaleString()} track{filteredTracks.length !== 1 ? 's' : ''} 
-            {library.length > 0 && filteredTracks.length !== library.length && (
-              <span className="text-muted-foreground/60"> of {library.length.toLocaleString()}</span>
+        <div className="space-y-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search any song on Spotify..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-secondary/30"
+              autoFocus
+            />
+            {isSearching && (
+              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
             )}
-          </span>
-          {selectedTracks.size > 0 && (
+          </div>
+          
+          {/* Helper text */}
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Lightbulb className="w-3.5 h-3.5" />
+            <span>Search any track – even if you haven't saved it yet</span>
+          </div>
+        </div>
+
+        {/* Selection count */}
+        {selectedTracks.size > 0 && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">
+              {searchResults.length} result{searchResults.length !== 1 ? 's' : ''}
+            </span>
             <span className="text-primary font-medium">
               {selectedTracks.size} selected
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Track list */}
         <ScrollArea className="h-[400px] -mx-6 px-6">
-          {isLoading ? (
+          {showEmptyState ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <Search className="w-12 h-12 text-muted-foreground/30 mb-4" />
+              <p className="text-muted-foreground font-medium">Search for tracks</p>
+              <p className="text-sm text-muted-foreground/70 mt-1">
+                Find any song on Spotify to add to your crate
+              </p>
+            </div>
+          ) : isSearching && searchResults.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
-              <p className="text-sm text-muted-foreground">Loading your library...</p>
+              <p className="text-sm text-muted-foreground">Searching Spotify...</p>
             </div>
-          ) : filteredTracks.length === 0 ? (
+          ) : searchError ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Music className="w-12 h-12 text-muted-foreground mb-3" />
+              <p className="text-destructive">{searchError}</p>
+            </div>
+          ) : searchResults.length === 0 && debouncedQuery.trim() ? (
             <div className="flex flex-col items-center justify-center py-12 text-center">
               <Music className="w-12 h-12 text-muted-foreground mb-3" />
               <p className="text-muted-foreground">
-                {searchQuery ? 'No matching tracks found' : 'No tracks available'}
+                No tracks found for "{debouncedQuery}"
               </p>
               <p className="text-sm text-muted-foreground/70 mt-1">
-                {searchQuery ? 'Try a different search term' : 'Extract your library from Intelligence tab first'}
+                Try a different search term
               </p>
             </div>
           ) : (
             <div className="space-y-1 pb-4">
-              {filteredTracks.map((track) => {
-                const isInCrate = existingSet.has(track.track_id);
-                const isSelected = selectedTracks.has(track.track_id);
+              {searchResults.map((track) => {
+                const isInCrate = existingSet.has(track.id);
+                const isSelected = selectedTracks.has(track.id);
+                const albumArt = track.album.images[2]?.url || track.album.images[1]?.url || track.album.images[0]?.url;
                 
                 return (
                   <div
-                    key={track.track_id}
+                    key={track.id}
                     onClick={() => toggleTrack(track)}
                     className={cn(
                       "flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer",
@@ -341,28 +300,12 @@ const AddTracksToCrateModal = ({
                           : "hover:bg-secondary/50"
                     )}
                   >
-                    {/* Checkbox or Check icon */}
-                    <div className="shrink-0">
-                      {isInCrate ? (
-                        <div className="w-5 h-5 rounded-md bg-primary/20 flex items-center justify-center">
-                          <Check className="w-3.5 h-3.5 text-primary" />
-                        </div>
-                      ) : (
-                        <Checkbox
-                          checked={isSelected}
-                          onCheckedChange={() => toggleTrack(track)}
-                          onClick={(e) => e.stopPropagation()}
-                          className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                        />
-                      )}
-                    </div>
-
                     {/* Album art */}
                     <div className="w-10 h-10 rounded-md bg-secondary/50 shrink-0 flex items-center justify-center overflow-hidden">
-                      {track.album_art_url ? (
+                      {albumArt ? (
                         <img 
-                          src={track.album_art_url} 
-                          alt={track.album || 'Album art'} 
+                          src={albumArt} 
+                          alt={track.album.name} 
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -379,25 +322,29 @@ const AddTracksToCrateModal = ({
                         {track.name}
                       </p>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="truncate">{track.artist}</span>
+                        <span className="truncate">{track.artists.map(a => a.name).join(', ')}</span>
+                        <span className="shrink-0">•</span>
+                        <span className="shrink-0">{formatDuration(track.duration_ms)}</span>
                       </div>
                     </div>
 
-                    {/* Duration & BPM */}
-                    <div className="shrink-0 text-right text-xs text-muted-foreground/70">
-                      {track.tempo && (
-                        <div className="bg-secondary/50 px-2 py-0.5 rounded">
-                          {Math.round(track.tempo)} BPM
+                    {/* Add button or status */}
+                    <div className="shrink-0">
+                      {isInCrate ? (
+                        <div className="flex items-center gap-1.5 text-xs text-primary">
+                          <Check className="w-3.5 h-3.5" />
+                          <span>In crate</span>
+                        </div>
+                      ) : isSelected ? (
+                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
+                          <Check className="w-4 h-4 text-primary-foreground" />
+                        </div>
+                      ) : (
+                        <div className="w-8 h-8 rounded-full border border-border hover:border-primary hover:bg-primary/10 flex items-center justify-center transition-colors">
+                          <Plus className="w-4 h-4 text-muted-foreground" />
                         </div>
                       )}
                     </div>
-
-                    {/* In crate indicator */}
-                    {isInCrate && (
-                      <span className="text-xs text-muted-foreground shrink-0">
-                        In crate
-                      </span>
-                    )}
                   </div>
                 );
               })}
