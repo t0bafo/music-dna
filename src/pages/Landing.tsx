@@ -147,7 +147,7 @@ const Landing = () => {
 
           {/* Crate Cards Visual */}
           <motion.div
-            className="mb-8 relative w-full max-w-[380px] h-[280px] lg:h-[320px]"
+            className="mb-4 relative w-full max-w-[380px] h-[200px] lg:h-[220px]"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6, delay: 0.25, ease: smoothEase }}
