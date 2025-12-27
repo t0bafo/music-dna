@@ -65,7 +65,7 @@ import {
 } from 'recharts';
 
 const MusicIntelligence = () => {
-  usePageTitle('Music Intelligence');
+  usePageTitle('Your Music Stats');
   const { isAuthenticated, isLoading: authLoading, accessToken, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
