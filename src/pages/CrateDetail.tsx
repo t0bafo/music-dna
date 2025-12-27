@@ -29,6 +29,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { CRATE_EMOJIS, CRATE_COLORS } from '@/lib/crates-api';
 import { motion } from 'framer-motion';
 import { usePageTitle } from '@/hooks/use-page-title';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
@@ -36,7 +37,6 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
-  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -63,18 +63,21 @@ const CrateDetail = () => {
   const updateCrate = useUpdateCrate();
   const reorderTracks = useReorderCrateTracks();
 
+  const isMobile = useIsMobile();
+
   // Drag and drop sensors - optimized for mobile scrolling
+  // NOTE: On mobile browsers, Pointer events are used for touch too.
+  // Using a long-press delay on PointerSensor prevents DnD from hijacking scroll.
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        delay: 500, // Longer delay to avoid interfering with scroll
-        tolerance: 8, // More tolerance for touch movement
-      },
+      activationConstraint: isMobile
+        ? {
+            delay: 600,
+            tolerance: 10,
+          }
+        : {
+            distance: 8,
+          },
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
@@ -329,35 +332,43 @@ const CrateDetail = () => {
 
         {/* Tracks List */}
         {displayTracks.length > 0 ? (
-          <motion.div 
-            initial={{ opacity: 0 }} 
-            animate={{ opacity: 1 }} 
-            className="space-y-2"
-            style={{
-              WebkitOverflowScrolling: 'touch',
-              overscrollBehaviorY: 'contain',
-            }}
-          >
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <div
+              className={cn(
+                "space-y-2",
+                // Mobile: make the list its own scroll container for crisp native scrolling
+                "max-h-[60vh] overflow-y-auto overscroll-contain",
+                // Desktop: allow the page to scroll naturally
+                "lg:max-h-none lg:overflow-visible"
+              )}
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y',
+                transform: 'translateZ(0)',
+                willChange: 'scroll-position',
+              }}
             >
-              <SortableContext
-                items={displayTracks.map(t => t.id)}
-                strategy={verticalListSortingStrategy}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
               >
-                {displayTracks.map((track, index) => (
-                  <SortableTrackRow
-                    key={track.id}
-                    track={track}
-                    index={index}
-                    onRemove={handleRemoveTrack}
-                    formatDuration={formatDuration}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
+                <SortableContext
+                  items={displayTracks.map((t) => t.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {displayTracks.map((track, index) => (
+                    <SortableTrackRow
+                      key={track.id}
+                      track={track}
+                      index={index}
+                      onRemove={handleRemoveTrack}
+                      formatDuration={formatDuration}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+            </div>
           </motion.div>
         ) : (
           /* Empty State */
