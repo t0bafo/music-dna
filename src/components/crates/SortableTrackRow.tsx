@@ -1,3 +1,4 @@
+import { useState, useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, Music, MoreVertical, Trash2 } from 'lucide-react';
@@ -8,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { cn } from '@/lib/utils';
 
 interface Track {
@@ -34,6 +36,13 @@ export function SortableTrackRow({
   onRemove, 
   formatDuration 
 }: SortableTrackRowProps) {
+  const isMobile = useIsMobile();
+  const [swipeX, setSwipeX] = useState(0);
+  const [isSwiping, setIsSwiping] = useState(false);
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isHorizontalSwipe = useRef(false);
+
   const {
     attributes,
     listeners,
@@ -44,101 +53,160 @@ export function SortableTrackRow({
   } = useSortable({ id: track.id });
 
   const style: React.CSSProperties = {
-    transition,
+    transition: isSwiping ? 'none' : transition,
     ...(transform ? { transform: CSS.Transform.toString(transform) } : {}),
   };
 
+  // Swipe handlers for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (!isMobile) return;
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    isHorizontalSwipe.current = false;
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isMobile || !isSwiping) return;
+    
+    const deltaX = e.touches[0].clientX - touchStartX.current;
+    const deltaY = e.touches[0].clientY - touchStartY.current;
+    
+    // Determine if this is a horizontal or vertical swipe
+    if (!isHorizontalSwipe.current && Math.abs(deltaX) > 10) {
+      isHorizontalSwipe.current = Math.abs(deltaX) > Math.abs(deltaY);
+    }
+    
+    // Only handle horizontal swipes (left swipe to delete)
+    if (isHorizontalSwipe.current && deltaX < 0) {
+      setSwipeX(Math.max(deltaX, -120)); // Max swipe distance
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isMobile) return;
+    setIsSwiping(false);
+    
+    // If swiped far enough, trigger delete
+    if (swipeX < -80) {
+      onRemove(track.track_id, track.name || 'Track');
+    }
+    
+    // Reset swipe position
+    setSwipeX(0);
+  };
+
+  const deleteProgress = Math.min(Math.abs(swipeX) / 80, 1);
+
   return (
-    <div
-      ref={setNodeRef}
-      style={{
-        ...style,
-        touchAction: 'pan-y', // Allow vertical scrolling on the row
-      }}
-      className={cn(
-        "flex items-center gap-3 lg:gap-4 p-3 lg:p-4 bg-card/40 rounded-xl border border-border/30 hover:border-border/60 hover:bg-card/60 transition-all group",
-        isDragging && "opacity-70 shadow-lg shadow-primary/10 border-primary/30 z-10 bg-card/80"
+    <div className="relative overflow-hidden rounded-xl">
+      {/* Delete background (revealed on swipe) */}
+      {isMobile && (
+        <div 
+          className="absolute inset-0 bg-destructive flex items-center justify-end pr-6 rounded-xl"
+          style={{ opacity: deleteProgress }}
+        >
+          <Trash2 className="w-6 h-6 text-destructive-foreground" />
+        </div>
       )}
-    >
-      {/* Drag Handle - touch-action:none to capture drag gestures */}
-      <button
-        {...attributes}
-        {...listeners}
-        style={{ touchAction: 'none' }}
+      
+      <div
+        ref={setNodeRef}
+        style={{
+          ...style,
+          touchAction: 'pan-y',
+          transform: isMobile && swipeX < 0 
+            ? `translateX(${swipeX}px)` 
+            : style.transform,
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
         className={cn(
-          "p-2 -m-1 rounded cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground transition-all",
-          "lg:opacity-0 lg:group-hover:opacity-100",
-          isDragging && "cursor-grabbing opacity-100"
+          "flex items-center gap-3 lg:gap-4 p-3 lg:p-4 bg-card/40 rounded-xl border border-border/30 hover:border-border/60 hover:bg-card/60 transition-all group touch-target-lg",
+          isDragging && "opacity-70 shadow-lg shadow-primary/10 border-primary/30 z-10 bg-card/80"
         )}
-        aria-label="Drag to reorder"
       >
-        <GripVertical className="w-5 h-5" />
-      </button>
-
-      {/* Position Number */}
-      <span className="text-sm text-muted-foreground/70 w-5 text-center font-mono">
-        {index + 1}
-      </span>
-
-      {/* Album Art */}
-      <div className="w-10 h-10 lg:w-12 lg:h-12 rounded-md bg-secondary/50 shrink-0 overflow-hidden">
-        {track.album_art_url ? (
-          <img
-            src={track.album_art_url}
-            alt={track.album_name || 'Album art'}
-            className="w-full h-full object-cover"
-            draggable={false}
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Music className="w-5 h-5 text-muted-foreground/50" />
-          </div>
-        )}
-      </div>
-
-      {/* Track Info */}
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-foreground truncate">
-          {track.name || 'Unknown Track'}
-        </p>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <span className="truncate">{track.artist_name || 'Unknown Artist'}</span>
-          {track.duration_ms && (
-            <>
-              <span className="text-border">•</span>
-              <span className="shrink-0">{formatDuration(track.duration_ms)}</span>
-            </>
+        {/* Drag Handle - touch-action:none to capture drag gestures */}
+        <button
+          {...attributes}
+          {...listeners}
+          style={{ touchAction: 'none' }}
+          className={cn(
+            "p-2 -m-1 rounded cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground transition-all touch-target",
+            "lg:opacity-0 lg:group-hover:opacity-100",
+            isDragging && "cursor-grabbing opacity-100"
           )}
-          {track.bpm && (
-            <>
-              <span className="text-border hidden sm:inline">•</span>
-              <span className="shrink-0 hidden sm:inline">{Math.round(track.bpm)} BPM</span>
-            </>
+          aria-label="Drag to reorder"
+        >
+          <GripVertical className="w-5 h-5" />
+        </button>
+
+        {/* Position Number */}
+        <span className="text-sm text-muted-foreground/70 w-5 text-center font-mono">
+          {index + 1}
+        </span>
+
+        {/* Album Art */}
+        <div className="w-12 h-12 rounded-md bg-secondary/50 shrink-0 overflow-hidden">
+          {track.album_art_url ? (
+            <img
+              src={track.album_art_url}
+              alt={track.album_name || 'Album art'}
+              className="w-full h-full object-cover"
+              draggable={false}
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Music className="w-5 h-5 text-muted-foreground/50" />
+            </div>
           )}
         </div>
-      </div>
 
-      {/* Actions Menu */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shrink-0"
-          >
-            <MoreVertical className="w-4 h-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border/50">
-          <DropdownMenuItem
-            onClick={() => onRemove(track.track_id, track.name || 'Track')}
-            className="text-destructive focus:text-destructive focus:bg-destructive/10"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Remove from crate
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        {/* Track Info */}
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-foreground truncate">
+            {track.name || 'Unknown Track'}
+          </p>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <span className="truncate">{track.artist_name || 'Unknown Artist'}</span>
+            {track.duration_ms && (
+              <>
+                <span className="text-border">•</span>
+                <span className="shrink-0">{formatDuration(track.duration_ms)}</span>
+              </>
+            )}
+            {track.bpm && (
+              <>
+                <span className="text-border hidden sm:inline">•</span>
+                <span className="shrink-0 hidden sm:inline">{Math.round(track.bpm)} BPM</span>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Actions Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:opacity-0 lg:group-hover:opacity-100 transition-opacity shrink-0 touch-target"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border/50">
+            <DropdownMenuItem
+              onClick={() => onRemove(track.track_id, track.name || 'Track')}
+              className="text-destructive focus:text-destructive focus:bg-destructive/10 touch-target"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Remove from crate
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 }

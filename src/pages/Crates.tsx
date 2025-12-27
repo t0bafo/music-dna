@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCrates } from '@/hooks/use-crates';
-import { Music, Loader2, Plus, Home as HomeIcon, Palette, Package } from 'lucide-react';
+import { Music, Plus, Home as HomeIcon, Palette, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
 import CrateGrid from '@/components/crates/CrateGrid';
 import CreateCrateModal from '@/components/crates/CreateCrateModal';
 import EmptyCratesState from '@/components/crates/EmptyCratesState';
+import { CrateGridSkeleton } from '@/components/ui/skeletons';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion } from 'framer-motion';
 import { usePageTitle } from '@/hooks/use-page-title';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Crates = () => {
   usePageTitle('Your Crates | Music Memory System');
@@ -29,8 +31,31 @@ const Crates = () => {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center gradient-bg">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
+      <div className="min-h-screen gradient-bg pb-24 lg:pb-0">
+        {/* Header skeleton */}
+        <header className="bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50 safe-top">
+          <div className="container mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Skeleton className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl" />
+              <Skeleton className="h-6 w-24 rounded hidden lg:block" />
+            </div>
+            <div className="flex items-center gap-2">
+              <Skeleton className="w-9 h-9 rounded-full" />
+              <Skeleton className="w-9 h-9 rounded-full" />
+            </div>
+          </div>
+        </header>
+        <main className="container mx-auto px-4 lg:px-8 py-8 lg:py-12 max-w-6xl">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <Skeleton className="h-8 w-48 rounded mb-2" />
+              <Skeleton className="h-5 w-64 rounded" />
+            </div>
+            <Skeleton className="h-10 w-28 rounded-lg" />
+          </div>
+          <CrateGridSkeleton count={6} />
+        </main>
+        <BottomNav />
       </div>
     );
   }
@@ -38,11 +63,11 @@ const Crates = () => {
   return (
     <div className="min-h-screen gradient-bg pb-24 lg:pb-0">
       {/* Header */}
-      <header className="bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50">
+      <header className="bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50 safe-top">
         <div className="container mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4 lg:gap-6">
             <div 
-              className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-primary to-sonic-dark rounded-xl flex items-center justify-center shadow-glow cursor-pointer hover:scale-105 transition-transform"
+              className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-primary to-sonic-dark rounded-xl flex items-center justify-center shadow-glow cursor-pointer hover:scale-105 transition-transform touch-target"
               onClick={() => navigate('/home')}
             >
               <Music className="w-4 h-4 lg:w-5 lg:h-5 text-primary-foreground" />
@@ -73,17 +98,14 @@ const Crates = () => {
             <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">📦 Your Crates</h1>
             <p className="text-base lg:text-lg text-muted-foreground">Organize your music by vibe, mood, or meaning.</p>
           </div>
-          <Button onClick={() => setShowCreateModal(true)} size="lg" className="gap-2 btn-scale">
+          <Button onClick={() => setShowCreateModal(true)} size="lg" className="gap-2 btn-scale touch-target">
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">New Crate</span>
           </Button>
         </motion.div>
 
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-            <p className="text-muted-foreground">Loading your crates...</p>
-          </div>
+          <CrateGridSkeleton count={6} />
         ) : crates.length === 0 ? (
           <EmptyCratesState onCreateCrate={() => setShowCreateModal(true)} />
         ) : (

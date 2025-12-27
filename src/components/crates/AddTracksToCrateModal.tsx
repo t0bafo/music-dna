@@ -1,12 +1,15 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Loader2, Search, Plus, Music, Check, Lightbulb } from 'lucide-react';
 import { useAddTracksToCrate } from '@/hooks/use-crates';
 import { useAuth } from '@/contexts/AuthContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { TrackToAdd } from '@/lib/crates-api';
+import { SearchResultsListSkeleton } from '@/components/ui/skeletons';
 import { cn } from '@/lib/utils';
 
 interface AddTracksToCrateModalProps {
@@ -126,6 +129,7 @@ const AddTracksToCrateModal = ({
   existingTrackIds 
 }: AddTracksToCrateModalProps) => {
   const { accessToken } = useAuth();
+  const isMobile = useIsMobile();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SpotifyTrack[]>([]);
@@ -248,6 +252,203 @@ const AddTracksToCrateModal = ({
 
   const showEmptyState = !searchQuery.trim() && searchResults.length === 0;
 
+  // Modal content shared between Dialog and Drawer
+  const modalContent = (
+    <>
+      {/* Search */}
+      <div className="space-y-2 px-4 sm:px-0">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="search"
+            inputMode="search"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            placeholder="Search any song on Spotify..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 pr-10 bg-secondary/30 touch-target"
+            autoFocus={!isMobile}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/30 transition-colors"
+            >
+              <span className="sr-only">Clear search</span>
+              <span className="text-xs font-medium text-muted-foreground">×</span>
+            </button>
+          )}
+          {isSearching && !searchQuery && (
+            <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
+          )}
+        </div>
+        
+        {/* Helper text */}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Lightbulb className="w-3.5 h-3.5" />
+          <span>Search any track – even if you haven't saved it yet</span>
+        </div>
+      </div>
+
+      {/* Selection count */}
+      {selectedTracks.size > 0 && (
+        <div className="flex items-center justify-between text-sm px-4 sm:px-0">
+          <span className="text-muted-foreground">
+            {searchResults.length} result{searchResults.length !== 1 ? 's' : ''}
+          </span>
+          <span className="text-primary font-medium">
+            {selectedTracks.size} selected
+          </span>
+        </div>
+      )}
+
+      {/* Track list */}
+      <ScrollArea className="h-[50vh] sm:h-[400px] -mx-4 sm:-mx-6 px-4 sm:px-6">
+        {showEmptyState ? (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <Search className="w-12 h-12 text-muted-foreground/30 mb-4" />
+            <p className="text-muted-foreground font-medium">Search for tracks</p>
+            <p className="text-sm text-muted-foreground/70 mt-1">
+              Find any song on Spotify to add to your crate
+            </p>
+          </div>
+        ) : isSearching && searchResults.length === 0 ? (
+          <div className="py-4">
+            <SearchResultsListSkeleton count={5} />
+          </div>
+        ) : searchError ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Music className="w-12 h-12 text-muted-foreground mb-3" />
+            <p className="text-destructive">{searchError}</p>
+          </div>
+        ) : searchResults.length === 0 && debouncedQuery.trim() ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Music className="w-12 h-12 text-muted-foreground mb-3" />
+            <p className="text-muted-foreground">
+              No tracks found for "{debouncedQuery}"
+            </p>
+            <p className="text-sm text-muted-foreground/70 mt-1">
+              Try a different search term
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-1 pb-4">
+            {searchResults.map((track) => {
+              const isInCrate = existingSet.has(track.id);
+              const isSelected = selectedTracks.has(track.id);
+              const albumArt = track.album.images[2]?.url || track.album.images[1]?.url || track.album.images[0]?.url;
+              
+              return (
+                <div
+                  key={track.id}
+                  onClick={() => toggleTrack(track)}
+                  className={cn(
+                    "flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer touch-target-lg",
+                    isInCrate 
+                      ? "opacity-50 cursor-not-allowed bg-secondary/20" 
+                      : isSelected 
+                        ? "bg-primary/10 border border-primary/30" 
+                        : "hover:bg-secondary/50 active:bg-secondary/70"
+                  )}
+                >
+                  {/* Album art */}
+                  <div className="w-10 h-10 rounded-md bg-secondary/50 shrink-0 flex items-center justify-center overflow-hidden">
+                    {albumArt ? (
+                      <img 
+                        src={albumArt} 
+                        alt={track.album.name} 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Music className="w-5 h-5 text-muted-foreground/50" />
+                    )}
+                  </div>
+
+                  {/* Track info */}
+                  <div className="flex-1 min-w-0">
+                    <p className={cn(
+                      "font-medium truncate",
+                      isInCrate ? "text-muted-foreground" : "text-foreground"
+                    )}>
+                      {track.name}
+                    </p>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="truncate">{track.artists.map(a => a.name).join(', ')}</span>
+                      <span className="shrink-0">•</span>
+                      <span className="shrink-0">{formatDuration(track.duration_ms)}</span>
+                    </div>
+                  </div>
+
+                  {/* Add button or status */}
+                  <div className="shrink-0">
+                    {isInCrate ? (
+                      <div className="flex items-center gap-1.5 text-xs text-primary">
+                        <Check className="w-3.5 h-3.5" />
+                        <span>In crate</span>
+                      </div>
+                    ) : isSelected ? (
+                      <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center touch-target">
+                        <Check className="w-5 h-5 text-primary-foreground" />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 rounded-full border border-border hover:border-primary hover:bg-primary/10 flex items-center justify-center transition-colors touch-target">
+                        <Plus className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </ScrollArea>
+
+      {/* Actions */}
+      <div className="flex gap-3 pt-4 border-t border-border/50 px-4 sm:px-0 safe-bottom">
+        <Button
+          variant="outline"
+          className="flex-1 touch-target"
+          onClick={handleClose}
+        >
+          Cancel
+        </Button>
+        <Button
+          className="flex-1 gap-2 touch-target"
+          disabled={selectedTracks.size === 0 || isPending}
+          onClick={handleAdd}
+        >
+          {isPending ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Plus className="w-4 h-4" />
+          )}
+          Add {selectedTracks.size > 0 ? `${selectedTracks.size} track${selectedTracks.size !== 1 ? 's' : ''}` : 'tracks'}
+        </Button>
+      </div>
+    </>
+  );
+
+  // Use Drawer on mobile, Dialog on desktop
+  if (isMobile) {
+    return (
+      <Drawer open={open} onOpenChange={handleClose}>
+        <DrawerContent className="max-h-[90vh] bg-card/95 backdrop-blur-xl">
+          <DrawerHeader className="text-left">
+            <DrawerTitle className="font-display text-xl">
+              Add to {crateName ? `"${crateName}"` : 'Crate'}
+            </DrawerTitle>
+          </DrawerHeader>
+          <div className="flex flex-col gap-4 pb-4">
+            {modalContent}
+          </div>
+        </DrawerContent>
+      </Drawer>
+    );
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col bg-card/95 backdrop-blur-xl">
@@ -256,165 +457,8 @@ const AddTracksToCrateModal = ({
             Add to {crateName ? `"${crateName}"` : 'Crate'}
           </DialogTitle>
         </DialogHeader>
-
-        {/* Search */}
-        <div className="space-y-2">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder="Search any song on Spotify..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 bg-secondary/30"
-              autoFocus
-            />
-            {isSearching && (
-              <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 animate-spin text-muted-foreground" />
-            )}
-          </div>
-          
-          {/* Helper text */}
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Lightbulb className="w-3.5 h-3.5" />
-            <span>Search any track – even if you haven't saved it yet</span>
-          </div>
-        </div>
-
-        {/* Selection count */}
-        {selectedTracks.size > 0 && (
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">
-              {searchResults.length} result{searchResults.length !== 1 ? 's' : ''}
-            </span>
-            <span className="text-primary font-medium">
-              {selectedTracks.size} selected
-            </span>
-          </div>
-        )}
-
-        {/* Track list */}
-        <ScrollArea className="h-[400px] -mx-6 px-6">
-          {showEmptyState ? (
-            <div className="flex flex-col items-center justify-center py-16 text-center">
-              <Search className="w-12 h-12 text-muted-foreground/30 mb-4" />
-              <p className="text-muted-foreground font-medium">Search for tracks</p>
-              <p className="text-sm text-muted-foreground/70 mt-1">
-                Find any song on Spotify to add to your crate
-              </p>
-            </div>
-          ) : isSearching && searchResults.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-primary mb-3" />
-              <p className="text-sm text-muted-foreground">Searching Spotify...</p>
-            </div>
-          ) : searchError ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Music className="w-12 h-12 text-muted-foreground mb-3" />
-              <p className="text-destructive">{searchError}</p>
-            </div>
-          ) : searchResults.length === 0 && debouncedQuery.trim() ? (
-            <div className="flex flex-col items-center justify-center py-12 text-center">
-              <Music className="w-12 h-12 text-muted-foreground mb-3" />
-              <p className="text-muted-foreground">
-                No tracks found for "{debouncedQuery}"
-              </p>
-              <p className="text-sm text-muted-foreground/70 mt-1">
-                Try a different search term
-              </p>
-            </div>
-          ) : (
-            <div className="space-y-1 pb-4">
-              {searchResults.map((track) => {
-                const isInCrate = existingSet.has(track.id);
-                const isSelected = selectedTracks.has(track.id);
-                const albumArt = track.album.images[2]?.url || track.album.images[1]?.url || track.album.images[0]?.url;
-                
-                return (
-                  <div
-                    key={track.id}
-                    onClick={() => toggleTrack(track)}
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-xl transition-all cursor-pointer",
-                      isInCrate 
-                        ? "opacity-50 cursor-not-allowed bg-secondary/20" 
-                        : isSelected 
-                          ? "bg-primary/10 border border-primary/30" 
-                          : "hover:bg-secondary/50"
-                    )}
-                  >
-                    {/* Album art */}
-                    <div className="w-10 h-10 rounded-md bg-secondary/50 shrink-0 flex items-center justify-center overflow-hidden">
-                      {albumArt ? (
-                        <img 
-                          src={albumArt} 
-                          alt={track.album.name} 
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <Music className="w-5 h-5 text-muted-foreground/50" />
-                      )}
-                    </div>
-
-                    {/* Track info */}
-                    <div className="flex-1 min-w-0">
-                      <p className={cn(
-                        "font-medium truncate",
-                        isInCrate ? "text-muted-foreground" : "text-foreground"
-                      )}>
-                        {track.name}
-                      </p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span className="truncate">{track.artists.map(a => a.name).join(', ')}</span>
-                        <span className="shrink-0">•</span>
-                        <span className="shrink-0">{formatDuration(track.duration_ms)}</span>
-                      </div>
-                    </div>
-
-                    {/* Add button or status */}
-                    <div className="shrink-0">
-                      {isInCrate ? (
-                        <div className="flex items-center gap-1.5 text-xs text-primary">
-                          <Check className="w-3.5 h-3.5" />
-                          <span>In crate</span>
-                        </div>
-                      ) : isSelected ? (
-                        <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
-                          <Check className="w-4 h-4 text-primary-foreground" />
-                        </div>
-                      ) : (
-                        <div className="w-8 h-8 rounded-full border border-border hover:border-primary hover:bg-primary/10 flex items-center justify-center transition-colors">
-                          <Plus className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </ScrollArea>
-
-        {/* Actions */}
-        <div className="flex gap-3 pt-4 border-t border-border/50">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={handleClose}
-          >
-            Cancel
-          </Button>
-          <Button
-            className="flex-1 gap-2"
-            disabled={selectedTracks.size === 0 || isPending}
-            onClick={handleAdd}
-          >
-            {isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Plus className="w-4 h-4" />
-            )}
-            Add {selectedTracks.size > 0 ? `${selectedTracks.size} track${selectedTracks.size !== 1 ? 's' : ''}` : 'tracks'}
-          </Button>
+        <div className="flex flex-col gap-4">
+          {modalContent}
         </div>
       </DialogContent>
     </Dialog>
