@@ -319,7 +319,39 @@
   .btn-scale:active {
     transform: scale(0.98);
   }
-  
+
+  /* Share URL scroll field (prevents long URLs breaking modals) */
+  .share-url-scroll {
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+
+    font-size: 13px;
+    padding: 0.75rem;
+
+    border: 1px solid hsl(var(--border) / 0.5);
+    border-radius: calc(var(--radius) - 0.25rem);
+    background: hsl(var(--secondary) / 0.5);
+
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--primary) / 0.35) hsl(var(--secondary) / 0.7);
+  }
+
+  .share-url-scroll::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .share-url-scroll::-webkit-scrollbar-track {
+    background: hsl(var(--secondary) / 0.7);
+    border-radius: 999px;
+  }
+
+  .share-url-scroll::-webkit-scrollbar-thumb {
+    background: hsl(var(--primary) / 0.35);
+    border-radius: 999px;
+  }
+
   /* Hide scrollbar utility */
   .scrollbar-hide {
     -ms-overflow-style: none;
