@@ -19,7 +19,7 @@ import BottomNav from '@/components/BottomNav';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import SmartDiscoveryEngine from '@/components/SmartDiscoveryEngine';
 import ContextPlaylistGenerator from '@/components/ContextPlaylistGenerator';
-import TrackSuggestionsTool from '@/components/TrackSuggestionsTool';
+import PlaylistFlowAnalyzer from '@/components/PlaylistFlowAnalyzer';
 import { searchLibraryTracks, generateContextPlaylist } from '@/lib/curation-tools';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -251,7 +251,7 @@ const Studio = () => {
                       Select a playlist to analyze its flow and get optimization suggestions
                     </p>
                   </div>
-                  <TrackSuggestionsTool fullWidth />
+                  <PlaylistFlowAnalyzer fullWidth />
                 </div>
               )}
               
