@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCrates } from '@/hooks/use-crates';
-import { Music, Loader2, Plus, Home as HomeIcon, SlidersHorizontal, Package } from 'lucide-react';
+import { Music, Loader2, Plus, Home as HomeIcon, Palette, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
@@ -51,8 +51,8 @@ const Crates = () => {
               <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 text-primary font-medium">
                 <Package className="w-4 h-4" /><span>Crates</span>
               </div>
-              <Link to="/curation" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
-                <SlidersHorizontal className="w-4 h-4" /><span>Studio</span>
+              <Link to="/studio" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
+                <Palette className="w-4 h-4" /><span>Studio</span>
               </Link>
             </nav>
           </div>

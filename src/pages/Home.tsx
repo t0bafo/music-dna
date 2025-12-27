@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Music, Loader2, AlertCircle, RefreshCw, Home as HomeIcon, SlidersHorizontal, Package, Search, BarChart3 } from 'lucide-react';
+import { Music, Loader2, AlertCircle, RefreshCw, Home as HomeIcon, Palette, Package, Search, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import UserProfile from '@/components/UserProfile';
@@ -113,10 +113,10 @@ const Home = () => {
                 <span>Crates</span>
               </Link>
               <Link 
-                to="/curation" 
+                to="/studio" 
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
               >
-                <SlidersHorizontal className="w-4 h-4" />
+                <Palette className="w-4 h-4" />
                 <span>Studio</span>
               </Link>
             </nav>
@@ -230,7 +230,7 @@ const Home = () => {
               </Link>
 
               {/* Discover Tracks */}
-              <Link to="/curation">
+              <Link to="/studio">
                 <Card className="bg-card/60 backdrop-blur-xl border-border/50 hover:border-chart-purple/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 h-full group">
                   <CardContent className="p-5 lg:p-6 flex flex-col items-center text-center">
                     <div className="w-12 h-12 rounded-xl bg-chart-purple/10 flex items-center justify-center mb-3 group-hover:bg-chart-purple/20 transition-colors">
@@ -247,7 +247,7 @@ const Home = () => {
               </Link>
 
               {/* Analyze Playlist */}
-              <Link to="/curation">
+              <Link to="/studio">
                 <Card className="bg-card/60 backdrop-blur-xl border-border/50 hover:border-chart-cyan/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 h-full group">
                   <CardContent className="p-5 lg:p-6 flex flex-col items-center text-center">
                     <div className="w-12 h-12 rounded-xl bg-chart-cyan/10 flex items-center justify-center mb-3 group-hover:bg-chart-cyan/20 transition-colors">
