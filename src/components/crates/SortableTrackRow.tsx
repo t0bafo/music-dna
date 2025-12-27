@@ -43,9 +43,9 @@ export function SortableTrackRow({
     isDragging,
   } = useSortable({ id: track.id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
+  const style: React.CSSProperties = {
     transition,
+    ...(transform ? { transform: CSS.Transform.toString(transform) } : {}),
   };
 
   return (
