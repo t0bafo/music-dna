@@ -227,13 +227,6 @@ const MusicIntelligence = () => {
                 <span>Crates</span>
               </Link>
               <Link 
-                to="/playlists" 
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-              >
-                <ListMusic className="w-4 h-4" />
-                <span>Playlists</span>
-              </Link>
-              <Link 
                 to="/curation" 
                 className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
               >

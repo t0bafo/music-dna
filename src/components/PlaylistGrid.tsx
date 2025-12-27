@@ -1,15 +1,13 @@
-import { useNavigate, Link } from 'react-router-dom';
-import { Music, BarChart3, ArrowRight } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Music, BarChart3 } from 'lucide-react';
 import { SpotifyPlaylist } from '@/lib/spotify-api';
 
 interface PlaylistGridProps {
   playlists: SpotifyPlaylist[];
   selectedPlaylistId?: string;
-  showViewAll?: boolean;
-  totalCount?: number;
 }
 
-const PlaylistGrid = ({ playlists, selectedPlaylistId, showViewAll, totalCount }: PlaylistGridProps) => {
+const PlaylistGrid = ({ playlists, selectedPlaylistId }: PlaylistGridProps) => {
   const navigate = useNavigate();
 
   const handlePlaylistClick = (playlist: SpotifyPlaylist) => {
@@ -68,19 +66,6 @@ const PlaylistGrid = ({ playlists, selectedPlaylistId, showViewAll, totalCount }
         );
       })}
       
-      {/* View All button - flows inline as grid item */}
-      {showViewAll && totalCount && totalCount > playlists.length && (
-        <Link
-          to="/playlists"
-          className="flex items-center justify-center lg:justify-start"
-          aria-label={`View all ${totalCount} playlists`}
-        >
-          <span className="inline-flex items-center gap-1 text-sm font-bold text-muted-foreground hover:text-primary transition-colors whitespace-nowrap">
-            View All {totalCount}
-            <ArrowRight className="w-4 h-4" />
-          </span>
-        </Link>
-      )}
     </div>
   );
 };

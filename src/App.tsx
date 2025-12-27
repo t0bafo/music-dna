@@ -9,7 +9,6 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import Landing from "./pages/Landing";
 import Callback from "./pages/Callback";
 import Home from "./pages/Home";
-import Playlists from "./pages/Playlists";
 import PlaylistDetail from "./pages/PlaylistDetail";
 import MusicIntelligence from "./pages/MusicIntelligence";
 import Crates from "./pages/Crates";
@@ -33,7 +32,6 @@ const App = () => (
               <Route path="/callback" element={<Callback />} />
               <Route path="/home" element={<Home />} />
               <Route path="/dashboard" element={<Navigate to="/home" replace />} />
-              <Route path="/playlists" element={<Playlists />} />
               <Route path="/playlist/:playlistId" element={<PlaylistDetail />} />
               <Route path="/intelligence" element={<MusicIntelligence />} />
               <Route path="/crates" element={<Crates />} />
