@@ -9,6 +9,7 @@ import BottomNav from '@/components/BottomNav';
 import HomeCratesSection from '@/components/HomeCratesSection';
 import MusicStatsSection from '@/components/MusicStatsSection';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import WelcomeModal from '@/components/WelcomeModal';
 import { motion } from 'framer-motion';
 import { calculateArchetype, Archetype, MusicProfile } from '@/lib/music-archetypes';
 import { useTopTracks, TrackWithFeatures } from '@/hooks/use-music-intelligence';
@@ -272,6 +273,9 @@ const Home = () => {
       
       {/* Mobile Bottom Navigation */}
       <BottomNav />
+      
+      {/* First-time Welcome Modal */}
+      <WelcomeModal />
     </div>
   );
 };
