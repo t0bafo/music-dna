@@ -587,14 +587,6 @@ const Landing = () => {
                   </>
                 )}
               </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                className="border-2 border-primary text-primary hover:bg-primary/10 font-bold px-8 h-14 text-base rounded-xl"
-                onClick={() => navigate('/home')}
-              >
-                See a Demo First
-              </Button>
             </motion.div>
 
             <motion.div 
