@@ -1,7 +1,7 @@
 {
-  "name": "Music DNA - Discover Your Music Personality",
+  "name": "Music DNA - Organize Your Music by Vibe",
   "short_name": "Music DNA",
-  "description": "Discover your music personality with AI-powered Spotify analysis",
+  "description": "Create Crates for every mood and moment. Never lose the perfect track again.",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -14,7 +14,7 @@
       "type": "image/png"
     }
   ],
-  "theme_color": "#0f172a",
+  "theme_color": "#00ff87",
   "background_color": "#0f172a",
   "display": "standalone",
   "start_url": "/",

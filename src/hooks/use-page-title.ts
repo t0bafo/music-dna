@@ -9,7 +9,7 @@ export function usePageTitle(title?: string) {
     if (title) {
       document.title = `${title} | ${BASE_TITLE}`;
     } else {
-      document.title = `What's Your Music Personality? | ${BASE_TITLE}`;
+      document.title = `Organize Your Music by Vibe | ${BASE_TITLE}`;
     }
 
     return () => {

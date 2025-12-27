@@ -13,7 +13,7 @@ import { motion } from 'framer-motion';
 import { usePageTitle } from '@/hooks/use-page-title';
 
 const Crates = () => {
-  usePageTitle('Your Crates');
+  usePageTitle('Your Crates | Music Memory System');
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);

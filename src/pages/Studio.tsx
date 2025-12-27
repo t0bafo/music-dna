@@ -68,7 +68,7 @@ const TOOL_CARDS: ToolCard[] = [
 ];
 
 const Studio = () => {
-  usePageTitle('Studio | Music DNA');
+  usePageTitle('Studio | Create & Discover');
   const { isAuthenticated, isLoading: authLoading, accessToken } = useAuth();
   const navigate = useNavigate();
   const [activeTool, setActiveTool] = useState<ToolType>('none');

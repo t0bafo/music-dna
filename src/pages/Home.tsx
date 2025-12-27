@@ -17,7 +17,7 @@ import { usePageTitle } from '@/hooks/use-page-title';
 import { useLibrarySync } from '@/hooks/use-library-sync';
 
 const Home = () => {
-  usePageTitle('Your Music DNA');
+  usePageTitle('Your Music DNA | Organize by Vibe, Not Genre');
   const { isAuthenticated, isLoading: authLoading, accessToken, user } = useAuth();
   const navigate = useNavigate();
 
