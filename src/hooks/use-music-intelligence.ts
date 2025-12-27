@@ -12,8 +12,10 @@ import {
   getTopTracks, 
   getUserPlaylists,
   getAudioFeaturesFromReccoBeats,
+  getTopArtists,
   SpotifyTrack, 
   SpotifyPlaylist,
+  SpotifyArtist,
   AudioFeatures,
 } from '@/lib/spotify-api';
 import { TrackData } from '@/lib/music-analytics';
@@ -146,6 +148,26 @@ export const usePlaylists = (accessToken: string | null, limit: number = 50) => 
     queryKey: ['playlists', limit],
     queryFn: async () => {
       const data = await getUserPlaylists(accessToken!, limit);
+      return data.items;
+    },
+    enabled: !!accessToken,
+    staleTime: STALE_TIME,
+    gcTime: GC_TIME,
+    refetchOnWindowFocus: false,
+  });
+};
+
+// ============= Top Artists Hook =============
+
+export const useTopArtists = (
+  accessToken: string | null,
+  timeRange: 'short_term' | 'medium_term' | 'long_term' = 'medium_term',
+  limit: number = 10
+) => {
+  return useQuery<SpotifyArtist[]>({
+    queryKey: ['top-artists', timeRange, limit],
+    queryFn: async () => {
+      const data = await getTopArtists(accessToken!, timeRange, limit);
       return data.items;
     },
     enabled: !!accessToken,
