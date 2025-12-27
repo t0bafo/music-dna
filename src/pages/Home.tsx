@@ -1,23 +1,21 @@
 import { useEffect, useMemo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Music, Loader2, AlertCircle, RefreshCw, Home as HomeIcon, SlidersHorizontal, Package } from 'lucide-react';
+import { Music, Loader2, AlertCircle, RefreshCw, Home as HomeIcon, SlidersHorizontal, Package, Search, BarChart3 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
-import PlaylistGrid from '@/components/PlaylistGrid';
-import TopAlbumsGrid from '@/components/TopAlbumsGrid';
-import TopSongsGrid from '@/components/TopSongsGrid';
 import HomeCratesSection from '@/components/HomeCratesSection';
 import MusicStatsSection from '@/components/MusicStatsSection';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion } from 'framer-motion';
 import { calculateArchetype, Archetype, MusicProfile } from '@/lib/music-archetypes';
-import { useTopTracks, usePlaylists, TrackWithFeatures } from '@/hooks/use-music-intelligence';
+import { useTopTracks, TrackWithFeatures } from '@/hooks/use-music-intelligence';
 import { AudioFeatures } from '@/lib/spotify-api';
 import { usePageTitle } from '@/hooks/use-page-title';
 import { useLibrarySync } from '@/hooks/use-library-sync';
+
 const Home = () => {
   usePageTitle('Your Music DNA');
   const { isAuthenticated, isLoading: authLoading, accessToken, user } = useAuth();
@@ -30,11 +28,6 @@ const Home = () => {
     error: topTracksError,
     refetch: refetchTopTracks
   } = useTopTracks(accessToken, 'medium_term', 50);
-  
-  const { 
-    data: playlists = [], 
-    isLoading: loadingPlaylists 
-  } = usePlaylists(accessToken, 50);
 
   // Auto-sync library if stale (runs in background, non-blocking)
   useLibrarySync(true);
@@ -165,7 +158,7 @@ const Home = () => {
         )}
 
         <div className="space-y-6 lg:space-y-8">
-          {/* 2. Personality Section (Simplified - No Chart) */}
+          {/* 2. Personality Section */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -199,62 +192,78 @@ const Home = () => {
             </Card>
           </motion.div>
 
-          {/* 3. Your Top Songs (Visual Cards) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <TopSongsGrid 
-              tracks={topTracks} 
-              isLoading={loadingTopTracks} 
-              maxTracks={5} 
-            />
-          </motion.div>
-
-          {/* 4. Your Current Favorites (Albums) */}
-          <TopAlbumsGrid
-            tracks={topTracks}
-            isLoading={loadingTopTracks}
-          />
-
-          {/* 5. Your Crates */}
+          {/* 3. Your Crates */}
           <HomeCratesSection />
 
-          {/* 6. Music Stats */}
+          {/* 4. Music Stats */}
           <MusicStatsSection 
             topTracks={topTracks}
             accessToken={accessToken}
             isLoading={loadingTopTracks}
           />
 
-          {/* 7. Your Playlists */}
+          {/* 5. What's Next? */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.4 }}
           >
             <h2 className="font-display text-lg lg:text-xl font-bold text-foreground mb-4">
-              🎧 Your Playlists
+              🚀 What's Next?
             </h2>
-            {loadingPlaylists ? (
-              <div className="bg-card/60 backdrop-blur-xl rounded-2xl p-8 lg:p-12 text-center border border-border/50">
-                <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto mb-4" />
-                <p className="text-muted-foreground">Loading your playlists...</p>
-              </div>
-            ) : playlists.length > 0 ? (
-              <PlaylistGrid 
-                playlists={playlists.slice(0, 5)} 
-              />
-            ) : (
-              <div className="bg-card/60 backdrop-blur-xl rounded-2xl p-8 text-center border border-border/50">
-                <Music className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="font-display text-lg font-semibold text-foreground mb-2">No playlists found</h3>
-                <p className="text-muted-foreground">Create some playlists on Spotify to see them here.</p>
-              </div>
-            )}
-          </motion.section>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Create a Crate */}
+              <Link to="/crates">
+                <Card className="bg-card/60 backdrop-blur-xl border-border/50 hover:border-primary/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 h-full group">
+                  <CardContent className="p-5 lg:p-6 flex flex-col items-center text-center">
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                      <span className="text-2xl">🗂️</span>
+                    </div>
+                    <h3 className="font-display font-semibold text-foreground mb-1">
+                      Create a Crate
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Organize music by vibe
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
 
+              {/* Discover Tracks */}
+              <Link to="/curation">
+                <Card className="bg-card/60 backdrop-blur-xl border-border/50 hover:border-chart-purple/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 h-full group">
+                  <CardContent className="p-5 lg:p-6 flex flex-col items-center text-center">
+                    <div className="w-12 h-12 rounded-xl bg-chart-purple/10 flex items-center justify-center mb-3 group-hover:bg-chart-purple/20 transition-colors">
+                      <Search className="w-6 h-6 text-chart-purple" />
+                    </div>
+                    <h3 className="font-display font-semibold text-foreground mb-1">
+                      Discover Tracks
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      Find music in your library
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+
+              {/* Analyze Playlist */}
+              <Link to="/curation">
+                <Card className="bg-card/60 backdrop-blur-xl border-border/50 hover:border-chart-cyan/40 hover:-translate-y-1 hover:shadow-lg transition-all duration-200 h-full group">
+                  <CardContent className="p-5 lg:p-6 flex flex-col items-center text-center">
+                    <div className="w-12 h-12 rounded-xl bg-chart-cyan/10 flex items-center justify-center mb-3 group-hover:bg-chart-cyan/20 transition-colors">
+                      <BarChart3 className="w-6 h-6 text-chart-cyan" />
+                    </div>
+                    <h3 className="font-display font-semibold text-foreground mb-1">
+                      Analyze a Playlist
+                    </h3>
+                    <p className="text-xs text-muted-foreground">
+                      See flow and optimize
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
+            </div>
+          </motion.section>
         </div>
       </main>
       
