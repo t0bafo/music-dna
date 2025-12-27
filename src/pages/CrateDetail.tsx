@@ -588,14 +588,14 @@ const CrateDetail = () => {
             </p>
 
             {/* Copy Link Section */}
-            <div className="flex gap-2 items-center">
-              <div className="share-url-scroll min-w-0 flex-1 text-muted-foreground">
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+              <div className="min-w-0 flex-1 px-3 py-2 rounded-lg bg-secondary/50 border border-border/50 text-xs text-muted-foreground break-all leading-relaxed">
                 {shareUrl}
               </div>
               <Button
                 onClick={handleCopyLink}
                 variant={linkCopied ? "default" : "outline"}
-                className={cn("gap-2 shrink-0 min-w-[104px]", linkCopied && "bg-primary text-primary-foreground")}
+                className={cn("gap-2 shrink-0 w-full sm:w-auto sm:min-w-[104px]", linkCopied && "bg-primary text-primary-foreground")}
               >
                 {linkCopied ? (
                   <>
