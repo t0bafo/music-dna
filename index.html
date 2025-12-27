@@ -49,9 +49,9 @@
     <link rel="manifest" href="/site.webmanifest" />
     
     <!-- Theme Colors -->
-    <meta name="theme-color" content="#0f172a" />
-    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
-    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a" />
+    <meta name="theme-color" content="#00ff87" />
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#00ff87" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#00ff87" />
     <meta name="msapplication-TileColor" content="#0f172a" />
     <meta name="msapplication-TileImage" content="/mstile-144x144.png" />
 
@@ -112,5 +112,15 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Register service worker for PWA
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('SW registered'))
+            .catch(err => console.log('SW registration failed:', err));
+        });
+      }
+    </script>
   </body>
 </html>
