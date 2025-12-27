@@ -8,6 +8,7 @@ import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
 import CrateGrid from '@/components/crates/CrateGrid';
 import CreateCrateModal from '@/components/crates/CreateCrateModal';
+import EmptyCratesState from '@/components/crates/EmptyCratesState';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { motion } from 'framer-motion';
 import { usePageTitle } from '@/hooks/use-page-title';
@@ -84,17 +85,7 @@ const Crates = () => {
             <p className="text-muted-foreground">Loading your crates...</p>
           </div>
         ) : crates.length === 0 ? (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card/60 backdrop-blur-xl rounded-2xl p-12 text-center border border-border/50">
-            <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="font-display text-xl font-semibold text-foreground mb-2">No crates yet</h3>
-            <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-              Create your first crate to start organizing your music by vibe, mood, or moment.
-            </p>
-            <Button onClick={() => setShowCreateModal(true)} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Create Your First Crate
-            </Button>
-          </motion.div>
+          <EmptyCratesState onCreateCrate={() => setShowCreateModal(true)} />
         ) : (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <CrateGrid crates={crates} />
