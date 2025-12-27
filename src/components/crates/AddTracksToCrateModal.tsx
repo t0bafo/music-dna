@@ -77,6 +77,47 @@ function sortSearchResults(tracks: SpotifyTrack[], searchQuery: string): Spotify
   });
 }
 
+// Filter out results where artist name has no meaningful match to query
+function filterByArtistSimilarity(tracks: SpotifyTrack[], searchQuery: string): SpotifyTrack[] {
+  const query = searchQuery.toLowerCase().trim();
+
+  // If query is very short (< 3 chars), don't filter (too strict)
+  if (query.length < 3) return tracks;
+
+  return tracks.filter(track => {
+    const artistName = track.artists[0]?.name.toLowerCase() || '';
+    const trackName = track.name.toLowerCase();
+
+    // Keep if exact artist match
+    if (artistName === query) return true;
+
+    // Keep if artist name contains query
+    if (artistName.includes(query)) return true;
+
+    // Keep if query contains artist name (for longer artist names)
+    if (query.includes(artistName) && artistName.length > 2) return true;
+
+    // Keep if track name contains query (user might be searching for song title)
+    if (trackName.includes(query)) return true;
+
+    // Keep if first word matches (handles "burna boy" → "burna")
+    const queryWords = query.split(/\s+/);
+    const artistWords = artistName.split(/\s+/);
+
+    for (const qWord of queryWords) {
+      if (qWord.length < 3) continue; // Skip very short words
+      for (const aWord of artistWords) {
+        if (aWord.length < 2) continue;
+        if (aWord.includes(qWord)) return true;
+        if (qWord.includes(aWord) && aWord.length > 2) return true;
+      }
+    }
+
+    // Otherwise, filter out
+    return false;
+  });
+}
+
 const AddTracksToCrateModal = ({ 
   open, 
   onOpenChange, 
@@ -120,7 +161,8 @@ const AddTracksToCrateModal = ({
       try {
         const results = await searchSpotifyTracks(debouncedQuery, accessToken);
         const sorted = sortSearchResults(results, debouncedQuery);
-        setSearchResults(sorted);
+        const filtered = filterByArtistSimilarity(sorted, debouncedQuery);
+        setSearchResults(filtered);
       } catch (err) {
         console.error('Search failed:', err);
         setSearchError('Search failed. Please try again.');
