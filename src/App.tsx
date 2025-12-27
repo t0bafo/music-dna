@@ -14,6 +14,7 @@ import PlaylistDetail from "./pages/PlaylistDetail";
 import MusicIntelligence from "./pages/MusicIntelligence";
 import Crates from "./pages/Crates";
 import CrateDetail from "./pages/CrateDetail";
+import CrateShare from "./pages/CrateShare";
 import CurationLab from "./pages/CurationLab";
 import NotFound from "./pages/NotFound";
 
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/intelligence" element={<MusicIntelligence />} />
               <Route path="/crates" element={<Crates />} />
               <Route path="/crates/:crateId" element={<CrateDetail />} />
+              <Route path="/crates/:crateId/share" element={<CrateShare />} />
               <Route path="/curation" element={<CurationLab />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
