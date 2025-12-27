@@ -42,17 +42,41 @@ const Landing = () => {
     {
       icon: '🕐',
       title: 'The Moment Problem',
-      body: `It's Sunday morning. You're cooking breakfast. You need the *perfect* vibe—not "chill," specifically *this* energy, right now.\n\nYou know you have the tracks. Somewhere. In your library.\n\nBy the time you find it, you've burned the eggs.`
+      body: (
+        <>
+          It's Sunday morning. You're cooking breakfast. You need the <em className="italic not-italic font-medium text-foreground/80">perfect</em> vibe—not "chill," specifically <em className="italic not-italic font-medium text-foreground/80">this</em> energy, right now.
+          <br /><br />
+          You know you have the tracks. Somewhere. In your library.
+          <br /><br />
+          By the time you find it, you've burned the eggs.
+        </>
+      )
     },
     {
       icon: '🧠',
       title: 'The Memory Problem',
-      body: `Last week you spent 3 hours discovering underground fire on SoundCloud.\n\nToday? You can't remember where you put it.\n\nYour musical memory is a black hole. You find fire. You lose fire. You rediscover it by accident months later and think, "Oh shit, I forgot about this."`
+      body: (
+        <>
+          Last week you spent 3 hours discovering underground fire on SoundCloud.
+          <br /><br />
+          Today? You can't remember where you put it.
+          <br /><br />
+          Your musical memory is a black hole. You find fire. You lose fire. You rediscover it by accident months later and think, "Oh shit, I forgot about this."
+        </>
+      )
     },
     {
       icon: '🪞',
       title: 'The Mirror Problem',
-      body: `"Afrobeats" feels too broad. "Mid-tempo grooves" sounds generic. "Quality over trends" means nothing.\n\nYou have this rich relationship with music—shaped by culture, discovery, and feeling—but you can't articulate it.\n\nYou can't even see it yourself.`
+      body: (
+        <>
+          "Afrobeats" feels too broad. "Mid-tempo grooves" sounds generic. "Quality over trends" means nothing.
+          <br /><br />
+          You have this rich relationship with music—shaped by culture, discovery, and feeling—but you can't articulate it.
+          <br /><br />
+          You can't even see it yourself.
+        </>
+      )
     }
   ];
 
@@ -251,7 +275,7 @@ const Landing = () => {
                 >
                   <span className="text-[48px] block mb-4">{problem.icon}</span>
                   <h3 className="font-display text-xl font-bold text-foreground mb-4">{problem.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed whitespace-pre-line">{problem.body}</p>
+                  <p className="text-muted-foreground leading-relaxed">{problem.body}</p>
                 </motion.div>
               ))}
             </div>
