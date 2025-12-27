@@ -13,7 +13,94 @@ serve(async (req) => {
   }
 
   try {
-    // Get Spotify access token from header
+    // Parse request body first to check if it's a public action
+    const body = await req.json()
+    const { action, data } = body
+
+    // Create Supabase admin client
+    const supabaseAdmin = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      { auth: { persistSession: false } }
+    )
+
+    // Handle public actions (no auth required)
+    if (action === 'get_public_crate') {
+      const { crate_id } = data
+      console.log(`[music-intelligence] Fetching public crate: ${crate_id}`)
+      
+      if (!crate_id) {
+        return new Response(
+          JSON.stringify({ error: 'Missing crate_id' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      // Fetch crate (public - no user_id filter)
+      const { data: crate, error: crateError } = await supabaseAdmin
+        .from('crates')
+        .select('*')
+        .eq('id', crate_id)
+        .maybeSingle()
+      
+      if (crateError) {
+        console.error('[music-intelligence] Error fetching public crate:', crateError)
+        throw crateError
+      }
+      
+      if (!crate) {
+        return new Response(
+          JSON.stringify({ error: 'Crate not found' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+
+      // Fetch tracks with cache
+      const { data: crateTracks } = await supabaseAdmin
+        .from('crate_tracks')
+        .select('*')
+        .eq('crate_id', crate_id)
+        .order('position', { ascending: true })
+
+      const trackIds = (crateTracks || []).map((ct: any) => ct.track_id)
+      let trackDetails: Record<string, any> = {}
+      
+      if (trackIds.length > 0) {
+        const { data: cached } = await supabaseAdmin
+          .from('track_cache')
+          .select('*')
+          .in('track_id', trackIds)
+        
+        if (cached) {
+          for (const t of cached) {
+            trackDetails[t.track_id] = t
+          }
+        }
+      }
+
+      const tracks = (crateTracks || []).map((ct: any) => ({
+        ...ct,
+        ...trackDetails[ct.track_id]
+      }))
+
+      // Calculate total duration
+      const totalDurationMs = tracks.reduce((sum: number, t: any) => sum + (t.duration_ms || 0), 0)
+
+      console.log(`[music-intelligence] Public crate ${crate_id}: ${tracks.length} tracks`)
+      
+      return new Response(
+        JSON.stringify({ 
+          data: { 
+            ...crate, 
+            tracks,
+            total_duration_ms: totalDurationMs
+          } 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // For all other actions, require Spotify token
     const spotifyToken = req.headers.get('x-spotify-token')
     if (!spotifyToken) {
       console.error('[music-intelligence] Missing Spotify access token')
@@ -40,16 +127,6 @@ serve(async (req) => {
     const spotifyUser = await spotifyResponse.json()
     const userId = spotifyUser.id // Spotify user ID
     console.log(`[music-intelligence] Authenticated user: ${userId}`)
-
-    // Create Supabase client with service role (bypasses RLS)
-    const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-      { auth: { persistSession: false } }
-    )
-
-    // Parse request
-    const { action, data } = await req.json()
     console.log(`[music-intelligence] Action: ${action}`)
 
     let result

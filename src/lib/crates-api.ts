@@ -168,6 +168,27 @@ export async function reorderCrateTracks(
   await callSecureEndpoint('reorder_crate_tracks', { crate_id: crateId, track_ids: trackIds }, spotifyToken);
 }
 
+/**
+ * Get public crate data (no auth required)
+ */
+export async function getPublicCrate(crateId: string): Promise<CrateWithTracks & { total_duration_ms: number }> {
+  const response = await fetch(EDGE_FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ action: 'get_public_crate', data: { crate_id: crateId } }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to fetch crate');
+  }
+
+  const result = await response.json();
+  return result.data;
+}
+
 // Emoji picker options - music-focused quick picks
 export const CRATE_EMOJIS = [
   '🎵', '🎧', '🎶', '🌙', '⚡', '💎', '🔥', '✨', '🌊', '☀️', '🌴', '🎤'
