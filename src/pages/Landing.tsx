@@ -151,22 +151,12 @@ const Landing = () => {
 
           {/* Subheadline */}
           <motion.p 
-            className="text-lg lg:text-2xl text-foreground/90 font-medium max-w-[700px] mb-4"
+            className="text-lg lg:text-2xl text-foreground/90 font-medium max-w-[700px] mb-10"
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.15, ease: smoothEase }}
           >
             Music DNA turns your library into crates, a taste profile, and a way to find the right vibe fast.
-          </motion.p>
-          
-          {/* Description */}
-          <motion.p 
-            className="text-base lg:text-lg text-muted-foreground max-w-[650px] mb-12 leading-relaxed"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-          >
-            Your taste isn't a genre. It's culture, memory, and moments. Save what you love, organize by vibe, and actually see your musical identity.
           </motion.p>
 
           {/* Crate Cards Visual */}
