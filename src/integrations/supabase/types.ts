@@ -261,6 +261,7 @@ export type Database = {
           fetched_at: string
           name: string
           popularity: number | null
+          preview_url: string | null
           track_id: string
           valence: number | null
         }
@@ -275,6 +276,7 @@ export type Database = {
           fetched_at?: string
           name: string
           popularity?: number | null
+          preview_url?: string | null
           track_id: string
           valence?: number | null
         }
@@ -289,6 +291,7 @@ export type Database = {
           fetched_at?: string
           name?: string
           popularity?: number | null
+          preview_url?: string | null
           track_id?: string
           valence?: number | null
         }

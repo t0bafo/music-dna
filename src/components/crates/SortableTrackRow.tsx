@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, Music, MoreVertical, Trash2 } from 'lucide-react';
+import { GripVertical, Music, MoreVertical, Trash2, Play, Pause } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -21,6 +21,7 @@ interface Track {
   album_art_url?: string | null;
   duration_ms?: number | null;
   bpm?: number | null;
+  preview_url?: string | null;
 }
 
 interface SortableTrackRowProps {
@@ -28,13 +29,19 @@ interface SortableTrackRowProps {
   index: number;
   onRemove: (trackId: string, trackName: string) => void;
   formatDuration: (ms: number | undefined) => string;
+  currentPreviewId: string | null;
+  isPreviewPlaying: boolean;
+  onTogglePreview: (trackId: string, previewUrl: string) => void;
 }
 
 export function SortableTrackRow({ 
   track, 
   index, 
   onRemove, 
-  formatDuration 
+  formatDuration,
+  currentPreviewId,
+  isPreviewPlaying,
+  onTogglePreview
 }: SortableTrackRowProps) {
   const isMobile = useIsMobile();
   const [swipeX, setSwipeX] = useState(0);
@@ -42,6 +49,9 @@ export function SortableTrackRow({
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const isHorizontalSwipe = useRef(false);
+
+  const isCurrentlyPlaying = currentPreviewId === track.track_id && isPreviewPlaying;
+  const hasPreview = !!track.preview_url;
 
   const {
     attributes,
@@ -184,6 +194,26 @@ export function SortableTrackRow({
             )}
           </div>
         </div>
+
+        {/* Preview Button */}
+        {hasPreview && (
+          <button
+            onClick={() => onTogglePreview(track.track_id, track.preview_url!)}
+            className={cn(
+              "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all touch-target",
+              isCurrentlyPlaying
+                ? "bg-primary text-primary-foreground"
+                : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
+            )}
+            aria-label={isCurrentlyPlaying ? "Pause preview" : "Play preview"}
+          >
+            {isCurrentlyPlaying ? (
+              <Pause className="w-4 h-4" />
+            ) : (
+              <Play className="w-4 h-4 ml-0.5" />
+            )}
+          </button>
+        )}
 
         {/* Actions Menu */}
         <DropdownMenu>

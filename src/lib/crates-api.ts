@@ -35,6 +35,7 @@ export interface CrateTrack {
   energy?: number;
   danceability?: number;
   valence?: number;
+  preview_url?: string | null;
 }
 
 export interface CrateWithTracks extends Crate {
@@ -53,6 +54,7 @@ export interface TrackToAdd {
   energy?: number;
   danceability?: number;
   valence?: number;
+  preview_url?: string | null;
 }
 
 /**

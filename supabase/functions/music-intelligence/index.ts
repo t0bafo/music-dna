@@ -616,7 +616,7 @@ serve(async (req) => {
         if (!crate) return new Response(JSON.stringify({ error: 'Crate not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
         const { data: maxPos } = await supabaseAdmin.from('crate_tracks').select('position').eq('crate_id', crate_id).order('position', { ascending: false }).limit(1)
         let position = (maxPos && maxPos.length > 0) ? maxPos[0].position + 1 : 0
-        const trackCacheData = tracks.map((t: any) => ({ track_id: t.track_id, name: t.name, artist_name: t.artist_name, album_name: t.album_name, album_art_url: t.album_art_url, duration_ms: t.duration_ms, popularity: t.popularity, bpm: t.bpm, energy: t.energy, danceability: t.danceability, valence: t.valence, fetched_at: new Date().toISOString() }))
+        const trackCacheData = tracks.map((t: any) => ({ track_id: t.track_id, name: t.name, artist_name: t.artist_name, album_name: t.album_name, album_art_url: t.album_art_url, duration_ms: t.duration_ms, popularity: t.popularity, bpm: t.bpm, energy: t.energy, danceability: t.danceability, valence: t.valence, preview_url: t.preview_url || null, fetched_at: new Date().toISOString() }))
         await supabaseAdmin.from('track_cache').upsert(trackCacheData, { onConflict: 'track_id' })
         await supabaseAdmin.from('crate_tracks').delete().eq('crate_id', crate_id).in('track_id', tracks.map((t: any) => t.track_id))
         const crateTrackData = tracks.map((t: any, i: number) => ({ crate_id, track_id: t.track_id, position: position + i }))
