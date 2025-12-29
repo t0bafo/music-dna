@@ -4,10 +4,11 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Loader2, Search, Plus, Music, Check, Lightbulb } from 'lucide-react';
+import { Loader2, Search, Plus, Music, Check, Lightbulb, Play, Pause } from 'lucide-react';
 import { useAddTracksToCrate } from '@/hooks/use-crates';
 import { useAuth } from '@/contexts/AuthContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useAudioPreview } from '@/hooks/use-audio-preview';
 import { TrackToAdd } from '@/lib/crates-api';
 import { SearchResultsListSkeleton } from '@/components/ui/skeletons';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ interface SpotifyTrack {
   };
   duration_ms: number;
   popularity: number;
+  preview_url: string | null;
 }
 
 // Search ALL of Spotify using the Search API
@@ -130,6 +132,7 @@ const AddTracksToCrateModal = ({
 }: AddTracksToCrateModalProps) => {
   const { accessToken } = useAuth();
   const isMobile = useIsMobile();
+  const { currentTrackId, isPlaying, toggle: togglePreview, stop: stopPreview } = useAudioPreview();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SpotifyTrack[]>([]);
@@ -179,7 +182,7 @@ const AddTracksToCrateModal = ({
     performSearch();
   }, [debouncedQuery, accessToken]);
 
-  // Reset state when modal closes
+  // Reset state and stop audio when modal closes
   useEffect(() => {
     if (!open) {
       setSearchQuery('');
@@ -187,8 +190,9 @@ const AddTracksToCrateModal = ({
       setSearchResults([]);
       setSelectedTracks(new Map());
       setSearchError(null);
+      stopPreview();
     }
-  }, [open]);
+  }, [open, stopPreview]);
 
   const toggleTrack = useCallback((track: SpotifyTrack) => {
     if (existingSet.has(track.id)) return;
@@ -219,6 +223,7 @@ const AddTracksToCrateModal = ({
         album_art_url: track.album.images[1]?.url || track.album.images[0]?.url || '',
         duration_ms: track.duration_ms,
         popularity: track.popularity,
+        preview_url: track.preview_url,
         // Audio features can be fetched later if needed
         bpm: undefined,
         energy: undefined,
@@ -340,6 +345,8 @@ const AddTracksToCrateModal = ({
               const isInCrate = existingSet.has(track.id);
               const isSelected = selectedTracks.has(track.id);
               const albumArt = track.album.images[2]?.url || track.album.images[1]?.url || track.album.images[0]?.url;
+              const isCurrentlyPlaying = currentTrackId === track.id && isPlaying;
+              const hasPreview = !!track.preview_url;
               
               return (
                 <div
@@ -381,6 +388,29 @@ const AddTracksToCrateModal = ({
                       <span className="shrink-0">{formatDuration(track.duration_ms)}</span>
                     </div>
                   </div>
+
+                  {/* Preview button */}
+                  {hasPreview && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        togglePreview(track.id, track.preview_url!);
+                      }}
+                      className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all touch-target",
+                        isCurrentlyPlaying
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary/50 text-muted-foreground hover:bg-secondary hover:text-foreground"
+                      )}
+                      aria-label={isCurrentlyPlaying ? "Pause preview" : "Play preview"}
+                    >
+                      {isCurrentlyPlaying ? (
+                        <Pause className="w-4 h-4" />
+                      ) : (
+                        <Play className="w-4 h-4 ml-0.5" />
+                      )}
+                    </button>
+                  )}
 
                   {/* Add button or status */}
                   <div className="shrink-0">

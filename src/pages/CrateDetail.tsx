@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCrate, useRemoveTrackFromCrate, useDeleteCrate, useUpdateCrate, useReorderCrateTracks } from '@/hooks/use-crates';
+import { useAudioPreview } from '@/hooks/use-audio-preview';
 import { 
   Music, Loader2, ArrowLeft, Plus, Trash2, MoreVertical, Package, 
   Share2, Pencil, Clock, Link as LinkIcon, Check, Copy
@@ -66,6 +67,9 @@ const CrateDetail = () => {
   const deleteCrate = useDeleteCrate();
   const updateCrate = useUpdateCrate();
   const reorderTracks = useReorderCrateTracks();
+  
+  // Audio preview hook for 30-second previews
+  const { currentTrackId: previewTrackId, isPlaying: isPreviewPlaying, toggle: togglePreview } = useAudioPreview();
 
   const isMobile = useIsMobile();
 
@@ -394,6 +398,9 @@ const CrateDetail = () => {
                       index={index}
                       onRemove={handleRemoveTrack}
                       formatDuration={formatDuration}
+                      currentPreviewId={previewTrackId}
+                      isPreviewPlaying={isPreviewPlaying}
+                      onTogglePreview={togglePreview}
                     />
                   ))}
                 </SortableContext>
