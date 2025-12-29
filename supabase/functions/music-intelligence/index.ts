@@ -581,6 +581,56 @@ serve(async (req) => {
         if (trackIds.length > 0) {
           const { data: cached } = await supabaseAdmin.from('track_cache').select('*').in('track_id', trackIds)
           if (cached) { for (const t of cached) { trackDetails[t.track_id] = t } }
+          
+          // Fetch preview_urls from Spotify for tracks missing them
+          const tracksMissingPreview = trackIds.filter((id: string) => !trackDetails[id]?.preview_url && trackDetails[id]?.preview_url !== null)
+          if (tracksMissingPreview.length > 0) {
+            console.log(`[music-intelligence] Fetching preview_urls for ${tracksMissingPreview.length} tracks`)
+            try {
+              // Spotify allows up to 50 tracks per request
+              const batches = []
+              for (let i = 0; i < tracksMissingPreview.length; i += 50) {
+                batches.push(tracksMissingPreview.slice(i, i + 50))
+              }
+              
+              for (const batch of batches) {
+                const spotifyTracksResponse = await fetch(
+                  `https://api.spotify.com/v1/tracks?ids=${batch.join(',')}`,
+                  { headers: { 'Authorization': `Bearer ${spotifyToken}` } }
+                )
+                
+                if (spotifyTracksResponse.ok) {
+                  const spotifyData = await spotifyTracksResponse.json()
+                  const updates: any[] = []
+                  
+                  for (const track of spotifyData.tracks || []) {
+                    if (track && track.id) {
+                      // Update local cache
+                      if (trackDetails[track.id]) {
+                        trackDetails[track.id].preview_url = track.preview_url
+                      }
+                      // Prepare DB update
+                      updates.push({
+                        track_id: track.id,
+                        preview_url: track.preview_url,
+                        name: trackDetails[track.id]?.name || track.name,
+                        fetched_at: new Date().toISOString()
+                      })
+                    }
+                  }
+                  
+                  // Update track_cache with preview_urls
+                  if (updates.length > 0) {
+                    await supabaseAdmin.from('track_cache').upsert(updates, { onConflict: 'track_id' })
+                    console.log(`[music-intelligence] Updated ${updates.length} tracks with preview_urls`)
+                  }
+                }
+              }
+            } catch (previewError) {
+              console.error('[music-intelligence] Error fetching preview_urls:', previewError)
+              // Continue without preview_urls - non-critical error
+            }
+          }
         }
         result = { data: { ...crate, tracks: (crateTracks || []).map((ct: any) => ({ ...ct, ...trackDetails[ct.track_id] })) } }
         break
