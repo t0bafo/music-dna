@@ -344,10 +344,47 @@ const CrateDetail = () => {
 
         {/* Actions Row */}
         <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
-          <Button onClick={() => setShowAddTracks(true)} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Tracks
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="w-4 h-4" />
+                Add Tracks
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-64 bg-card/95 backdrop-blur-xl border-border/50">
+              <DropdownMenuItem 
+                onClick={() => setShowSmartSuggestions(true)}
+                className="flex items-start gap-3 p-3 cursor-pointer focus:bg-primary/10"
+              >
+                <Sparkles className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-medium text-foreground">Smart Suggestions</div>
+                  <div className="text-xs text-muted-foreground">Get tracks from your library</div>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => setShowDiscoverByVibe(true)}
+                className="flex items-start gap-3 p-3 cursor-pointer focus:bg-primary/10"
+              >
+                <Search className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-medium text-foreground">Filter by Vibe</div>
+                  <div className="text-xs text-muted-foreground">Search by BPM, energy, mood</div>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem 
+                onClick={() => setShowAddTracks(true)}
+                className="flex items-start gap-3 p-3 cursor-pointer focus:bg-primary/10"
+              >
+                <Plus className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
+                <div>
+                  <div className="font-medium text-foreground">Search Spotify</div>
+                  <div className="text-xs text-muted-foreground">Find any song manually</div>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           
           <div className="flex gap-2">
             <Button 
