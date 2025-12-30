@@ -5,7 +5,7 @@ import { useCrate, useRemoveTrackFromCrate, useDeleteCrate, useUpdateCrate, useR
 import { useAudioPreview } from '@/hooks/use-audio-preview';
 import { 
   Music, Loader2, ArrowLeft, Plus, Trash2, MoreVertical, Package, 
-  Share2, Pencil, Clock, Link as LinkIcon, Check, Copy
+  Share2, Pencil, Clock, Link as LinkIcon, Check, Copy, Sparkles, Search, ArrowRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
 import AddTracksToCrateModal from '@/components/crates/AddTracksToCrateModal';
+import SmartSuggestionsModal from '@/components/crates/SmartSuggestionsModal';
 import { SortableTrackRow } from '@/components/crates/SortableTrackRow';
 import ExportToSpotifyModal from '@/components/crates/ExportToSpotifyModal';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -60,6 +61,7 @@ const CrateDetail = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showSmartSuggestions, setShowSmartSuggestions] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
   const { data: crate, isLoading } = useCrate(crateId);
@@ -408,18 +410,68 @@ const CrateDetail = () => {
             </div>
           </motion.div>
         ) : (
-          /* Empty State */
+          /* Empty State - Action Cards */
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-card/40 rounded-2xl p-12 text-center border border-border/30"
+            className="space-y-4"
           >
-            <div className="text-5xl mb-4">🎵</div>
-            <p className="text-muted-foreground mb-4">No tracks in this crate yet</p>
-            <Button onClick={() => setShowAddTracks(true)} variant="outline" className="gap-2">
-              <Plus className="w-4 h-4" />
-              Add Your First Track
-            </Button>
+            <div className="text-center py-6">
+              <div className="text-5xl mb-3">🎵</div>
+              <h3 className="font-display text-lg font-semibold mb-1">Your Crate is empty!</h3>
+              <p className="text-sm text-muted-foreground">Quick ways to fill it:</p>
+            </div>
+
+            {/* Smart Suggestions Card */}
+            <button
+              onClick={() => setShowSmartSuggestions(true)}
+              className="w-full bg-card/60 hover:bg-card/80 backdrop-blur-sm rounded-xl p-5 border border-border/40 hover:border-primary/30 transition-all text-left group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <Sparkles className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-foreground mb-0.5">Try Smart Suggestions</h4>
+                  <p className="text-sm text-muted-foreground">Get tracks from your library that match this vibe</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
+              </div>
+            </button>
+
+            {/* Filter Library Card */}
+            <button
+              onClick={() => navigate('/studio?tab=discovery')}
+              className="w-full bg-card/60 hover:bg-card/80 backdrop-blur-sm rounded-xl p-5 border border-border/40 hover:border-primary/30 transition-all text-left group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-secondary/50 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <Search className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-foreground mb-0.5">Filter My Library by Vibe</h4>
+                  <p className="text-sm text-muted-foreground">Search by BPM, energy, mood and more</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
+              </div>
+            </button>
+
+            {/* Manual Add Card */}
+            <button
+              onClick={() => setShowAddTracks(true)}
+              className="w-full bg-card/60 hover:bg-card/80 backdrop-blur-sm rounded-xl p-5 border border-border/40 hover:border-primary/30 transition-all text-left group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-secondary/50 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <Plus className="w-6 h-6 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-semibold text-foreground mb-0.5">Add Tracks Manually</h4>
+                  <p className="text-sm text-muted-foreground">Search any song on Spotify</p>
+                </div>
+                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
+              </div>
+            </button>
           </motion.div>
         )}
 
@@ -445,6 +497,13 @@ const CrateDetail = () => {
         crateId={crateId!}
         crateName={crate.name}
         existingTrackIds={existingTrackIds} 
+      />
+
+      {/* Smart Suggestions Modal */}
+      <SmartSuggestionsModal
+        open={showSmartSuggestions}
+        onOpenChange={setShowSmartSuggestions}
+        crate={crate}
       />
       
       {/* Edit Crate Dialog */}
