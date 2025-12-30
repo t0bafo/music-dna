@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Play, Pause, Sparkles, Music } from 'lucide-react';
+import { Loader2, Play, Pause, Sparkles, Music, Lightbulb, Search } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAddTracksToCrate } from '@/hooks/use-crates';
 import { useAudioPreview } from '@/hooks/use-audio-preview';
@@ -218,28 +218,179 @@ const SmartSuggestionsModal = ({ open, onOpenChange, crate, onComplete }: SmartS
               </Button>
             </div>
           ) : suggestions.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center py-12 gap-4 text-center px-4">
-              <Music className="w-12 h-12 text-muted-foreground/50" />
-              <div>
-                <p className="font-medium">No Suggestions Found</p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  We couldn't find tracks in your library that match this vibe.
-                  <br />Try adding tracks manually or use Track Discovery.
-                </p>
+            <div className="flex-1 flex flex-col items-center justify-center py-12 gap-4 text-center px-6">
+              <div className="w-16 h-16 rounded-full bg-muted/30 flex items-center justify-center">
+                <Music className="w-8 h-8 text-muted-foreground/50" />
               </div>
-              <Button variant="outline" onClick={handleSkip}>
-                Add Tracks Manually
-              </Button>
+              <div className="space-y-2">
+                <p className="font-semibold text-lg">No matching tracks found in your library</p>
+                <p className="text-sm text-muted-foreground">
+                  Try:
+                </p>
+                <ul className="text-sm text-muted-foreground text-left space-y-1 inline-block">
+                  <li>• Filter your library by vibe (Track Discovery)</li>
+                  <li>• Add tracks manually</li>
+                  <li>• Save more music to Spotify</li>
+                </ul>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto mt-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => {
+                    onOpenChange(false);
+                    navigate('/studio');
+                  }}
+                  className="gap-2"
+                >
+                  <Search className="w-4 h-4" />
+                  Filter My Library
+                </Button>
+                <Button variant="secondary" onClick={handleSkip}>
+                  Add Manually
+                </Button>
+              </div>
+            </div>
+          ) : suggestions.length < 5 ? (
+            <div className="flex flex-col h-full">
+              {/* Low suggestions warning banner */}
+              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-4 mb-4">
+                <div className="flex items-start gap-3">
+                  <Lightbulb className="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-medium">
+                      We only found {suggestions.length} track{suggestions.length !== 1 ? 's' : ''} from your library.
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      💡 Suggestions work best with 500+ saved songs. Try saving more music to Spotify, or use Track Discovery to find new tracks.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Selection controls */}
+              <div className="flex gap-2 mb-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={selectAll}
+                  className="text-xs"
+                >
+                  Select All
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={deselectAll}
+                  className="text-xs"
+                >
+                  Deselect All
+                </Button>
+              </div>
+
+              {/* Track list */}
+              <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-0">
+                {suggestions.map((track) => {
+                  const isSelected = selectedTracks.has(track.track_id);
+                  const isCurrentlyPlaying = currentTrackId === track.track_id && isPlaying;
+
+                  return (
+                    <div
+                      key={track.track_id}
+                      onClick={() => toggleTrack(track.track_id)}
+                      className={cn(
+                        "flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all",
+                        "bg-secondary/30 hover:bg-secondary/50",
+                        isSelected && "bg-primary/10 border border-primary/30"
+                      )}
+                    >
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={() => toggleTrack(track.track_id)}
+                        className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+
+                      {track.album_art_url ? (
+                        <img
+                          src={track.album_art_url}
+                          alt={track.album}
+                          className="w-12 h-12 rounded object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded bg-secondary flex items-center justify-center flex-shrink-0">
+                          <Music className="w-5 h-5 text-muted-foreground" />
+                        </div>
+                      )}
+
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{track.name}</p>
+                        <p className="text-xs text-muted-foreground truncate">{track.artist}</p>
+                      </div>
+
+                      {track.preview_url && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-9 w-9 flex-shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handlePreview(track);
+                          }}
+                        >
+                          {isCurrentlyPlaying ? (
+                            <Pause className="w-4 h-4" />
+                          ) : (
+                            <Play className="w-4 h-4" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Actions for low suggestions */}
+              <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border/30 mt-4">
+                <Button
+                  variant="outline"
+                  className="flex-1 gap-2"
+                  onClick={() => {
+                    onOpenChange(false);
+                    navigate('/studio');
+                  }}
+                >
+                  <Search className="w-4 h-4" />
+                  Use Track Discovery
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="flex-1"
+                  onClick={handleSkip}
+                >
+                  Add Manually
+                </Button>
+                {selectedTracks.size > 0 && (
+                  <Button
+                    className="flex-1 gap-2"
+                    onClick={handleAddSelected}
+                    disabled={isAdding}
+                  >
+                    {isAdding ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        Adding...
+                      </>
+                    ) : (
+                      <>Add Selected ({selectedTracks.size})</>
+                    )}
+                  </Button>
+                )}
+              </div>
             </div>
           ) : (
             <>
               <p className="text-sm text-muted-foreground mb-3">
                 We found {suggestions.length} tracks from your library that might match this vibe.
-                {suggestions.length < 5 && suggestions.length > 0 && (
-                  <span className="block mt-1 text-yellow-500/80">
-                    Only found {suggestions.length} tracks. You can add more manually later.
-                  </span>
-                )}
               </p>
 
               {/* Selection controls */}
