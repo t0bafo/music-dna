@@ -29,6 +29,7 @@ import SmartSuggestionsModal from '@/components/crates/SmartSuggestionsModal';
 import DiscoverByVibeModal from '@/components/crates/DiscoverByVibeModal';
 import { SortableTrackRow } from '@/components/crates/SortableTrackRow';
 import ExportToSpotifyModal from '@/components/crates/ExportToSpotifyModal';
+import { CrateSearchBar } from '@/components/crates/CrateSearchBar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { CRATE_EMOJIS, CRATE_COLORS } from '@/lib/crates-api';
 import { motion } from 'framer-motion';
@@ -65,6 +66,11 @@ const CrateDetail = () => {
   const [showSmartSuggestions, setShowSmartSuggestions] = useState(false);
   const [showDiscoverByVibe, setShowDiscoverByVibe] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  
+  // In-crate search & filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [bpmFilter, setBpmFilter] = useState<[number, number] | null>(null);
+  const [energyFilter, setEnergyFilter] = useState<'low' | 'medium' | 'high' | null>(null);
 
   const { data: crate, isLoading } = useCrate(crateId);
   const removeTrack = useRemoveTrackFromCrate();
@@ -107,6 +113,36 @@ const CrateDetail = () => {
   }, [crate?.tracks]);
 
   const displayTracks = localTracks || crate?.tracks || [];
+
+  // Filtered tracks based on search and filters
+  const filteredTracks = useMemo(() => {
+    return displayTracks.filter(track => {
+      // Text search - match name, artist, or album
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const matchesText = 
+          track.name?.toLowerCase().includes(query) ||
+          track.artist_name?.toLowerCase().includes(query) ||
+          track.album_name?.toLowerCase().includes(query);
+        if (!matchesText) return false;
+      }
+      
+      // BPM filter
+      if (bpmFilter && track.bpm) {
+        if (track.bpm < bpmFilter[0] || track.bpm > bpmFilter[1]) return false;
+      }
+      
+      // Energy filter
+      if (energyFilter && track.energy !== null && track.energy !== undefined) {
+        const e = track.energy;
+        if (energyFilter === 'low' && e > 0.4) return false;
+        if (energyFilter === 'medium' && (e < 0.4 || e > 0.7)) return false;
+        if (energyFilter === 'high' && e < 0.7) return false;
+      }
+      
+      return true;
+    });
+  }, [displayTracks, searchQuery, bpmFilter, energyFilter]);
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -408,45 +444,68 @@ const CrateDetail = () => {
         {/* Tracks List */}
         {displayTracks.length > 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <div
-              className={cn(
-                "space-y-2",
-                // Mobile: make the list its own scroll container for crisp native scrolling
-                "max-h-[60vh] overflow-y-auto overscroll-contain",
-                // Desktop: allow the page to scroll naturally
-                "lg:max-h-none lg:overflow-visible"
-              )}
-              style={{
-                WebkitOverflowScrolling: 'touch',
-                touchAction: 'pan-y',
-                transform: 'translateZ(0)',
-                willChange: 'scroll-position',
-              }}
-            >
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
+            {/* In-Crate Search Bar - show when 3+ tracks */}
+            {displayTracks.length >= 3 && (
+              <CrateSearchBar
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                bpmFilter={bpmFilter}
+                onBpmFilterChange={setBpmFilter}
+                energyFilter={energyFilter}
+                onEnergyFilterChange={setEnergyFilter}
+                filteredCount={filteredTracks.length}
+                totalCount={displayTracks.length}
+              />
+            )}
+            
+            {/* No results message */}
+            {filteredTracks.length === 0 && (searchQuery || bpmFilter || energyFilter) ? (
+              <div className="text-center py-12 text-muted-foreground">
+                <Search className="w-8 h-8 mx-auto mb-3 opacity-50" />
+                <p className="font-medium">No tracks match your filters</p>
+                <p className="text-sm mt-1">Try adjusting your search or filters</p>
+              </div>
+            ) : (
+              <div
+                className={cn(
+                  "space-y-2",
+                  // Mobile: make the list its own scroll container for crisp native scrolling
+                  "max-h-[60vh] overflow-y-auto overscroll-contain",
+                  // Desktop: allow the page to scroll naturally
+                  "lg:max-h-none lg:overflow-visible"
+                )}
+                style={{
+                  WebkitOverflowScrolling: 'touch',
+                  touchAction: 'pan-y',
+                  transform: 'translateZ(0)',
+                  willChange: 'scroll-position',
+                }}
               >
-                <SortableContext
-                  items={displayTracks.map((t) => t.id)}
-                  strategy={verticalListSortingStrategy}
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEnd}
                 >
-                  {displayTracks.map((track, index) => (
-                    <SortableTrackRow
-                      key={track.id}
-                      track={track}
-                      index={index}
-                      onRemove={handleRemoveTrack}
-                      formatDuration={formatDuration}
-                      currentPreviewId={previewTrackId}
-                      isPreviewPlaying={isPreviewPlaying}
-                      onTogglePreview={togglePreview}
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
-            </div>
+                  <SortableContext
+                    items={filteredTracks.map((t) => t.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {filteredTracks.map((track, index) => (
+                      <SortableTrackRow
+                        key={track.id}
+                        track={track}
+                        index={index}
+                        onRemove={handleRemoveTrack}
+                        formatDuration={formatDuration}
+                        currentPreviewId={previewTrackId}
+                        isPreviewPlaying={isPreviewPlaying}
+                        onTogglePreview={togglePreview}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </div>
+            )}
           </motion.div>
         ) : (
           /* Empty State - Action Cards */
