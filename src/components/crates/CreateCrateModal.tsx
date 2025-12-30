@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Loader2, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowRight, Lightbulb } from 'lucide-react';
 import { CRATE_EMOJIS, CRATE_COLORS, Crate } from '@/lib/crates-api';
 import { useCreateCrate } from '@/hooks/use-crates';
 import { cn } from '@/lib/utils';
@@ -198,6 +198,16 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
                   {name || 'Crate Name'}
                 </p>
                 <p className="text-sm text-muted-foreground">0 tracks</p>
+              </div>
+            </div>
+
+            {/* What's a Crate? Helper */}
+            <div className="flex items-start gap-3 p-3 bg-primary/5 rounded-lg border border-primary/10">
+              <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+              <div className="text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">What's a Crate?</span>
+                <br />
+                Crates are moodboards for music — organized by vibe, not genre. We'll suggest tracks to get you started!
               </div>
             </div>
 
