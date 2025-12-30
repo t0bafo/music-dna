@@ -695,6 +695,272 @@ serve(async (req) => {
         break
       }
 
+      case 'suggest_tracks_for_crate': {
+        // Smart Track Suggestions for new Crates
+        const { crate_name, crate_description } = data
+        console.log(`[music-intelligence] Suggesting tracks for crate "${crate_name}" for user ${userId}`)
+        
+        const text = `${crate_name} ${crate_description || ''}`.toLowerCase()
+        
+        // Define vibe keywords and their associations
+        const vibeKeywords: Record<string, string[]> = {
+          night: ['night', 'midnight', 'evening', 'late', 'dark', 'moon', 'nocturnal'],
+          chill: ['chill', 'relax', 'calm', 'soft', 'smooth', 'easy', 'mellow', 'lounge'],
+          energy: ['energy', 'hype', 'pump', 'party', 'club', 'workout', 'gym', 'turn up', 'lit'],
+          drive: ['drive', 'driving', 'road', 'journey', 'travel', 'cruise', 'highway'],
+          sunday: ['sunday', 'morning', 'weekend', 'brunch', 'lazy'],
+          sad: ['sad', 'heartbreak', 'lonely', 'blue', 'melancholy', 'emotional', 'cry', 'miss'],
+          happy: ['happy', 'joy', 'upbeat', 'positive', 'bright', 'sunshine', 'good vibes'],
+          focus: ['focus', 'study', 'work', 'concentration', 'deep', 'productive'],
+          romance: ['love', 'romance', 'romantic', 'date', 'intimate', 'sensual'],
+          underground: ['underground', 'indie', 'alternative', 'discover', 'hidden', 'gems'],
+          summer: ['summer', 'beach', 'tropical', 'vacation', 'hot', 'sunny'],
+          winter: ['winter', 'cold', 'cozy', 'snow', 'holiday']
+        }
+        
+        // Genre keywords
+        const genreKeywords: Record<string, string[]> = {
+          afrobeats: ['afrobeats', 'afro', 'african', 'lagos', 'naija', 'amapiano'],
+          rnb: ['r&b', 'rnb', 'soul', 'neo soul', 'neo-soul'],
+          hiphop: ['hip hop', 'hip-hop', 'rap', 'trap', 'bars'],
+          electronic: ['electronic', 'edm', 'house', 'techno', 'dance'],
+          pop: ['pop', 'mainstream', 'hits']
+        }
+        
+        // Determine target audio profile based on keywords
+        let targetEnergy = 0.5
+        let targetValence = 0.5
+        let targetTempo = 110
+        let energyImportance = 0
+        let valenceImportance = 0
+        let tempoImportance = 0
+        let undergroundBoost = false
+        
+        // Night/chill = low energy
+        if (text.match(/night|midnight|evening|late|dark|chill|relax|calm|soft|smooth|mellow/)) {
+          targetEnergy = 0.4
+          energyImportance = 3
+        }
+        
+        // Energy/party = high energy
+        if (text.match(/energy|hype|pump|party|club|workout|gym|turn up|lit/)) {
+          targetEnergy = 0.8
+          energyImportance = 4
+        }
+        
+        // Sad = low valence
+        if (text.match(/sad|heartbreak|lonely|blue|melancholy|emotional|cry|miss/)) {
+          targetValence = 0.3
+          valenceImportance = 4
+        }
+        
+        // Happy = high valence
+        if (text.match(/happy|joy|upbeat|positive|bright|sunshine|good vibes/)) {
+          targetValence = 0.75
+          valenceImportance = 3
+        }
+        
+        // Underground preference
+        if (text.match(/underground|indie|alternative|discover|hidden|gems/)) {
+          undergroundBoost = true
+        }
+        
+        // Drive = medium tempo
+        if (text.match(/drive|driving|road|cruise|highway/)) {
+          targetTempo = 100
+          tempoImportance = 2
+        }
+        
+        // Focus = medium-low energy
+        if (text.match(/focus|study|work|concentration|productive/)) {
+          targetEnergy = 0.45
+          energyImportance = 3
+        }
+        
+        // Fetch all user tracks with audio features
+        let allTracks: any[] = []
+        let offset = 0
+        const pageSize = 1000
+        
+        while (true) {
+          const { data: batch, error } = await supabaseAdmin
+            .from('music_library')
+            .select('track_id, name, artist, album, tempo, energy, danceability, valence, popularity, added_at')
+            .eq('user_id', userId)
+            .range(offset, offset + pageSize - 1)
+          
+          if (error) throw error
+          if (!batch || batch.length === 0) break
+          
+          allTracks = allTracks.concat(batch)
+          if (batch.length < pageSize) break
+          offset += pageSize
+        }
+        
+        console.log(`[music-intelligence] Scoring ${allTracks.length} library tracks`)
+        
+        if (allTracks.length === 0) {
+          result = { data: [] }
+          break
+        }
+        
+        // Score each track
+        const scoredTracks = allTracks.map((track: any) => {
+          let score = 0
+          const trackText = `${track.name} ${track.artist}`.toLowerCase()
+          
+          // Check vibe keyword matches
+          Object.values(vibeKeywords).forEach((keywords: string[]) => {
+            keywords.forEach(keyword => {
+              if (text.includes(keyword) && trackText.includes(keyword)) {
+                score += 3
+              }
+            })
+          })
+          
+          // Check genre keyword matches
+          Object.entries(genreKeywords).forEach(([genre, keywords]) => {
+            keywords.forEach(keyword => {
+              if (text.includes(keyword)) {
+                if (trackText.includes(genre) || trackText.includes(keyword)) {
+                  score += 5
+                }
+              }
+            })
+          })
+          
+          // Audio feature scoring if available
+          if (track.energy != null && energyImportance > 0) {
+            const energyDiff = Math.abs(track.energy - targetEnergy)
+            if (energyDiff < 0.15) score += energyImportance
+            else if (energyDiff < 0.3) score += energyImportance * 0.5
+          }
+          
+          if (track.valence != null && valenceImportance > 0) {
+            const valenceDiff = Math.abs(track.valence - targetValence)
+            if (valenceDiff < 0.15) score += valenceImportance
+            else if (valenceDiff < 0.3) score += valenceImportance * 0.5
+          }
+          
+          if (track.tempo != null && tempoImportance > 0) {
+            const tempoDiff = Math.abs(track.tempo - targetTempo)
+            if (tempoDiff < 10) score += tempoImportance
+            else if (tempoDiff < 20) score += tempoImportance * 0.5
+          }
+          
+          // Underground boost
+          if (undergroundBoost && (track.popularity || 100) < 40) {
+            score += 2
+          }
+          
+          // Boost recently saved tracks
+          if (track.added_at) {
+            const daysSinceSaved = Math.floor((Date.now() - new Date(track.added_at).getTime()) / (1000 * 60 * 60 * 24))
+            if (daysSinceSaved < 7) score += 3
+            else if (daysSinceSaved < 30) score += 2
+          }
+          
+          // Small boost for tracks with decent popularity (more likely to be good)
+          if ((track.popularity || 0) > 50 && (track.popularity || 0) < 80) {
+            score += 1
+          }
+          
+          return { ...track, score }
+        })
+        
+        // Sort by score and return top 15
+        const suggestions: any[] = scoredTracks
+          .filter((t: any) => t.score > 0)
+          .sort((a: any, b: any) => b.score - a.score)
+          .slice(0, 15)
+          .map((t: any) => ({
+            track_id: t.track_id,
+            name: t.name,
+            artist: t.artist,
+            album: t.album,
+            tempo: t.tempo,
+            energy: t.energy,
+            danceability: t.danceability,
+            valence: t.valence,
+            popularity: t.popularity,
+            score: t.score,
+            album_art_url: null as string | null,
+            duration_ms: null as number | null,
+            preview_url: null as string | null
+          }))
+        
+        // Fetch album art from track_cache or Spotify
+        if (suggestions.length > 0) {
+          const trackIds = suggestions.map((s: any) => s.track_id)
+          
+          // Try cache first
+          const { data: cached } = await supabaseAdmin
+            .from('track_cache')
+            .select('track_id, album_art_url, duration_ms, preview_url')
+            .in('track_id', trackIds)
+          
+          const cacheMap: Record<string, any> = {}
+          if (cached) {
+            for (const c of cached) {
+              cacheMap[c.track_id] = c
+            }
+          }
+          
+          // Fetch missing from Spotify
+          const missingIds = trackIds.filter((id: string) => !cacheMap[id]?.album_art_url)
+          if (missingIds.length > 0) {
+            try {
+              const spotifyRes = await fetch(
+                `https://api.spotify.com/v1/tracks?ids=${missingIds.join(',')}`,
+                { headers: { 'Authorization': `Bearer ${spotifyToken}` } }
+              )
+              if (spotifyRes.ok) {
+                const spotifyData = await spotifyRes.json()
+                const updates: any[] = []
+                for (const track of spotifyData.tracks || []) {
+                  if (track && track.id) {
+                    cacheMap[track.id] = {
+                      album_art_url: track.album?.images?.[0]?.url,
+                      duration_ms: track.duration_ms,
+                      preview_url: track.preview_url
+                    }
+                    updates.push({
+                      track_id: track.id,
+                      name: track.name,
+                      artist_name: track.artists?.[0]?.name,
+                      album_name: track.album?.name,
+                      album_art_url: track.album?.images?.[0]?.url,
+                      duration_ms: track.duration_ms,
+                      preview_url: track.preview_url,
+                      fetched_at: new Date().toISOString()
+                    })
+                  }
+                }
+                if (updates.length > 0) {
+                  await supabaseAdmin.from('track_cache').upsert(updates, { onConflict: 'track_id' })
+                }
+              }
+            } catch (e) {
+              console.error('[music-intelligence] Error fetching track details from Spotify:', e)
+            }
+          }
+          
+          // Merge cache data into suggestions
+          for (const s of suggestions) {
+            const c = cacheMap[s.track_id]
+            if (c) {
+              s.album_art_url = c.album_art_url
+              s.duration_ms = c.duration_ms
+              s.preview_url = c.preview_url
+            }
+          }
+        }
+        
+        console.log(`[music-intelligence] Found ${suggestions.length} suggestions for crate "${crate_name}"`)
+        result = { data: suggestions }
+        break
+      }
+
       case 'suggest_tracks_for_playlist': {
         // Track Suggestions Tool - full flow with ReccoBeats
         const { playlist_id } = data
