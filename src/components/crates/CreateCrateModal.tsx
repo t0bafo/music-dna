@@ -85,28 +85,28 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="sm:max-w-[500px] bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl">
+        <DialogContent className="sm:max-w-[420px] max-h-[85vh] overflow-y-auto bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl">Create New Crate</DialogTitle>
+            <DialogTitle className="font-display text-lg">Create New Crate</DialogTitle>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-6 mt-2">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {/* Emoji Picker */}
-            <div className="space-y-2">
-              <Label>Emoji:</Label>
+            <div className="space-y-1.5">
+              <Label className="text-sm">Emoji:</Label>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-secondary/50 hover:bg-secondary/70 transition-colors border border-border/50"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/50 hover:bg-secondary/70 transition-colors border border-border/50"
                 >
-                  <span className="text-2xl">{selectedEmoji}</span>
-                  <span className="text-sm text-muted-foreground">Click to change</span>
+                  <span className="text-xl">{selectedEmoji}</span>
+                  <span className="text-xs text-muted-foreground">Click to change</span>
                 </button>
                 
                 {showEmojiPicker && (
-                  <div className="absolute top-full left-0 mt-2 p-3 bg-card/95 backdrop-blur-xl rounded-xl border border-border/50 shadow-xl z-50 animate-fade-in">
-                    <div className="grid grid-cols-6 gap-2">
+                  <div className="absolute top-full left-0 mt-2 p-2 bg-card/95 backdrop-blur-xl rounded-lg border border-border/50 shadow-xl z-50 animate-fade-in">
+                    <div className="grid grid-cols-6 gap-1.5">
                       {CRATE_EMOJIS.map((emoji) => (
                         <button
                           key={emoji}
@@ -116,7 +116,7 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
                             setShowEmojiPicker(false);
                           }}
                           className={cn(
-                            "w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all hover:scale-110",
+                            "w-8 h-8 rounded-md flex items-center justify-center text-lg transition-all hover:scale-110",
                             selectedEmoji === emoji
                               ? "bg-primary/20 ring-2 ring-primary"
                               : "hover:bg-secondary"
@@ -132,8 +132,8 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
             </div>
 
             {/* Name */}
-            <div className="space-y-2">
-              <Label htmlFor="name">Crate Name:</Label>
+            <div className="space-y-1">
+              <Label htmlFor="name" className="text-sm">Crate Name:</Label>
               <Input
                 id="name"
                 value={name}
@@ -143,37 +143,37 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
                 }}
                 placeholder="e.g., Late Night Drives"
                 maxLength={50}
-                className="bg-secondary/30 border-border/50 focus:border-primary/50"
+                className="bg-secondary/30 border-border/50 focus:border-primary/50 h-9"
               />
               <p className="text-xs text-muted-foreground text-right">{name.length}/50</p>
             </div>
 
             {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description">Description (optional):</Label>
+            <div className="space-y-1">
+              <Label htmlFor="description" className="text-sm">Description (optional):</Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="What's this crate for? (helps find matching tracks)"
+                placeholder="What's this crate for?"
                 maxLength={200}
                 rows={2}
-                className="bg-secondary/30 border-border/50 focus:border-primary/50 resize-none"
+                className="bg-secondary/30 border-border/50 focus:border-primary/50 resize-none text-sm"
               />
               <p className="text-xs text-muted-foreground text-right">{description.length}/200</p>
             </div>
 
             {/* Color Picker */}
-            <div className="space-y-2">
-              <Label>Color:</Label>
-              <div className="flex gap-3">
+            <div className="space-y-1.5">
+              <Label className="text-sm">Color:</Label>
+              <div className="flex gap-2">
                 {CRATE_COLORS.map((color) => (
                   <button
                     key={color}
                     type="button"
                     onClick={() => setSelectedColor(color)}
                     className={cn(
-                      "w-10 h-10 rounded-full transition-all",
+                      "w-8 h-8 rounded-full transition-all",
                       selectedColor === color
                         ? "ring-2 ring-offset-2 ring-offset-background ring-foreground scale-110"
                         : "hover:scale-105 opacity-80 hover:opacity-100"
@@ -186,29 +186,28 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
             </div>
 
             {/* Preview */}
-            <div className="p-4 bg-secondary/30 rounded-xl flex items-center gap-4 border border-border/30">
+            <div className="p-3 bg-secondary/30 rounded-lg flex items-center gap-3 border border-border/30">
               <div 
-                className="w-14 h-14 rounded-xl flex items-center justify-center shadow-lg"
+                className="w-10 h-10 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: `${selectedColor}30`, borderColor: selectedColor, borderWidth: 1 }}
               >
-                <span className="text-2xl">{selectedEmoji}</span>
+                <span className="text-lg">{selectedEmoji}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-semibold text-foreground truncate">
+                <p className="font-medium text-sm text-foreground truncate">
                   {name || 'Crate Name'}
                 </p>
-                <p className="text-sm text-muted-foreground">0 tracks</p>
+                <p className="text-xs text-muted-foreground">0 tracks</p>
               </div>
             </div>
 
             {/* What's a Crate? Helper */}
-            <div className="flex items-start gap-3 p-3 bg-primary/5 rounded-lg border border-primary/10">
-              <Lightbulb className="w-4 h-4 text-primary shrink-0 mt-0.5" />
-              <div className="text-xs text-muted-foreground">
-                <span className="font-medium text-foreground">What's a Crate?</span>
-                <br />
-                Crates are moodboards for music — organized by vibe, not genre. We'll suggest tracks to get you started!
-              </div>
+            <div className="flex items-start gap-2 p-2.5 bg-primary/5 rounded-md border border-primary/10">
+              <Lightbulb className="w-3.5 h-3.5 text-primary shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                <span className="font-medium text-foreground">What's a Crate?</span>{' '}
+                Moodboards for music — organized by vibe, not genre.
+              </p>
             </div>
 
             {/* Error Message */}
@@ -217,7 +216,7 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
             )}
 
             {/* Actions */}
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-3 pt-1">
               <Button
                 type="button"
                 variant="outline"
