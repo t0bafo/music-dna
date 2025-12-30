@@ -26,6 +26,7 @@ import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
 import AddTracksToCrateModal from '@/components/crates/AddTracksToCrateModal';
 import SmartSuggestionsModal from '@/components/crates/SmartSuggestionsModal';
+import DiscoverByVibeModal from '@/components/crates/DiscoverByVibeModal';
 import { SortableTrackRow } from '@/components/crates/SortableTrackRow';
 import ExportToSpotifyModal from '@/components/crates/ExportToSpotifyModal';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -62,6 +63,7 @@ const CrateDetail = () => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [showSmartSuggestions, setShowSmartSuggestions] = useState(false);
+  const [showDiscoverByVibe, setShowDiscoverByVibe] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
 
   const { data: crate, isLoading } = useCrate(crateId);
@@ -441,7 +443,7 @@ const CrateDetail = () => {
 
             {/* Filter Library Card */}
             <button
-              onClick={() => navigate('/studio?tab=discovery')}
+              onClick={() => setShowDiscoverByVibe(true)}
               className="w-full bg-card/60 hover:bg-card/80 backdrop-blur-sm rounded-xl p-5 border border-border/40 hover:border-primary/30 transition-all text-left group"
             >
               <div className="flex items-center gap-4">
@@ -504,6 +506,15 @@ const CrateDetail = () => {
         open={showSmartSuggestions}
         onOpenChange={setShowSmartSuggestions}
         crate={crate}
+      />
+
+      {/* Discover by Vibe Modal */}
+      <DiscoverByVibeModal
+        open={showDiscoverByVibe}
+        onOpenChange={setShowDiscoverByVibe}
+        crateId={crateId!}
+        crateName={crate.name}
+        existingTrackIds={existingTrackIds}
       />
       
       {/* Edit Crate Dialog */}
