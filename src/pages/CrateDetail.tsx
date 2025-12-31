@@ -258,18 +258,36 @@ const CrateDetail = () => {
     });
   };
 
-  // Calculate total duration
-  const totalDuration = useMemo(() => {
-    if (!crate?.tracks) return '0 min';
-    const totalMs = crate.tracks.reduce((sum, track) => sum + (track.duration_ms || 0), 0);
-    const totalMinutes = Math.floor(totalMs / 60000);
+  // Calculate total duration with estimation for missing data
+  const totalDurationInfo = useMemo(() => {
+    if (!crate?.tracks || crate.tracks.length === 0) {
+      return { text: '0 min', isEstimated: false };
+    }
+    
+    const tracksWithDuration = crate.tracks.filter(t => t.duration_ms && t.duration_ms > 0);
+    const knownDuration = tracksWithDuration.reduce((sum, t) => sum + t.duration_ms!, 0);
+    const missingCount = crate.tracks.length - tracksWithDuration.length;
+    
+    // Estimate missing durations (use avg of known, or 3 min default)
+    const avgDuration = tracksWithDuration.length > 0 
+      ? knownDuration / tracksWithDuration.length 
+      : 180000;
+    const estimatedTotal = knownDuration + (missingCount * avgDuration);
+    
+    const totalMinutes = Math.floor(estimatedTotal / 60000);
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
-    if (hours > 0) {
-      return `${hours}h ${minutes}min`;
-    }
-    return `${totalMinutes} min`;
+    
+    const text = hours > 0 ? `${hours}h ${minutes}min` : `${totalMinutes} min`;
+    
+    return { 
+      text, 
+      isEstimated: missingCount > 0,
+      missingCount 
+    };
   }, [crate?.tracks]);
+
+  const totalDuration = totalDurationInfo.text;
 
   // Format track duration
   const formatDuration = (ms: number | undefined) => {
@@ -360,6 +378,9 @@ const CrateDetail = () => {
                     <span className="flex items-center gap-1.5">
                       <Clock className="w-4 h-4" />
                       {totalDuration}
+                      {totalDurationInfo.isEstimated && (
+                        <span className="text-amber-500 text-xs">(~est)</span>
+                      )}
                     </span>
                   </div>
                 </div>

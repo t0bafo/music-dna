@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
-import { Clock, Music, Zap, Gem } from 'lucide-react';
+import { Clock, Music, Zap, Gem, AlertTriangle } from 'lucide-react';
 import { CrateTrack } from '@/lib/crates-api';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface CrateStatsProps {
   tracks: CrateTrack[];
@@ -12,9 +13,10 @@ interface StatCardProps {
   value: string | number;
   label: string;
   highlight?: boolean;
+  warning?: string;
 }
 
-function StatCard({ icon, title, value, label, highlight = false }: StatCardProps) {
+function StatCard({ icon, title, value, label, highlight = false, warning }: StatCardProps) {
   return (
     <div className={`
       p-4 rounded-xl border-2 transition-all
@@ -27,8 +29,20 @@ function StatCard({ icon, title, value, label, highlight = false }: StatCardProp
       <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
         {title}
       </div>
-      <div className="text-2xl font-bold text-foreground mb-1">
-        {value}
+      <div className="flex items-center gap-1.5">
+        <span className="text-2xl font-bold text-foreground">
+          {value}
+        </span>
+        {warning && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <AlertTriangle className="w-4 h-4 text-amber-500" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs max-w-[200px]">{warning}</p>
+            </TooltipContent>
+          </Tooltip>
+        )}
       </div>
       <div className="text-sm text-muted-foreground">
         {label}
@@ -81,7 +95,16 @@ export function CrateStats({ tracks }: CrateStatsProps) {
   const stats = useMemo(() => {
     if (tracks.length === 0) return null;
 
-    const totalDuration = tracks.reduce((sum, t) => sum + (t.duration_ms || 0), 0);
+    // Duration calculation with missing data tracking
+    const tracksWithDuration = tracks.filter(t => t.duration_ms && t.duration_ms > 0);
+    const totalDurationFromKnown = tracksWithDuration.reduce((sum, t) => sum + t.duration_ms!, 0);
+    const missingDurationCount = tracks.length - tracksWithDuration.length;
+    
+    // Estimate missing durations using average of known tracks, or 3 min default
+    const avgDuration = tracksWithDuration.length > 0 
+      ? totalDurationFromKnown / tracksWithDuration.length 
+      : 180000; // 3 min default
+    const estimatedTotal = totalDurationFromKnown + (missingDurationCount * avgDuration);
     
     const tracksWithBpm = tracks.filter(t => t.bpm && t.bpm > 0);
     const avgBpm = tracksWithBpm.length > 0
@@ -99,8 +122,10 @@ export function CrateStats({ tracks }: CrateStatsProps) {
       : 0;
 
     return {
-      duration: formatDuration(totalDuration),
-      durationLabel: getDurationLabel(totalDuration),
+      duration: formatDuration(estimatedTotal),
+      durationLabel: getDurationLabel(estimatedTotal),
+      hasMissingDurations: missingDurationCount > 0,
+      missingDurationCount,
       avgBpm: isNaN(avgBpm) ? '—' : Math.round(avgBpm),
       avgBpmLabel: getBpmLabel(avgBpm),
       avgEnergy: isNaN(avgEnergy) ? '—' : `${Math.round(avgEnergy * 100)}%`,
@@ -119,6 +144,10 @@ export function CrateStats({ tracks }: CrateStatsProps) {
         title="Duration"
         value={stats.duration}
         label={stats.durationLabel}
+        warning={stats.hasMissingDurations 
+          ? `Estimated: ${stats.missingDurationCount} track${stats.missingDurationCount > 1 ? 's' : ''} missing duration data` 
+          : undefined
+        }
       />
       <StatCard
         icon={<Music className="w-5 h-5" />}

@@ -59,8 +59,14 @@ function calculateQualityScore(tracks: CrateTrack[]): QualityScore {
     else undergroundScore = 2;
   }
 
-  // Length score (sweet spot: 30-90 min)
-  const totalMinutes = tracks.reduce((sum, t) => sum + (t.duration_ms || 0), 0) / 1000 / 60;
+  // Length score (sweet spot: 30-90 min) - estimate missing durations
+  const tracksWithDuration = tracks.filter(t => t.duration_ms && t.duration_ms > 0);
+  const knownDuration = tracksWithDuration.reduce((sum, t) => sum + t.duration_ms!, 0);
+  const missingCount = tracks.length - tracksWithDuration.length;
+  const avgDuration = tracksWithDuration.length > 0 ? knownDuration / tracksWithDuration.length : 180000;
+  const estimatedTotal = knownDuration + (missingCount * avgDuration);
+  const totalMinutes = estimatedTotal / 1000 / 60;
+  
   if (totalMinutes < 15) lengthScore = 1;
   else if (totalMinutes < 30) lengthScore = 1.5;
   else if (totalMinutes <= 90) lengthScore = 2;
