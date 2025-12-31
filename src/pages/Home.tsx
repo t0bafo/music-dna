@@ -226,6 +226,10 @@ const Home = () => {
           <MusicalIdentityHero
             archetype={archetype}
             undergroundIndex={undergroundIndex}
+            avgBpm={stats?.avgBpm || 0}
+            avgEnergy={stats?.avgEnergy || 0}
+            undergroundGemsCount={undergroundCount}
+            topTracks={topTracks.slice(0, 3).map(t => ({ name: t.name, artist: t.artist }))}
             isLoading={loadingTopTracks}
             onShare={() => setShowShareModal(true)}
           />
@@ -360,6 +364,7 @@ const Home = () => {
         undergroundIndex={undergroundIndex}
         avgBpm={stats?.avgBpm || 0}
         avgEnergy={stats?.avgEnergy || 0}
+        undergroundGemsCount={undergroundCount}
         topTracks={topTracks.slice(0, 3).map(t => ({ name: t.name, artist: t.artist }))}
       />
     </div>
