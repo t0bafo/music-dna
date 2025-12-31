@@ -12,6 +12,7 @@ import { BulkActionsToolbar } from '@/components/search/BulkActionsToolbar';
 import { TargetCrateSelector, useTargetCrate } from '@/components/search/TargetCrateSelector';
 import { SelectionTray } from '@/components/search/SelectionTray';
 import { CreateCrateFromSearchModal } from '@/components/crates/CreateCrateFromSearchModal';
+import CreateCrateModal from '@/components/crates/CreateCrateModal';
 import { SearchFilters } from '@/lib/vibe-search-types';
 import { cn } from '@/lib/utils';
 
@@ -583,6 +584,12 @@ export function CratesSearchResults({
         searchQuery={searchQuery}
         expandedFilters={expandedFilters || null}
         onSuccess={handleCreateFromSearchSuccess}
+      />
+
+      {/* Create Crate Modal (for sticky selector) */}
+      <CreateCrateModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
       />
     </>
   );
