@@ -30,6 +30,7 @@ import DiscoverByVibeModal from '@/components/crates/DiscoverByVibeModal';
 import { SortableTrackRow } from '@/components/crates/SortableTrackRow';
 import ExportToSpotifyModal from '@/components/crates/ExportToSpotifyModal';
 import { CrateSearchBar } from '@/components/crates/CrateSearchBar';
+import { CrateAnalysis } from '@/components/crates/CrateAnalysis';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { CRATE_EMOJIS, CRATE_COLORS } from '@/lib/crates-api';
 import { motion } from 'framer-motion';
@@ -440,6 +441,9 @@ const CrateDetail = () => {
             </Button>
           </div>
         </div>
+
+        {/* Crate Analysis Section */}
+        <CrateAnalysis tracks={displayTracks} />
 
         {/* Tracks List */}
         {displayTracks.length > 0 ? (
