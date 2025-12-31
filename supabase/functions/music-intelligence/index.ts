@@ -1215,6 +1215,73 @@ serve(async (req) => {
         break
       }
 
+      case 'get_all_crates_with_tracks': {
+        // Fetch all crates with their tracks for cross-crate search
+        console.log(`[music-intelligence] Fetching all crates with tracks for user ${userId}`)
+        
+        // Get all user's crates
+        const { data: allCrates, error: cratesErr } = await supabaseAdmin
+          .from('crates')
+          .select('*')
+          .eq('user_id', userId)
+          .order('updated_at', { ascending: false })
+        
+        if (cratesErr) throw cratesErr
+        
+        if (!allCrates || allCrates.length === 0) {
+          result = { data: [] }
+          break
+        }
+        
+        // Get all crate tracks for all user's crates
+        const crateIds = allCrates.map(c => c.id)
+        const { data: allCrateTracks, error: tracksErr } = await supabaseAdmin
+          .from('crate_tracks')
+          .select('*')
+          .in('crate_id', crateIds)
+          .order('position', { ascending: true })
+        
+        if (tracksErr) throw tracksErr
+        
+        // Get unique track IDs and fetch from cache
+        const uniqueTrackIds = [...new Set((allCrateTracks || []).map((ct: any) => ct.track_id))]
+        let trackDetailsMap: Record<string, any> = {}
+        
+        if (uniqueTrackIds.length > 0) {
+          const { data: cachedTracks } = await supabaseAdmin
+            .from('track_cache')
+            .select('*')
+            .in('track_id', uniqueTrackIds)
+          
+          if (cachedTracks) {
+            for (const t of cachedTracks) {
+              trackDetailsMap[t.track_id] = t
+            }
+          }
+        }
+        
+        // Group tracks by crate
+        const tracksByCrate: Record<string, any[]> = {}
+        for (const ct of allCrateTracks || []) {
+          if (!tracksByCrate[ct.crate_id]) tracksByCrate[ct.crate_id] = []
+          tracksByCrate[ct.crate_id].push({
+            ...ct,
+            ...trackDetailsMap[ct.track_id]
+          })
+        }
+        
+        // Combine crates with their tracks
+        const cratesWithTracks = allCrates.map(crate => ({
+          ...crate,
+          track_count: (tracksByCrate[crate.id] || []).length,
+          tracks: tracksByCrate[crate.id] || []
+        }))
+        
+        console.log(`[music-intelligence] Found ${allCrates.length} crates with ${uniqueTrackIds.length} unique tracks`)
+        result = { data: cratesWithTracks }
+        break
+      }
+
       default:
         console.error(`[music-intelligence] Invalid action: ${action}`)
         return new Response(
