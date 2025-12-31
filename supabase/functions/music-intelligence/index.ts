@@ -582,15 +582,22 @@ serve(async (req) => {
           const { data: cached } = await supabaseAdmin.from('track_cache').select('*').in('track_id', trackIds)
           if (cached) { for (const t of cached) { trackDetails[t.track_id] = t } }
           
-          // Fetch preview_urls from Spotify for tracks missing them
-          const tracksMissingPreview = trackIds.filter((id: string) => !trackDetails[id]?.preview_url && trackDetails[id]?.preview_url !== null)
-          if (tracksMissingPreview.length > 0) {
-            console.log(`[music-intelligence] Fetching preview_urls for ${tracksMissingPreview.length} tracks`)
+          // Find tracks missing critical data (preview_url OR duration_ms)
+          const tracksMissingData = trackIds.filter((id: string) => {
+            const track = trackDetails[id]
+            if (!track) return true // Track not in cache at all
+            const missingPreview = !track.preview_url && track.preview_url !== null
+            const missingDuration = !track.duration_ms || track.duration_ms === 0
+            return missingPreview || missingDuration
+          })
+          
+          if (tracksMissingData.length > 0) {
+            console.log(`[music-intelligence] Backfilling data for ${tracksMissingData.length} tracks (missing duration/preview)`)
             try {
               // Spotify allows up to 50 tracks per request
               const batches = []
-              for (let i = 0; i < tracksMissingPreview.length; i += 50) {
-                batches.push(tracksMissingPreview.slice(i, i + 50))
+              for (let i = 0; i < tracksMissingData.length; i += 50) {
+                batches.push(tracksMissingData.slice(i, i + 50))
               }
               
               for (const batch of batches) {
@@ -605,30 +612,43 @@ serve(async (req) => {
                   
                   for (const track of spotifyData.tracks || []) {
                     if (track && track.id) {
-                      // Update local cache
-                      if (trackDetails[track.id]) {
-                        trackDetails[track.id].preview_url = track.preview_url
+                      // Update local cache object
+                      if (!trackDetails[track.id]) {
+                        trackDetails[track.id] = {}
                       }
-                      // Prepare DB update
+                      trackDetails[track.id].preview_url = track.preview_url
+                      trackDetails[track.id].duration_ms = track.duration_ms
+                      trackDetails[track.id].popularity = track.popularity
+                      trackDetails[track.id].album_art_url = track.album?.images?.[0]?.url
+                      trackDetails[track.id].name = track.name
+                      trackDetails[track.id].artist_name = track.artists?.map((a: any) => a.name).join(', ')
+                      trackDetails[track.id].album_name = track.album?.name
+                      
+                      // Prepare DB update with all fields
                       updates.push({
                         track_id: track.id,
+                        name: track.name,
+                        artist_name: track.artists?.map((a: any) => a.name).join(', '),
+                        album_name: track.album?.name,
+                        album_art_url: track.album?.images?.[0]?.url,
+                        duration_ms: track.duration_ms,
+                        popularity: track.popularity,
                         preview_url: track.preview_url,
-                        name: trackDetails[track.id]?.name || track.name,
                         fetched_at: new Date().toISOString()
                       })
                     }
                   }
                   
-                  // Update track_cache with preview_urls
+                  // Update track_cache with backfilled data
                   if (updates.length > 0) {
                     await supabaseAdmin.from('track_cache').upsert(updates, { onConflict: 'track_id' })
-                    console.log(`[music-intelligence] Updated ${updates.length} tracks with preview_urls`)
+                    console.log(`[music-intelligence] Backfilled ${updates.length} tracks with duration/preview data`)
                   }
                 }
               }
-            } catch (previewError) {
-              console.error('[music-intelligence] Error fetching preview_urls:', previewError)
-              // Continue without preview_urls - non-critical error
+            } catch (backfillError) {
+              console.error('[music-intelligence] Error backfilling track data:', backfillError)
+              // Continue without backfill - non-critical error
             }
           }
         }
