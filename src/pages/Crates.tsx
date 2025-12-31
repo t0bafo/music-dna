@@ -175,6 +175,8 @@ const Crates = () => {
               crateCount={crateCount}
               isLimitReached={isLimitReached}
               onClear={handleClearSearch}
+              searchQuery={searchQuery}
+              expandedFilters={expandedFilters}
             />
           ) : (
             <motion.div 

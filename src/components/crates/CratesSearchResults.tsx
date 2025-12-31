@@ -1,20 +1,19 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Pause, Plus, Check, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { Play, Pause, Plus, Check, ChevronDown, ChevronUp, Loader2, Music2, Square, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GroupedSearchResult, SearchableTrack } from '@/hooks/use-crates-search';
 import { useAudioPreview } from '@/hooks/use-audio-preview';
 import { useCrates, useAddTracksToCrate } from '@/hooks/use-crates';
-import { TrackToAdd } from '@/lib/crates-api';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { TrackToAdd, Crate } from '@/lib/crates-api';
 import { toast } from 'sonner';
+import { BulkActionsToolbar } from '@/components/search/BulkActionsToolbar';
+import { TargetCrateSelector, useTargetCrate } from '@/components/search/TargetCrateSelector';
+import { SelectionTray } from '@/components/search/SelectionTray';
+import { CreateCrateFromSearchModal } from '@/components/crates/CreateCrateFromSearchModal';
+import { SearchFilters } from '@/lib/vibe-search-types';
+import { cn } from '@/lib/utils';
 
 interface CratesSearchResultsProps {
   results: GroupedSearchResult[];
@@ -22,6 +21,8 @@ interface CratesSearchResultsProps {
   crateCount: number;
   isLimitReached: boolean;
   onClear: () => void;
+  searchQuery: string;
+  expandedFilters?: SearchFilters | null;
 }
 
 function formatDuration(ms?: number): string {
@@ -36,59 +37,77 @@ interface SearchTrackRowProps {
   currentTrackId: string | null;
   isPlaying: boolean;
   onTogglePreview: (trackId: string, previewUrl: string) => void;
+  isSelected: boolean;
+  onToggleSelect: () => void;
+  showCheckbox: boolean;
+  targetCrate: Crate | null;
+  onQuickAdd: () => void;
+  isAdding: boolean;
+  matchReasons?: string[];
 }
 
-function SearchTrackRow({ track, currentTrackId, isPlaying, onTogglePreview }: SearchTrackRowProps) {
-  const [addingTo, setAddingTo] = useState<string | null>(null);
-  const [justAdded, setJustAdded] = useState<string | null>(null);
-  const { data: crates = [] } = useCrates();
-  const addTracksMutation = useAddTracksToCrate();
-
+function SearchTrackRow({ 
+  track, 
+  currentTrackId, 
+  isPlaying, 
+  onTogglePreview,
+  isSelected,
+  onToggleSelect,
+  showCheckbox,
+  targetCrate,
+  onQuickAdd,
+  isAdding,
+  matchReasons,
+}: SearchTrackRowProps) {
+  const [justAdded, setJustAdded] = useState(false);
   const isCurrentlyPlaying = currentTrackId === track.track_id && isPlaying;
   const hasPreview = !!track.preview_url;
 
-  const handleAddToCrate = async (crateId: string) => {
-    setAddingTo(crateId);
-    
-    try {
-      const trackData: TrackToAdd = {
-        track_id: track.track_id,
-        name: track.name || '',
-        artist_name: track.artist_name || '',
-        album_name: track.album_name || '',
-        album_art_url: track.album_art_url || '',
-        duration_ms: track.duration_ms,
-        popularity: track.popularity,
-        bpm: track.bpm,
-        energy: track.energy,
-        danceability: track.danceability,
-        valence: track.valence,
-        preview_url: track.preview_url,
-      };
+  const handleQuickAdd = async () => {
+    await onQuickAdd();
+    setJustAdded(true);
+    setTimeout(() => setJustAdded(false), 2000);
+  };
 
-      await addTracksMutation.mutateAsync({
-        crateId,
-        tracks: [trackData],
-      });
-      
-      const crate = crates.find(c => c.id === crateId);
-      toast.success(`Added "${track.name}" to ${crate?.emoji || '📦'} ${crate?.name}`);
-      setJustAdded(crateId);
-      setTimeout(() => setJustAdded(null), 2000);
-    } catch (error) {
-      toast.error('Failed to add track to crate');
-    } finally {
-      setAddingTo(null);
-    }
+  const openInSpotify = () => {
+    // Try Spotify app first, then web player
+    const spotifyUri = `spotify:track:${track.track_id}`;
+    const webUrl = `https://open.spotify.com/track/${track.track_id}`;
+    
+    // Create an invisible link to try opening the app
+    const a = document.createElement('a');
+    a.href = spotifyUri;
+    a.click();
+    
+    // Fallback to web after a short delay
+    setTimeout(() => {
+      window.open(webUrl, '_blank');
+    }, 500);
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 5 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex items-center gap-3 p-3 rounded-lg bg-background/50 hover:bg-background/80 
-                 transition-all hover:scale-[1.01] hover:shadow-sm group"
+      className={cn(
+        "flex items-center gap-3 p-3 rounded-lg transition-all hover:shadow-sm group",
+        isSelected ? "bg-primary/10 border border-primary/30" : "bg-background/50 hover:bg-background/80"
+      )}
     >
+      {/* Checkbox */}
+      {showCheckbox && (
+        <button
+          onClick={onToggleSelect}
+          className="w-5 h-5 shrink-0 flex items-center justify-center"
+        >
+          {isSelected ? (
+            <CheckSquare className="w-5 h-5 text-primary" />
+          ) : (
+            <Square className="w-5 h-5 text-muted-foreground hover:text-foreground" />
+          )}
+        </button>
+      )}
+
       {/* Album Art */}
       <div className="relative w-[60px] h-[60px] flex-shrink-0">
         {track.album_art_url ? (
@@ -109,10 +128,17 @@ function SearchTrackRow({ track, currentTrackId, isPlaying, onTogglePreview }: S
         <p className="font-semibold text-foreground truncate">{track.name}</p>
         <p className="text-sm text-muted-foreground truncate">{track.artist_name}</p>
         <p className="text-xs text-muted-foreground/60">{formatDuration(track.duration_ms)}</p>
+        
+        {/* Match reasons */}
+        {matchReasons && matchReasons.length > 0 && (
+          <p className="text-xs text-muted-foreground/50 mt-1 truncate">
+            matches: {matchReasons.join(', ')}
+          </p>
+        )}
       </div>
 
       {/* Actions */}
-      <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+      <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity shrink-0">
         {/* Preview Button */}
         {hasPreview && (
           <Button
@@ -129,62 +155,41 @@ function SearchTrackRow({ track, currentTrackId, isPlaying, onTogglePreview }: S
           </Button>
         )}
 
-        {/* Add to Crate Dropdown */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-8 gap-1 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
-            >
-              {justAdded ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  <span className="hidden sm:inline">Added</span>
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" />
-                  <span className="hidden sm:inline">Add</span>
-                </>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            align="end" 
-            className="w-56 bg-card/95 backdrop-blur-xl border-border/50"
+        {/* Quick Add Button */}
+        {targetCrate && (
+          <Button
+            variant={justAdded ? "secondary" : "default"}
+            size="sm"
+            onClick={handleQuickAdd}
+            disabled={isAdding || justAdded}
+            className="h-8 gap-1.5"
           >
-            <div className="px-3 py-2">
-              <p className="text-sm font-medium text-foreground truncate">
-                Add to crate:
-              </p>
-            </div>
-            <DropdownMenuSeparator />
-            <div className="max-h-[200px] overflow-y-auto">
-              {crates.map((crate) => (
-                <DropdownMenuItem
-                  key={crate.id}
-                  onClick={() => handleAddToCrate(crate.id)}
-                  disabled={addingTo === crate.id}
-                  className="cursor-pointer"
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <span className="text-lg">{crate.emoji || '📦'}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-medium truncate">{crate.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {crate.track_count} track{crate.track_count !== 1 ? 's' : ''}
-                      </p>
-                    </div>
-                    {addingTo === crate.id && (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    )}
-                  </div>
-                </DropdownMenuItem>
-              ))}
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
+            {justAdded ? (
+              <>
+                <Check className="w-4 h-4" />
+                <span className="hidden sm:inline">Added</span>
+              </>
+            ) : isAdding ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <>
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Add</span>
+              </>
+            )}
+          </Button>
+        )}
+
+        {/* Open in Spotify */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={openInSpotify}
+          className="h-8 gap-1.5"
+        >
+          <Music2 className="w-4 h-4" />
+          <span className="hidden sm:inline">Spotify</span>
+        </Button>
       </div>
     </motion.div>
   );
@@ -196,6 +201,13 @@ interface CrateGroupProps {
   currentTrackId: string | null;
   isPlaying: boolean;
   onTogglePreview: (trackId: string, previewUrl: string) => void;
+  selectedTrackIds: Set<string>;
+  onToggleTrackSelect: (trackId: string) => void;
+  showCheckboxes: boolean;
+  targetCrate: Crate | null;
+  onQuickAdd: (track: SearchableTrack) => Promise<void>;
+  addingTrackId: string | null;
+  expandedFilters?: SearchFilters | null;
 }
 
 function CrateGroup({ 
@@ -203,13 +215,43 @@ function CrateGroup({
   initialShowCount = 3, 
   currentTrackId, 
   isPlaying, 
-  onTogglePreview 
+  onTogglePreview,
+  selectedTrackIds,
+  onToggleTrackSelect,
+  showCheckboxes,
+  targetCrate,
+  onQuickAdd,
+  addingTrackId,
+  expandedFilters,
 }: CrateGroupProps) {
   const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   
   const visibleTracks = expanded ? group.tracks : group.tracks.slice(0, initialShowCount);
   const hasMore = group.tracks.length > initialShowCount;
+
+  // Build match reasons from expanded filters
+  const getMatchReasons = (track: SearchableTrack): string[] => {
+    if (!expandedFilters) return [];
+    const reasons: string[] = [];
+    
+    if (expandedFilters.vibes) {
+      const matchingVibes = expandedFilters.vibes.filter(vibe => 
+        track.name?.toLowerCase().includes(vibe.toLowerCase()) ||
+        group.crate_name?.toLowerCase().includes(vibe.toLowerCase())
+      );
+      reasons.push(...matchingVibes);
+    }
+    
+    if (expandedFilters.scenes) {
+      const matchingScenes = expandedFilters.scenes.filter(scene =>
+        group.crate_name?.toLowerCase().includes(scene.toLowerCase())
+      );
+      reasons.push(...matchingScenes);
+    }
+    
+    return reasons.slice(0, 3);
+  };
 
   return (
     <div className="space-y-3">
@@ -236,6 +278,13 @@ function CrateGroup({
             currentTrackId={currentTrackId}
             isPlaying={isPlaying}
             onTogglePreview={onTogglePreview}
+            isSelected={selectedTrackIds.has(track.track_id)}
+            onToggleSelect={() => onToggleTrackSelect(track.track_id)}
+            showCheckbox={showCheckboxes}
+            targetCrate={targetCrate}
+            onQuickAdd={() => onQuickAdd(track)}
+            isAdding={addingTrackId === track.track_id}
+            matchReasons={getMatchReasons(track)}
           />
         ))}
       </div>
@@ -271,12 +320,161 @@ export function CratesSearchResults({
   crateCount,
   isLimitReached,
   onClear,
+  searchQuery,
+  expandedFilters,
 }: CratesSearchResultsProps) {
+  const navigate = useNavigate();
   const { currentTrackId, isPlaying, toggle, stop } = useAudioPreview();
+  const { data: crates = [] } = useCrates();
+  const addTracksMutation = useAddTracksToCrate();
+  
+  // Selection state
+  const [selectedTrackIds, setSelectedTrackIds] = useState<Set<string>>(new Set());
+  const [showCheckboxes, setShowCheckboxes] = useState(false);
+  
+  // Target crate state
+  const { targetCrateId, setTargetCrateId } = useTargetCrate();
+  const targetCrate = crates.find(c => c.id === targetCrateId) || null;
+  
+  // Create crate modal
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showCreateFromSearchModal, setShowCreateFromSearchModal] = useState(false);
+  
+  // Track being added
+  const [addingTrackId, setAddingTrackId] = useState<string | null>(null);
+  const [isBulkAdding, setIsBulkAdding] = useState(false);
+
+  // Get all tracks flat
+  const allTracks = results.flatMap(group => group.tracks);
 
   const handleTogglePreview = (trackId: string, previewUrl: string) => {
     toggle(trackId, previewUrl);
   };
+
+  const toggleTrackSelect = (trackId: string) => {
+    setShowCheckboxes(true);
+    setSelectedTrackIds(prev => {
+      const next = new Set(prev);
+      if (next.has(trackId)) {
+        next.delete(trackId);
+      } else {
+        next.add(trackId);
+      }
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    setShowCheckboxes(true);
+    setSelectedTrackIds(new Set(allTracks.map(t => t.track_id)));
+  };
+
+  const clearSelection = () => {
+    setSelectedTrackIds(new Set());
+    setShowCheckboxes(false);
+  };
+
+  const handleQuickAdd = async (track: SearchableTrack) => {
+    if (!targetCrateId) return;
+    
+    setAddingTrackId(track.track_id);
+    
+    try {
+      const trackData: TrackToAdd = {
+        track_id: track.track_id,
+        name: track.name || '',
+        artist_name: track.artist_name || '',
+        album_name: track.album_name || '',
+        album_art_url: track.album_art_url || '',
+        duration_ms: track.duration_ms,
+        popularity: track.popularity,
+        bpm: track.bpm,
+        energy: track.energy,
+        danceability: track.danceability,
+        valence: track.valence,
+        preview_url: track.preview_url,
+      };
+
+      await addTracksMutation.mutateAsync({
+        crateId: targetCrateId,
+        tracks: [trackData],
+      });
+      
+      toast.success(`Added "${track.name}" to ${targetCrate?.emoji || '📦'} ${targetCrate?.name}`, {
+        action: {
+          label: 'View Crate',
+          onClick: () => navigate(`/crates/${targetCrateId}`),
+        },
+      });
+    } catch (error) {
+      toast.error('Failed to add track');
+    } finally {
+      setAddingTrackId(null);
+    }
+  };
+
+  const handleBulkAddToCrate = async () => {
+    if (!targetCrateId || selectedTrackIds.size === 0) return;
+    
+    setIsBulkAdding(true);
+    
+    try {
+      const selectedTracks = allTracks.filter(t => selectedTrackIds.has(t.track_id));
+      const tracksToAdd: TrackToAdd[] = selectedTracks.map(track => ({
+        track_id: track.track_id,
+        name: track.name || '',
+        artist_name: track.artist_name || '',
+        album_name: track.album_name || '',
+        album_art_url: track.album_art_url || '',
+        duration_ms: track.duration_ms,
+        popularity: track.popularity,
+        bpm: track.bpm,
+        energy: track.energy,
+        danceability: track.danceability,
+        valence: track.valence,
+        preview_url: track.preview_url,
+      }));
+
+      await addTracksMutation.mutateAsync({
+        crateId: targetCrateId,
+        tracks: tracksToAdd,
+      });
+      
+      toast.success(`Added ${selectedTracks.length} tracks to ${targetCrate?.emoji || '📦'} ${targetCrate?.name}`, {
+        action: {
+          label: 'View Crate',
+          onClick: () => navigate(`/crates/${targetCrateId}`),
+        },
+      });
+      
+      clearSelection();
+    } catch (error) {
+      toast.error('Failed to add tracks');
+    } finally {
+      setIsBulkAdding(false);
+    }
+  };
+
+  const handleOpenSelectedInSpotify = () => {
+    if (selectedTrackIds.size === 0) return;
+    
+    const firstTrackId = Array.from(selectedTrackIds)[0];
+    const webUrl = `https://open.spotify.com/track/${firstTrackId}`;
+    window.open(webUrl, '_blank');
+    
+    if (selectedTrackIds.size > 1) {
+      toast.info(`Opening first track. ${selectedTrackIds.size - 1} more selected.`);
+    }
+  };
+
+  const handleCreateFromSearchSuccess = (crateId: string) => {
+    setTargetCrateId(crateId);
+    clearSelection();
+    navigate(`/crates/${crateId}`);
+  };
+
+  const selectedTracks = allTracks.filter(t => selectedTrackIds.has(t.track_id));
+  const isAllSelected = selectedTrackIds.size === allTracks.length && allTracks.length > 0;
 
   // Empty state
   if (results.length === 0) {
@@ -293,7 +491,7 @@ export function CratesSearchResults({
           <ul className="text-sm text-muted-foreground space-y-1 mb-6">
             <li>• Track name: "Midnight Drive"</li>
             <li>• Artist name: "Burna Boy"</li>
-            <li>• Crate name: "Late Night"</li>
+            <li>• Vibe: "late night Lagos drive"</li>
           </ul>
           <Button variant="outline" onClick={onClear}>
             Clear Search
@@ -304,52 +502,89 @@ export function CratesSearchResults({
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="w-full max-w-[900px] mx-auto"
-    >
-      <div 
-        className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-lg 
-                   max-h-[600px] overflow-y-auto"
-        role="region"
-        aria-live="polite"
-        aria-label={`Found ${totalTrackCount} tracks across ${crateCount} crates`}
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-[900px] mx-auto"
       >
-        {/* Results Header */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-border/30">
-          <p className="text-foreground">
-            <span className="font-semibold">Found {totalTrackCount}</span>
-            {' '}
-            <span className="text-muted-foreground">
-              {totalTrackCount === 1 ? 'track' : 'tracks'} across {crateCount} {crateCount === 1 ? 'crate' : 'crates'}
-            </span>
-          </p>
+        {/* Target Crate Selector */}
+        <TargetCrateSelector
+          selectedCrateId={targetCrateId}
+          onSelectCrate={setTargetCrateId}
+          onCreateNew={() => setShowCreateModal(true)}
+        />
+
+        <div 
+          className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-lg mt-4 max-h-[600px] overflow-y-auto"
+          role="region"
+          aria-live="polite"
+          aria-label={`Found ${totalTrackCount} tracks across ${crateCount} crates`}
+        >
+          {/* Bulk Actions Toolbar */}
+          <BulkActionsToolbar
+            totalResults={totalTrackCount}
+            crateCount={crateCount}
+            selectedCount={selectedTrackIds.size}
+            isAllSelected={isAllSelected}
+            onSelectAll={selectAll}
+            onClearSelection={clearSelection}
+          />
+
+          {/* Results Limit Warning */}
           {isLimitReached && (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground text-center py-2">
               Showing first 50 results. Try a more specific search.
             </p>
           )}
-        </div>
 
-        {/* Grouped Results */}
-        <div className="space-y-8">
-          {results.map((group, index) => (
-            <div key={group.crate_id}>
-              <CrateGroup
-                group={group}
-                currentTrackId={currentTrackId}
-                isPlaying={isPlaying}
-                onTogglePreview={handleTogglePreview}
-              />
-              {index < results.length - 1 && (
-                <div className="border-t border-border/30 mt-6" />
-              )}
-            </div>
-          ))}
+          {/* Grouped Results */}
+          <div className="space-y-8 mt-4">
+            {results.map((group, index) => (
+              <div key={group.crate_id}>
+                <CrateGroup
+                  group={group}
+                  currentTrackId={currentTrackId}
+                  isPlaying={isPlaying}
+                  onTogglePreview={handleTogglePreview}
+                  selectedTrackIds={selectedTrackIds}
+                  onToggleTrackSelect={toggleTrackSelect}
+                  showCheckboxes={showCheckboxes}
+                  targetCrate={targetCrate}
+                  onQuickAdd={handleQuickAdd}
+                  addingTrackId={addingTrackId}
+                  expandedFilters={expandedFilters}
+                />
+                {index < results.length - 1 && (
+                  <div className="border-t border-border/30 mt-6" />
+                )}
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-    </motion.div>
+      </motion.div>
+
+      {/* Selection Tray */}
+      <SelectionTray
+        selectedCount={selectedTrackIds.size}
+        targetCrate={targetCrate}
+        isAdding={isBulkAdding}
+        onAddToCrate={handleBulkAddToCrate}
+        onSaveAsNewCrate={() => setShowCreateFromSearchModal(true)}
+        onOpenInSpotify={handleOpenSelectedInSpotify}
+        onClear={clearSelection}
+      />
+
+      {/* Create Crate from Search Modal */}
+      <CreateCrateFromSearchModal
+        open={showCreateFromSearchModal}
+        onOpenChange={setShowCreateFromSearchModal}
+        selectedTracks={selectedTracks}
+        searchQuery={searchQuery}
+        expandedFilters={expandedFilters || null}
+        onSuccess={handleCreateFromSearchSuccess}
+      />
+    </>
   );
 }
 

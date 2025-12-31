@@ -13,6 +13,7 @@ export interface Crate {
   description: string | null;
   emoji: string;
   color: string;
+  vibe_keywords?: string[];
   created_at: string;
   updated_at: string;
   track_count: number;
@@ -105,9 +106,10 @@ export async function createCrate(
   description: string | null,
   emoji: string,
   color: string,
-  spotifyToken: string
+  spotifyToken: string,
+  vibe_keywords?: string[]
 ): Promise<Crate> {
-  return await callSecureEndpoint<Crate>('create_crate', { name, description, emoji, color }, spotifyToken);
+  return await callSecureEndpoint<Crate>('create_crate', { name, description, emoji, color, vibe_keywords }, spotifyToken);
 }
 
 /**
