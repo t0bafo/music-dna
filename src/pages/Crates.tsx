@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCrates } from '@/hooks/use-crates';
+import { useCratesSearch } from '@/hooks/use-crates-search';
 import { Music, Plus, Home as HomeIcon, Palette, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserProfile from '@/components/UserProfile';
@@ -11,17 +12,39 @@ import CreateCrateModal from '@/components/crates/CreateCrateModal';
 import EmptyCratesState from '@/components/crates/EmptyCratesState';
 import { CrateGridSkeleton } from '@/components/ui/skeletons';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { usePageTitle } from '@/hooks/use-page-title';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CratesSearchBar } from '@/components/crates/CratesSearchBar';
+import { CratesSearchResults, SearchLoadingState } from '@/components/crates/CratesSearchResults';
 
 const Crates = () => {
   usePageTitle('Your Crates | Music Memory System');
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   const { data: crates = [], isLoading } = useCrates();
+  
+  // Search across all crates
+  const {
+    results: searchResults,
+    totalTrackCount,
+    crateCount,
+    isSearching,
+    isLoadingCrates,
+    hasResults,
+    isLimitReached,
+  } = useCratesSearch(searchQuery);
+
+  const isActiveSearch = searchQuery.length >= 2;
+  const showSearchResults = isActiveSearch && !isSearching;
+  const showSearchLoading = isActiveSearch && isSearching;
+
+  const handleClearSearch = () => {
+    setSearchQuery('');
+  };
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -93,6 +116,7 @@ const Crates = () => {
       </header>
 
       <main className="container mx-auto px-4 lg:px-8 py-8 lg:py-12 max-w-6xl">
+        {/* Header Row */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-8">
           <div>
             <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">📦 Your Crates</h1>
@@ -104,15 +128,45 @@ const Crates = () => {
           </Button>
         </motion.div>
 
-        {isLoading ? (
-          <CrateGridSkeleton count={6} />
-        ) : crates.length === 0 ? (
-          <EmptyCratesState onCreateCrate={() => setShowCreateModal(true)} />
-        ) : (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <CrateGrid crates={crates} />
-          </motion.div>
+        {/* Search Bar - only show when user has crates */}
+        {!isLoading && crates.length > 0 && (
+          <CratesSearchBar
+            value={searchQuery}
+            onChange={setSearchQuery}
+            isSearching={isSearching}
+            onClear={handleClearSearch}
+            placeholder="🔍 Search your crates..."
+          />
         )}
+
+        {/* Content */}
+        <AnimatePresence mode="wait">
+          {isLoading ? (
+            <CrateGridSkeleton count={6} />
+          ) : crates.length === 0 ? (
+            <EmptyCratesState onCreateCrate={() => setShowCreateModal(true)} />
+          ) : showSearchLoading ? (
+            <SearchLoadingState key="loading" />
+          ) : showSearchResults ? (
+            <CratesSearchResults
+              key="results"
+              results={searchResults}
+              totalTrackCount={totalTrackCount}
+              crateCount={crateCount}
+              isLimitReached={isLimitReached}
+              onClear={handleClearSearch}
+            />
+          ) : (
+            <motion.div 
+              key="grid"
+              initial={{ opacity: 0, y: 20 }} 
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+            >
+              <CrateGrid crates={crates} />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       <BottomNav />
