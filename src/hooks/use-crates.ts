@@ -51,8 +51,8 @@ export function useCreateCrate() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (data: { name: string; description: string | null; emoji: string; color: string }) =>
-      createCrate(data.name, data.description, data.emoji, data.color, accessToken!),
+    mutationFn: (data: { name: string; description: string | null; emoji: string; color: string; vibe_keywords?: string[] }) =>
+      createCrate(data.name, data.description, data.emoji, data.color, accessToken!, data.vibe_keywords),
     onSuccess: (newCrate) => {
       queryClient.invalidateQueries({ queryKey: ['crates'] });
       toast.success(`Created "${newCrate.name}"`, {
