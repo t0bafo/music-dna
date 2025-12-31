@@ -15,28 +15,21 @@ interface MusicalIdentityHeroProps {
   onShare: () => void;
 }
 
-// Dynamic gradient backgrounds based on archetype
-const archetypeGradients: Record<string, string> = {
-  'MIDNIGHT CURATOR': 'from-purple-900 via-indigo-900 to-blue-900',
-  'ENERGY ARCHITECT': 'from-orange-600 via-red-600 to-pink-600',
-  'VIBES ENGINEER': 'from-pink-500 via-purple-500 to-indigo-500',
-  'UNDERGROUND EXPLORER': 'from-teal-800 via-green-800 to-emerald-900',
-  'PEAK COMMANDER': 'from-yellow-600 via-orange-600 to-red-600',
-  'BALANCED CURATOR': 'from-blue-600 via-cyan-600 to-teal-600',
+// Dynamic gradient backgrounds based on archetype (using hex colors for reliability)
+const archetypeStyles: Record<string, { from: string; via: string; to: string }> = {
+  'MIDNIGHT CURATOR': { from: '#581c87', via: '#312e81', to: '#1e3a8a' },
+  'ENERGY ARCHITECT': { from: '#ea580c', via: '#dc2626', to: '#db2777' },
+  'VIBES ENGINEER': { from: '#ec4899', via: '#a855f7', to: '#6366f1' },
+  'UNDERGROUND EXPLORER': { from: '#115e59', via: '#166534', to: '#064e3b' },
+  'PEAK COMMANDER': { from: '#ca8a04', via: '#ea580c', to: '#dc2626' },
+  'BALANCED CURATOR': { from: '#2563eb', via: '#0891b2', to: '#0d9488' },
 };
 
-const getUndergroundColor = (index: number) => {
-  if (index <= 30) return 'from-yellow-400 to-yellow-500';
-  if (index <= 60) return 'from-orange-400 to-orange-500';
-  if (index <= 80) return 'from-red-400 to-red-500';
-  return 'from-purple-400 to-pink-500';
-};
-
-const getUndergroundGlow = (index: number) => {
-  if (index <= 30) return 'shadow-yellow-500/50';
-  if (index <= 60) return 'shadow-orange-500/50';
-  if (index <= 80) return 'shadow-red-500/50';
-  return 'shadow-purple-500/50';
+const getUndergroundColor = (index: number): { from: string; to: string } => {
+  if (index <= 30) return { from: '#facc15', to: '#eab308' };
+  if (index <= 60) return { from: '#fb923c', to: '#f97316' };
+  if (index <= 80) return { from: '#f87171', to: '#ef4444' };
+  return { from: '#c084fc', to: '#ec4899' };
 };
 
 const getUndergroundLabel = (index: number) => {
@@ -59,8 +52,11 @@ const MusicalIdentityHero = ({
   if (isLoading) {
     return (
       <div className="w-full max-w-[900px] mx-auto">
-        <div className="aspect-[16/9] md:aspect-auto md:min-h-[500px] bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 rounded-3xl shadow-2xl p-8 md:p-12">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 md:p-10 h-full flex flex-col items-center justify-center">
+        <div 
+          className="rounded-3xl shadow-2xl p-8 md:p-12"
+          style={{ background: 'linear-gradient(135deg, #581c87, #312e81, #1e3a8a)' }}
+        >
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center min-h-[400px]">
             <Skeleton className="h-16 w-16 rounded-full bg-white/20 mb-4" />
             <Skeleton className="h-10 w-64 bg-white/20 mb-4" />
             <Skeleton className="h-5 w-48 bg-white/20 mb-8" />
@@ -75,8 +71,11 @@ const MusicalIdentityHero = ({
   if (!archetype) {
     return (
       <div className="w-full max-w-[900px] mx-auto">
-        <div className="aspect-[16/9] md:aspect-auto md:min-h-[400px] bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 rounded-3xl shadow-2xl p-8 md:p-12">
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 md:p-10 h-full flex flex-col items-center justify-center">
+        <div 
+          className="rounded-3xl shadow-2xl p-8 md:p-12"
+          style={{ background: 'linear-gradient(135deg, #581c87, #312e81, #1e3a8a)' }}
+        >
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center min-h-[300px]">
             <p className="text-white/80 text-lg text-center">
               Listen to more music to discover your archetype
             </p>
@@ -86,7 +85,8 @@ const MusicalIdentityHero = ({
     );
   }
 
-  const gradient = archetypeGradients[archetype.name] || archetypeGradients['BALANCED CURATOR'];
+  const colors = archetypeStyles[archetype.name] || archetypeStyles['BALANCED CURATOR'];
+  const undergroundColors = getUndergroundColor(undergroundIndex);
 
   return (
     <motion.div
@@ -98,7 +98,8 @@ const MusicalIdentityHero = ({
       {/* Outer gradient container */}
       <div 
         id="identity-card-export"
-        className={`bg-gradient-to-br ${gradient} rounded-3xl shadow-2xl p-6 md:p-10 lg:p-12`}
+        className="rounded-3xl shadow-2xl p-6 md:p-10 lg:p-12"
+        style={{ background: `linear-gradient(135deg, ${colors.from}, ${colors.via}, ${colors.to})` }}
       >
         {/* Inner glassmorphism card */}
         <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 md:p-10">
@@ -110,15 +111,7 @@ const MusicalIdentityHero = ({
             className="text-center mb-6 md:mb-8"
           >
             <span className="text-5xl md:text-6xl lg:text-7xl block mb-3">{archetype.emoji}</span>
-            <h2 
-              className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight uppercase mb-3"
-              style={{
-                background: 'linear-gradient(to right, #ffffff, #e5e5e5)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                textShadow: '0 2px 10px rgba(0,0,0,0.3)',
-              }}
-            >
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight uppercase mb-3 text-white drop-shadow-lg">
               {archetype.name}
             </h2>
             <p className="text-white/90 text-sm sm:text-base md:text-lg leading-relaxed max-w-lg mx-auto">
@@ -136,15 +129,16 @@ const MusicalIdentityHero = ({
             transition={{ delay: 0.2 }}
             className="text-center mb-6 md:mb-8"
           >
-            <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="flex items-center justify-center gap-2 mb-3 flex-wrap">
               <span className="text-xl md:text-2xl">🔥</span>
               <span className="text-white/90 text-base md:text-lg font-medium">Underground Index:</span>
               <span 
                 className="text-2xl md:text-3xl lg:text-4xl font-bold"
                 style={{
-                  background: `linear-gradient(to right, ${undergroundIndex <= 30 ? '#facc15, #eab308' : undergroundIndex <= 60 ? '#fb923c, #f97316' : undergroundIndex <= 80 ? '#f87171, #ef4444' : '#c084fc, #ec4899'})`,
+                  background: `linear-gradient(to right, ${undergroundColors.from}, ${undergroundColors.to})`,
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
                 }}
               >
                 {undergroundIndex}/100
@@ -158,7 +152,8 @@ const MusicalIdentityHero = ({
                   initial={{ width: 0 }}
                   animate={{ width: `${undergroundIndex}%` }}
                   transition={{ delay: 0.4, duration: 0.8, ease: 'easeOut' }}
-                  className={`h-full rounded-full bg-gradient-to-r ${getUndergroundColor(undergroundIndex)} shadow-lg ${getUndergroundGlow(undergroundIndex)}`}
+                  className="h-full rounded-full shadow-lg"
+                  style={{ background: `linear-gradient(to right, ${undergroundColors.from}, ${undergroundColors.to})` }}
                 />
               </div>
             </div>
