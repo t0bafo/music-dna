@@ -56,6 +56,7 @@ export type Database = {
           name: string
           updated_at: string
           user_id: string
+          vibe_keywords: string[] | null
         }
         Insert: {
           color?: string | null
@@ -66,6 +67,7 @@ export type Database = {
           name: string
           updated_at?: string
           user_id: string
+          vibe_keywords?: string[] | null
         }
         Update: {
           color?: string | null
@@ -76,6 +78,7 @@ export type Database = {
           name?: string
           updated_at?: string
           user_id?: string
+          vibe_keywords?: string[] | null
         }
         Relationships: []
       }
