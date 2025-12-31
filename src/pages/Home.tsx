@@ -139,6 +139,9 @@ const Home = () => {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
+  // Debug logging
+  console.log('[Home] Auth loading:', authLoading, 'Authenticated:', isAuthenticated, 'Top tracks loading:', loadingTopTracks, 'Tracks count:', topTracks.length);
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center gradient-bg">
