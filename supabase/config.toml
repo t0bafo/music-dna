@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.spotify-public-token]
 verify_jwt = false
+
+[functions.vibe-search-expand]
+verify_jwt = false

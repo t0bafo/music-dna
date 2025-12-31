@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCrates } from '@/hooks/use-crates';
-import { useCratesSearch } from '@/hooks/use-crates-search';
+import { useVibeSearch } from '@/hooks/use-vibe-search';
 import { Music, Plus, Home as HomeIcon, Palette, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserProfile from '@/components/UserProfile';
@@ -17,6 +17,7 @@ import { usePageTitle } from '@/hooks/use-page-title';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CratesSearchBar } from '@/components/crates/CratesSearchBar';
 import { CratesSearchResults, SearchLoadingState } from '@/components/crates/CratesSearchResults';
+import { InterpretedFilters } from '@/components/search/InterpretedFilters';
 
 const Crates = () => {
   usePageTitle('Your Crates | Music Memory System');
@@ -27,7 +28,7 @@ const Crates = () => {
 
   const { data: crates = [], isLoading } = useCrates();
   
-  // Search across all crates
+  // AI-powered vibe search across all crates
   const {
     results: searchResults,
     totalTrackCount,
@@ -36,7 +37,13 @@ const Crates = () => {
     isLoadingCrates,
     hasResults,
     isLimitReached,
-  } = useCratesSearch(searchQuery);
+    expandedFilters,
+    isExpanding,
+    removeVibe,
+    removeScene,
+    removeTempo,
+    removeEnergy,
+  } = useVibeSearch(searchQuery);
 
   const isActiveSearch = searchQuery.length >= 2;
   const showSearchResults = isActiveSearch && !isSearching;
@@ -130,13 +137,26 @@ const Crates = () => {
 
         {/* Search Bar - only show when user has crates */}
         {!isLoading && crates.length > 0 && (
-          <CratesSearchBar
-            value={searchQuery}
-            onChange={setSearchQuery}
-            isSearching={isSearching}
-            onClear={handleClearSearch}
-            placeholder="🔍 Search your crates..."
-          />
+          <>
+            <CratesSearchBar
+              value={searchQuery}
+              onChange={setSearchQuery}
+              isSearching={isSearching || isExpanding}
+              onClear={handleClearSearch}
+              placeholder="🔍 Search by vibe, mood, artist... (e.g., 'late night Lagos drive')"
+            />
+            
+            {/* Show interpreted filters from AI */}
+            {expandedFilters && (
+              <InterpretedFilters
+                filters={expandedFilters}
+                onRemoveVibe={removeVibe}
+                onRemoveScene={removeScene}
+                onRemoveTempo={removeTempo}
+                onRemoveEnergy={removeEnergy}
+              />
+            )}
+          </>
         )}
 
         {/* Content */}
