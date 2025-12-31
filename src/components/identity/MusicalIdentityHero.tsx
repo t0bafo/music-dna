@@ -15,7 +15,7 @@ interface MusicalIdentityHeroProps {
   onShare: () => void;
 }
 
-// Dynamic gradient backgrounds based on archetype (using hex colors for reliability)
+// Dynamic gradient backgrounds based on archetype
 const archetypeStyles: Record<string, { from: string; via: string; to: string }> = {
   'MIDNIGHT CURATOR': { from: '#581c87', via: '#312e81', to: '#1e3a8a' },
   'ENERGY ARCHITECT': { from: '#ea580c', via: '#dc2626', to: '#db2777' },
@@ -33,10 +33,10 @@ const getUndergroundColor = (index: number): { from: string; to: string } => {
 };
 
 const getUndergroundLabel = (index: number) => {
-  if (index <= 30) return 'Mainstream listener';
-  if (index <= 60) return 'Balanced explorer';
-  if (index <= 80) return 'Underground digger';
-  return 'True tastemaker';
+  if (index <= 30) return 'Mainstream';
+  if (index <= 60) return 'Balanced';
+  if (index <= 80) return 'Underground';
+  return 'Tastemaker';
 };
 
 const MusicalIdentityHero = ({
@@ -49,19 +49,32 @@ const MusicalIdentityHero = ({
   isLoading,
   onShare,
 }: MusicalIdentityHeroProps) => {
+  // Generate top tracks inline text for desktop
+  const topTracksInline = topTracks
+    .slice(0, 3)
+    .map(track => track.name)
+    .join(' • ');
+  
+  const displayTracksText = topTracksInline.length > 70 
+    ? topTracksInline.slice(0, 67) + '...'
+    : topTracksInline;
+
   if (isLoading) {
     return (
-      <div className="w-full max-w-[900px] mx-auto">
+      <div className="w-full max-w-[1000px] mx-auto px-4 md:px-0">
         <div 
-          className="rounded-3xl shadow-2xl p-8 md:p-12"
+          className="rounded-3xl shadow-2xl p-6 md:p-8"
           style={{ background: 'linear-gradient(135deg, #581c87, #312e81, #1e3a8a)' }}
         >
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center min-h-[400px]">
-            <Skeleton className="h-16 w-16 rounded-full bg-white/20 mb-4" />
-            <Skeleton className="h-10 w-64 bg-white/20 mb-4" />
-            <Skeleton className="h-5 w-48 bg-white/20 mb-8" />
-            <Skeleton className="h-3 w-full max-w-md bg-white/20 mb-8" />
-            <Skeleton className="h-8 w-32 bg-white/20" />
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-5 md:p-8 flex flex-col items-center justify-center h-[300px] md:h-[400px]">
+            <Skeleton className="h-12 w-12 rounded-full bg-white/20 mb-3" />
+            <Skeleton className="h-8 w-48 bg-white/20 mb-3" />
+            <Skeleton className="h-4 w-64 bg-white/20 mb-6" />
+            <div className="grid grid-cols-4 gap-4 w-full max-w-lg">
+              {[...Array(4)].map((_, i) => (
+                <Skeleton key={i} className="h-16 bg-white/20 rounded-lg" />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -70,13 +83,13 @@ const MusicalIdentityHero = ({
 
   if (!archetype) {
     return (
-      <div className="w-full max-w-[900px] mx-auto">
+      <div className="w-full max-w-[1000px] mx-auto px-4 md:px-0">
         <div 
-          className="rounded-3xl shadow-2xl p-8 md:p-12"
+          className="rounded-3xl shadow-2xl p-6 md:p-8"
           style={{ background: 'linear-gradient(135deg, #581c87, #312e81, #1e3a8a)' }}
         >
-          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 md:p-10 flex flex-col items-center justify-center min-h-[300px]">
-            <p className="text-white/80 text-lg text-center">
+          <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-5 md:p-8 flex flex-col items-center justify-center h-[200px]">
+            <p className="text-white/80 text-base text-center">
               Listen to more music to discover your archetype
             </p>
           </div>
@@ -93,172 +106,197 @@ const MusicalIdentityHero = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full max-w-[900px] mx-auto"
+      className="w-full max-w-[1000px] mx-auto px-4 md:px-0 mb-8 md:mb-12"
     >
-      {/* Outer gradient container */}
+      {/* Outer gradient container - max-height enforced */}
       <div 
         id="identity-card-export"
-        className="rounded-3xl shadow-2xl p-6 md:p-10 lg:p-12"
+        className="rounded-3xl shadow-2xl p-5 md:p-8 max-h-[350px] md:max-h-[500px] overflow-hidden"
         style={{ background: `linear-gradient(135deg, ${colors.from}, ${colors.via}, ${colors.to})` }}
       >
         {/* Inner glassmorphism card */}
-        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 md:p-10">
-          {/* 1. Archetype Section */}
+        <div className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-5 md:p-8">
+          
+          {/* Header Section - Archetype */}
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1, duration: 0.4 }}
-            className="text-center mb-6 md:mb-8"
+            transition={{ delay: 0.1, duration: 0.3 }}
+            className="text-center mb-5 md:mb-6"
           >
-            <span className="text-5xl md:text-6xl lg:text-7xl block mb-3">{archetype.emoji}</span>
-            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold tracking-tight uppercase mb-3 text-white drop-shadow-lg">
+            <span className="text-4xl md:text-5xl block mb-2">{archetype.emoji}</span>
+            <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight uppercase mb-1 text-white drop-shadow-lg">
               {archetype.name}
             </h2>
-            <p className="text-white/90 text-sm sm:text-base md:text-lg leading-relaxed max-w-lg mx-auto">
+            <p className="text-white/90 text-xs md:text-sm leading-relaxed truncate max-w-md mx-auto">
               {archetype.traits.join(' • ')}
             </p>
           </motion.div>
 
-          {/* Divider */}
-          <div className="w-full h-px bg-white/20 mb-6 md:mb-8" />
-
-          {/* 2. Underground Index Section */}
+          {/* Stats Row - 4 columns on desktop, 2x2 grid on mobile */}
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="text-center mb-6 md:mb-8"
+            className="mb-4 md:mb-5"
           >
-            <div className="flex items-center justify-center gap-2 mb-3 flex-wrap">
-              <span className="text-xl md:text-2xl">🔥</span>
-              <span className="text-white/90 text-base md:text-lg font-medium">Underground Index:</span>
-              <span 
-                className="text-2xl md:text-3xl lg:text-4xl font-bold"
-                style={{
-                  background: `linear-gradient(to right, ${undergroundColors.from}, ${undergroundColors.to})`,
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  backgroundClip: 'text',
-                }}
-              >
-                {undergroundIndex}/100
-              </span>
-            </div>
+            {/* Desktop: 4-column grid */}
+            <div className="hidden md:grid grid-cols-4 gap-4">
+              {/* Underground Index */}
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <span className="text-lg">🔥</span>
+                  <span 
+                    className="text-xl font-bold"
+                    style={{
+                      background: `linear-gradient(to right, ${undergroundColors.from}, ${undergroundColors.to})`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }}
+                  >
+                    {undergroundIndex}/100
+                  </span>
+                </div>
+                <div className="w-24 h-1.5 rounded-full bg-white/10 overflow-hidden mx-auto mb-1">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${undergroundIndex}%` }}
+                    transition={{ delay: 0.4, duration: 0.8, ease: 'easeOut' }}
+                    className="h-full rounded-full"
+                    style={{ 
+                      background: `linear-gradient(to right, ${undergroundColors.from}, ${undergroundColors.to})`,
+                      boxShadow: `0 0 8px ${undergroundColors.from}50`
+                    }}
+                  />
+                </div>
+                <p className="text-white/80 text-[11px]">{getUndergroundLabel(undergroundIndex)}</p>
+              </div>
 
-            {/* Progress Bar */}
-            <div className="w-full max-w-md mx-auto mb-3">
-              <div className="w-full h-3 rounded-full bg-white/10 overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${undergroundIndex}%` }}
-                  transition={{ delay: 0.4, duration: 0.8, ease: 'easeOut' }}
-                  className="h-full rounded-full shadow-lg"
-                  style={{ background: `linear-gradient(to right, ${undergroundColors.from}, ${undergroundColors.to})` }}
-                />
+              {/* BPM */}
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <span className="text-lg">🎵</span>
+                  <span className="text-xl font-bold text-white">{avgBpm || '--'}</span>
+                </div>
+                <p className="text-white/80 text-[11px]">Average BPM</p>
+              </div>
+
+              {/* Energy */}
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <span className="text-lg">⚡</span>
+                  <span className="text-xl font-bold text-white">{avgEnergy}%</span>
+                </div>
+                <p className="text-white/80 text-[11px]">Energy Level</p>
+              </div>
+
+              {/* Underground Gems */}
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <span className="text-lg">💎</span>
+                  <span className="text-xl font-bold text-white">{undergroundGemsCount}</span>
+                </div>
+                <p className="text-white/80 text-[11px]">Underground Gems</p>
               </div>
             </div>
 
-            <p className="text-white/80 text-sm md:text-base">
-              {getUndergroundLabel(undergroundIndex)}
-            </p>
+            {/* Mobile: Underground Index prominent + 2x2 grid for others */}
+            <div className="md:hidden">
+              {/* Underground Index - Full width, prominent */}
+              <div className="text-center mb-3">
+                <div className="flex items-center justify-center gap-2 mb-1.5">
+                  <span className="text-xl">🔥</span>
+                  <span 
+                    className="text-2xl font-bold"
+                    style={{
+                      background: `linear-gradient(to right, ${undergroundColors.from}, ${undergroundColors.to})`,
+                      WebkitBackgroundClip: 'text',
+                      WebkitTextFillColor: 'transparent',
+                      backgroundClip: 'text',
+                    }}
+                  >
+                    {undergroundIndex}/100
+                  </span>
+                </div>
+                <div className="w-full max-w-xs h-2 rounded-full bg-white/10 overflow-hidden mx-auto mb-1.5">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${undergroundIndex}%` }}
+                    transition={{ delay: 0.4, duration: 0.8, ease: 'easeOut' }}
+                    className="h-full rounded-full"
+                    style={{ 
+                      background: `linear-gradient(to right, ${undergroundColors.from}, ${undergroundColors.to})`,
+                      boxShadow: `0 0 8px ${undergroundColors.from}50`
+                    }}
+                  />
+                </div>
+                <p className="text-white/80 text-xs">{getUndergroundLabel(undergroundIndex)}</p>
+              </div>
+
+              {/* Other stats - 3 in a row */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 mb-0.5">
+                    <span className="text-base">🎵</span>
+                    <span className="text-lg font-bold text-white">{avgBpm || '--'}</span>
+                  </div>
+                  <p className="text-white/80 text-[10px]">BPM</p>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 mb-0.5">
+                    <span className="text-base">⚡</span>
+                    <span className="text-lg font-bold text-white">{avgEnergy}%</span>
+                  </div>
+                  <p className="text-white/80 text-[10px]">Energy</p>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center gap-1 mb-0.5">
+                    <span className="text-base">💎</span>
+                    <span className="text-lg font-bold text-white">{undergroundGemsCount}</span>
+                  </div>
+                  <p className="text-white/80 text-[10px]">Gems</p>
+                </div>
+              </div>
+            </div>
           </motion.div>
 
-          {/* Divider */}
-          <div className="w-full h-px bg-white/20 mb-6 md:mb-8" />
-
-          {/* 3. Music Stats Grid */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="mb-6 md:mb-8"
-          >
-            <div className="grid grid-cols-2 gap-4 md:gap-6 mb-4">
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <span className="text-xl md:text-2xl">🎵</span>
-                  <span className="text-xl md:text-2xl lg:text-3xl font-bold text-white">{avgBpm}</span>
-                </div>
-                <p className="text-white/80 text-xs md:text-sm">Average BPM</p>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <span className="text-xl md:text-2xl">⚡</span>
-                  <span className="text-xl md:text-2xl lg:text-3xl font-bold text-white">{avgEnergy}%</span>
-                </div>
-                <p className="text-white/80 text-xs md:text-sm">Energy Level</p>
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-2 mb-1">
-                <span className="text-xl md:text-2xl">💎</span>
-                <span className="text-xl md:text-2xl lg:text-3xl font-bold text-white">{undergroundGemsCount}</span>
-              </div>
-              <p className="text-white/80 text-xs md:text-sm">Underground Gems</p>
-            </div>
-          </motion.div>
-
-          {/* Divider */}
-          <div className="w-full h-px bg-white/20 mb-6 md:mb-8" />
-
-          {/* 4. Top Tracks Section */}
+          {/* Top Tracks Inline - Desktop only */}
           {topTracks.length > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="mb-6 md:mb-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="hidden md:block text-center mb-4"
             >
-              <h3 className="text-white/90 text-base md:text-lg font-semibold text-center mb-4">
-                Top Tracks That Define You:
-              </h3>
-              <div className="space-y-2 max-w-md mx-auto">
-                {topTracks.slice(0, 3).map((track, i) => (
-                  <p key={i} className="text-white text-sm md:text-base text-left leading-relaxed">
-                    <span className="font-bold text-base md:text-lg">{i + 1}.</span>{' '}
-                    {track.name} <span className="text-white/80">- {track.artist}</span>
-                  </p>
-                ))}
-              </div>
+              <p className="text-white/90 text-sm">
+                <span className="font-semibold">Top Tracks:</span>{' '}
+                <span className="text-white/80">{displayTracksText}</span>
+              </p>
             </motion.div>
           )}
 
-          {/* Divider */}
-          <div className="w-full h-px bg-white/20 mb-6 md:mb-8" />
-
-          {/* 5. Footer/CTA */}
+          {/* Share Button + Footer */}
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4 }}
             className="text-center"
           >
-            <p className="text-white/70 text-xs md:text-sm mb-1">
-              Discover your music identity at
-            </p>
-            <p className="text-white font-bold text-sm md:text-base">
+            <Button
+              onClick={onShare}
+              size="default"
+              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2.5 text-sm md:text-base font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 rounded-xl mb-2"
+            >
+              <Share2 className="w-4 h-4" />
+              Share My Identity
+            </Button>
+            <p className="text-white/60 text-[11px] md:text-xs">
               musicdna.app
             </p>
           </motion.div>
         </div>
       </div>
-
-      {/* Share Button - Below Card */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.6 }}
-        className="flex justify-center mt-6"
-      >
-        <Button
-          onClick={onShare}
-          size="lg"
-          className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-base md:text-lg font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 rounded-xl"
-        >
-          <Share2 className="w-5 h-5" />
-          Share My Identity
-        </Button>
-      </motion.div>
     </motion.div>
   );
 };
