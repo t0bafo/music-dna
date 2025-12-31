@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Music, Loader2, AlertCircle, RefreshCw, Home as HomeIcon, Palette, Package, Search, BarChart3 } from 'lucide-react';
@@ -13,14 +13,23 @@ import WelcomeModal from '@/components/WelcomeModal';
 import { motion } from 'framer-motion';
 import { calculateArchetype, Archetype, MusicProfile } from '@/lib/music-archetypes';
 import { useTopTracks, TrackWithFeatures } from '@/hooks/use-music-intelligence';
+import { useRecentDiscoveries, useUndergroundGems } from '@/hooks/use-saved-tracks';
 import { AudioFeatures } from '@/lib/spotify-api';
 import { usePageTitle } from '@/hooks/use-page-title';
 import { useLibrarySync } from '@/hooks/use-library-sync';
+
+// New Identity Components
+import MusicalIdentityHero from '@/components/identity/MusicalIdentityHero';
+import IdentityStatCards from '@/components/identity/IdentityStatCards';
+import TopDefiningTracks from '@/components/identity/TopDefiningTracks';
+import HorizontalTrackScroller, { ScrollerTrack } from '@/components/identity/HorizontalTrackScroller';
+import ShareIdentityModal from '@/components/identity/ShareIdentityModal';
 
 const Home = () => {
   usePageTitle('Your Music DNA | Organize by Vibe, Not Genre');
   const { isAuthenticated, isLoading: authLoading, accessToken, user } = useAuth();
   const navigate = useNavigate();
+  const [showShareModal, setShowShareModal] = useState(false);
 
   // React Query hooks for cached data
   const { 
@@ -30,17 +39,35 @@ const Home = () => {
     refetch: refetchTopTracks
   } = useTopTracks(accessToken, 'medium_term', 50);
 
+  // Recent discoveries (saved in last 30 days)
+  const { 
+    data: recentDiscoveries = [], 
+    isLoading: loadingRecent 
+  } = useRecentDiscoveries(accessToken, 50);
+
+  // Underground gems (popularity < 50)
+  const { 
+    data: undergroundGems = [], 
+    isLoading: loadingUnderground 
+  } = useUndergroundGems(accessToken, 50);
+
   // Auto-sync library if stale (runs in background, non-blocking)
   useLibrarySync(true);
 
   const error = topTracksError ? (topTracksError instanceof Error ? topTracksError.message : 'Failed to fetch top tracks') : null;
 
-  // Calculate underground count
+  // Calculate underground count from top tracks
   const undergroundCount = useMemo(() => {
     return topTracks.filter(t => t.popularity < 50).length;
   }, [topTracks]);
 
-  // Calculate stats for archetype
+  // Calculate underground index (0-100)
+  const undergroundIndex = useMemo(() => {
+    if (topTracks.length === 0) return 0;
+    return Math.round((undergroundCount / topTracks.length) * 100);
+  }, [undergroundCount, topTracks.length]);
+
+  // Calculate stats for archetype and cards
   const stats = useMemo(() => {
     if (topTracks.length === 0) return null;
     
@@ -49,11 +76,16 @@ const Home = () => {
       return values.length ? values.reduce((a, b) => a + b, 0) / values.length : 0;
     };
 
+    const avgBpm = Math.round(getAvg('tempo'));
+    const avgEnergy = Math.round(getAvg('energy') * 100);
+
     return {
       tempo: { avg: getAvg('tempo') },
       energy: { avg: getAvg('energy') },
       danceability: { avg: getAvg('danceability') },
       valence: { avg: getAvg('valence') },
+      avgBpm,
+      avgEnergy,
     };
   }, [topTracks]);
 
@@ -71,6 +103,34 @@ const Home = () => {
     
     return calculateArchetype(profile);
   }, [stats, topTracks.length, undergroundCount]);
+
+  // Transform recent discoveries into ScrollerTrack format
+  const recentTracks: ScrollerTrack[] = useMemo(() => {
+    return recentDiscoveries.map(item => ({
+      id: item.track.id,
+      name: item.track.name,
+      artist: item.track.artists[0]?.name || 'Unknown',
+      albumImage: item.track.album.images?.[1]?.url || item.track.album.images?.[0]?.url,
+      albumName: item.track.album.name,
+      duration_ms: item.track.duration_ms,
+      popularity: item.track.popularity,
+      added_at: item.added_at,
+    }));
+  }, [recentDiscoveries]);
+
+  // Transform underground gems into ScrollerTrack format
+  const gemTracks: ScrollerTrack[] = useMemo(() => {
+    return undergroundGems.map(item => ({
+      id: item.track.id,
+      name: item.track.name,
+      artist: item.track.artists[0]?.name || 'Unknown',
+      albumImage: item.track.album.images?.[1]?.url || item.track.album.images?.[0]?.url,
+      albumName: item.track.album.name,
+      duration_ms: item.track.duration_ms,
+      popularity: item.track.popularity,
+      added_at: item.added_at,
+    }));
+  }, [undergroundGems]);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -133,10 +193,10 @@ const Home = () => {
       </header>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 lg:px-8 py-8 lg:py-12 max-w-6xl">
+      <main className="container mx-auto px-4 lg:px-8 py-8 lg:py-12 max-w-5xl">
         {/* 1. Welcome Message */}
         <motion.div 
-          className="mb-10 lg:mb-12"
+          className="mb-8 lg:mb-10"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
@@ -161,56 +221,71 @@ const Home = () => {
           </div>
         )}
 
-        <div className="space-y-10 lg:space-y-12">
-          {/* 2. Personality Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-          >
-            <Card className="bg-gradient-to-br from-card/95 via-card/90 to-primary/5 backdrop-blur-xl border-primary/20 shadow-2xl overflow-hidden">
-              <CardContent className="py-14 px-8 lg:py-20 lg:px-12 flex flex-col items-center relative">
-                {/* Decorative glow */}
-                <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent pointer-events-none" />
-                
-                {loadingTopTracks ? (
-                  <div className="flex flex-col items-center gap-4">
-                    <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                    <p className="text-muted-foreground text-lg">Analyzing your music...</p>
-                  </div>
-                ) : archetype ? (
-                  <>
-                    <p className="text-lg lg:text-xl text-muted-foreground mb-3">You're a</p>
-                    <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-primary flex items-center justify-center gap-4 mb-5">
-                      <span className="text-4xl lg:text-5xl">{archetype.emoji}</span>
-                      <span>{archetype.name}</span>
-                    </h2>
-                    <p className="text-base lg:text-lg text-muted-foreground text-center max-w-lg leading-relaxed">
-                      {archetype.traits.join(' • ')}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-muted-foreground text-lg">Listen to more music to discover your archetype</p>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
+        <div className="space-y-8 lg:space-y-10">
+          {/* 2. Musical Identity Hero */}
+          <MusicalIdentityHero
+            archetype={archetype}
+            undergroundIndex={undergroundIndex}
+            isLoading={loadingTopTracks}
+            onShare={() => setShowShareModal(true)}
+          />
 
-          {/* 3. Your Crates */}
+          {/* 3. Stat Cards Row */}
+          <IdentityStatCards
+            avgBpm={stats?.avgBpm || 0}
+            avgEnergy={stats?.avgEnergy || 0}
+            undergroundPercent={undergroundIndex}
+            hiddenGemsCount={undergroundCount}
+            isLoading={loadingTopTracks}
+          />
+
+          {/* 4. Top 3 Tracks That Define You */}
+          <TopDefiningTracks
+            tracks={topTracks}
+            isLoading={loadingTopTracks}
+          />
+
+          {/* 5. Recent Discoveries */}
+          <HorizontalTrackScroller
+            title="Recent Discoveries"
+            subtitle="Tracks you saved in the last 30 days"
+            emoji="🌟"
+            tracks={recentTracks}
+            isLoading={loadingRecent}
+            emptyMessage="You haven't saved any tracks recently. Explore new music!"
+            bulkCrateName="Recent Finds"
+            bulkCrateDescription="Tracks I discovered recently"
+            delay={1.1}
+          />
+
+          {/* 6. Underground Gems */}
+          <HorizontalTrackScroller
+            title="Underground Gems You Vibe With"
+            subtitle="Hidden tracks under 50,000 streams"
+            emoji="💎"
+            tracks={gemTracks}
+            isLoading={loadingUnderground}
+            emptyMessage="You tend to follow popular tracks. Try digging deeper! 🔍"
+            bulkCrateName="Hidden Gems Collection"
+            bulkCrateDescription="Underground tracks I vibe with"
+            delay={1.2}
+          />
+
+          {/* 7. Your Crates */}
           <HomeCratesSection />
 
-          {/* 4. Music Stats */}
+          {/* 8. Music Stats (Collapsed by default) */}
           <MusicStatsSection 
             topTracks={topTracks}
             accessToken={accessToken}
             isLoading={loadingTopTracks}
           />
 
-          {/* 5. What's Next? */}
+          {/* 9. What's Next? */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.4 }}
+            transition={{ duration: 0.4, delay: 1.3 }}
           >
             <h2 className="font-display text-xl lg:text-2xl font-bold text-foreground mb-5">
               🚀 What's Next?
@@ -276,6 +351,17 @@ const Home = () => {
       
       {/* First-time Welcome Modal */}
       <WelcomeModal />
+
+      {/* Share Identity Modal */}
+      <ShareIdentityModal
+        open={showShareModal}
+        onOpenChange={setShowShareModal}
+        archetype={archetype}
+        undergroundIndex={undergroundIndex}
+        avgBpm={stats?.avgBpm || 0}
+        avgEnergy={stats?.avgEnergy || 0}
+        topTracks={topTracks.slice(0, 3).map(t => ({ name: t.name, artist: t.artist }))}
+      />
     </div>
   );
 };
