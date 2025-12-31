@@ -82,15 +82,17 @@ const MusicalIdentityHero = ({
           </motion.p>
           
           {/* Archetype Name */}
-          <motion.h2
+          <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2, duration: 0.4 }}
-            className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-primary flex items-center justify-center gap-3 lg:gap-4 mb-5 relative z-10"
+            className="flex flex-col items-center gap-2 mb-5 relative z-10"
           >
             <span className="text-4xl lg:text-5xl">{archetype.emoji}</span>
-            <span>{archetype.name}</span>
-          </motion.h2>
+            <h2 className="font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-primary text-center">
+              {archetype.name}
+            </h2>
+          </motion.div>
           
           {/* Traits */}
           <motion.p
