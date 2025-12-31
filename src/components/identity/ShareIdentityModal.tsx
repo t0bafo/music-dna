@@ -67,11 +67,9 @@ const ShareIdentityModal = ({
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
-  const exportContainerRef = useRef<HTMLDivElement>(null);
 
-  if (!archetype) return null;
-
-  const generateShareText = () => {
+  const generateShareText = useCallback(() => {
+    if (!archetype) return '';
     const trackList = topTracks
       .slice(0, 3)
       .map((t, i) => `${i + 1}. ${t.name} - ${t.artist}`)
@@ -87,9 +85,9 @@ ${trackList}
 🎵 Avg BPM: ${avgBpm} | Energy: ${avgEnergy}%
 
 Discover your music identity at musicdna.app`;
-  };
+  }, [archetype, topTracks, undergroundIndex, avgBpm, avgEnergy]);
 
-  const handleCopy = async () => {
+  const handleCopy = useCallback(async () => {
     const text = generateShareText();
     try {
       await navigator.clipboard.writeText(text);
@@ -106,9 +104,11 @@ Discover your music identity at musicdna.app`;
         variant: "destructive",
       });
     }
-  };
+  }, [generateShareText, toast]);
 
   const handleExport = useCallback(async (format: ExportFormat) => {
+    if (!archetype) return;
+    
     setExporting(format);
     toast({
       title: "Creating your shareable image...",
@@ -280,6 +280,9 @@ Discover your music identity at musicdna.app`;
       setExporting(null);
     }
   }, [archetype, undergroundIndex, avgBpm, avgEnergy, undergroundGemsCount, topTracks, toast]);
+
+  // Conditional return AFTER all hooks
+  if (!archetype) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
