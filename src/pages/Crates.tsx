@@ -3,12 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCrates } from '@/hooks/use-crates';
 import { useVibeSearch } from '@/hooks/use-vibe-search';
-import { Music, Plus, Home as HomeIcon, Palette, Package } from 'lucide-react';
+import { Music, Plus, Home as HomeIcon, Palette, Package, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
 import CrateGrid from '@/components/crates/CrateGrid';
 import CreateCrateModal from '@/components/crates/CreateCrateModal';
+import AICurationModal from '@/components/crates/AICurationModal';
 import EmptyCratesState from '@/components/crates/EmptyCratesState';
 import { CrateGridSkeleton } from '@/components/ui/skeletons';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -24,6 +25,7 @@ const Crates = () => {
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showAIModal, setShowAIModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
   const { data: crates = [], isLoading } = useCrates();
@@ -129,10 +131,19 @@ const Crates = () => {
             <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">📦 Your Crates</h1>
             <p className="text-base lg:text-lg text-muted-foreground">Organize your music by vibe, mood, or meaning.</p>
           </div>
-          <Button onClick={() => setShowCreateModal(true)} size="lg" className="gap-2 btn-scale touch-target">
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">New Crate</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button 
+              onClick={() => setShowAIModal(true)} 
+              className="gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg touch-target"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span className="hidden sm:inline">Build with AI</span>
+            </Button>
+            <Button onClick={() => setShowCreateModal(true)} variant="outline" size="lg" className="gap-2 btn-scale touch-target">
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">New Crate</span>
+            </Button>
+          </div>
         </motion.div>
 
         {/* Search Bar - only show when user has crates */}
@@ -193,6 +204,7 @@ const Crates = () => {
 
       <BottomNav />
       <CreateCrateModal open={showCreateModal} onOpenChange={setShowCreateModal} />
+      <AICurationModal open={showAIModal} onOpenChange={setShowAIModal} />
     </div>
   );
 };
