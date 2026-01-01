@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.vibe-search-expand]
 verify_jwt = false
+
+[functions.ai-curation]
+verify_jwt = false
