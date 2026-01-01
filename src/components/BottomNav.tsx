@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { Home, Palette, Package } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useHaptics } from '@/hooks/use-haptics';
 
 interface NavItem {
   path: string;
@@ -16,9 +17,14 @@ const navItems: NavItem[] = [
 
 const BottomNav = () => {
   const location = useLocation();
+  const { lightTap } = useHaptics();
   
   const isActive = (path: string) => {
     return location.pathname === path;
+  };
+
+  const handleNavClick = () => {
+    lightTap();
   };
 
   return (
@@ -35,6 +41,7 @@ const BottomNav = () => {
             <Link
               key={item.label}
               to={item.path}
+              onClick={handleNavClick}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 py-3 px-4 rounded-xl transition-all duration-200 touch-target-lg",
                 active 

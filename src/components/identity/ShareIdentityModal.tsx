@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from 'react';
-import { Copy, Check, Download, Loader2, Smartphone, Square, Twitter } from 'lucide-react';
+import { useState, useCallback } from 'react';
+import { Copy, Check, Download, Loader2, Smartphone, Square, Twitter, Share2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -9,6 +9,9 @@ import {
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Archetype } from '@/lib/music-archetypes';
+import { useHaptics } from '@/hooks/use-haptics';
+import { useNativeShare } from '@/hooks/use-native-share';
+import { isNativePlatform } from '@/lib/platform';
 import html2canvas from 'html2canvas';
 
 interface ShareIdentityModalProps {
@@ -65,8 +68,11 @@ const ShareIdentityModal = ({
   topTracks,
 }: ShareIdentityModalProps) => {
   const { toast } = useToast();
+  const { lightTap, success, mediumTap } = useHaptics();
+  const { shareIdentity } = useNativeShare();
   const [copied, setCopied] = useState(false);
   const [exporting, setExporting] = useState<ExportFormat | null>(null);
+  const isNative = isNativePlatform();
 
   const generateShareText = useCallback(() => {
     if (!archetype) return '';
@@ -89,9 +95,11 @@ Discover your music identity at musicdna.app`;
 
   const handleCopy = useCallback(async () => {
     const text = generateShareText();
+    lightTap();
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
+      success();
       toast({
         title: "Copied to clipboard!",
         description: "Share your music identity with friends",
@@ -104,11 +112,25 @@ Discover your music identity at musicdna.app`;
         variant: "destructive",
       });
     }
-  }, [generateShareText, toast]);
+  }, [generateShareText, toast, lightTap, success]);
+
+  const handleNativeShare = useCallback(async () => {
+    const text = generateShareText();
+    mediumTap();
+    const result = await shareIdentity(text);
+    if (result) {
+      success();
+      toast({
+        title: "Shared successfully!",
+        description: "Your music identity has been shared",
+      });
+    }
+  }, [generateShareText, shareIdentity, mediumTap, success, toast]);
 
   const handleExport = useCallback(async (format: ExportFormat) => {
     if (!archetype) return;
     
+    lightTap();
     setExporting(format);
     toast({
       title: "Creating your shareable image...",
@@ -263,6 +285,7 @@ Discover your music identity at musicdna.app`;
           link.click();
           URL.revokeObjectURL(url);
 
+          success();
           toast({
             title: `Downloaded ${formatDimensions[format].label} image!`,
             description: "Share it on social media",
@@ -279,7 +302,7 @@ Discover your music identity at musicdna.app`;
     } finally {
       setExporting(null);
     }
-  }, [archetype, undergroundIndex, avgBpm, avgEnergy, undergroundGemsCount, topTracks, toast]);
+  }, [archetype, undergroundIndex, avgBpm, avgEnergy, undergroundGemsCount, topTracks, toast, lightTap, success]);
 
   // Conditional return AFTER all hooks
   if (!archetype) return null;
@@ -294,7 +317,21 @@ Discover your music identity at musicdna.app`;
         </DialogHeader>
         
         <div className="space-y-6 pt-2">
-          <p className="text-muted-foreground text-sm">Choose format:</p>
+          {/* Native Share Button (shown on mobile apps) */}
+          {isNative && (
+            <Button 
+              onClick={handleNativeShare} 
+              className="w-full gap-2"
+              size="lg"
+            >
+              <Share2 className="w-5 h-5" />
+              Share via...
+            </Button>
+          )}
+
+          <p className="text-muted-foreground text-sm">
+            {isNative ? 'Or download an image:' : 'Choose format:'}
+          </p>
 
           {/* Format Grid */}
           <div className="grid grid-cols-2 gap-4">

@@ -2,14 +2,17 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Music } from 'lucide-react';
 import { Crate } from '@/lib/crates-api';
+import { useHaptics } from '@/hooks/use-haptics';
 
 interface CrateCardProps {
   crate: Crate;
 }
 
 const CrateCard = ({ crate }: CrateCardProps) => {
+  const { lightTap } = useHaptics();
+
   return (
-    <Link to={`/crates/${crate.id}`}>
+    <Link to={`/crates/${crate.id}`} onClick={lightTap}>
       <Card 
         className="group bg-card/70 backdrop-blur-xl border-border/40 hover:border-primary/40 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl overflow-hidden cursor-pointer h-full"
       >

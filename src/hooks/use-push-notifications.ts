@@ -63,13 +63,14 @@ export function usePushNotifications(options: UsePushNotificationsOptions = {}) 
   }, [isNative, requestPermission]);
 
   /**
-   * Save token to database
+   * Save token to database using raw SQL via RPC or direct insert
    */
   const saveToken = useCallback(async (pushToken: string, spotifyUserId: string) => {
     try {
       const platform = getPlatformName();
       
-      await supabase.from('push_tokens').upsert({
+      // Use type assertion to bypass strict typing since table was just created
+      const { error } = await (supabase as any).from('push_tokens').upsert({
         user_id: spotifyUserId,
         token: pushToken,
         platform,
@@ -78,7 +79,11 @@ export function usePushNotifications(options: UsePushNotificationsOptions = {}) 
         onConflict: 'token'
       });
 
-      console.log('Push token saved successfully');
+      if (error) {
+        console.error('Failed to save push token:', error);
+      } else {
+        console.log('Push token saved successfully');
+      }
     } catch (error) {
       console.error('Failed to save push token:', error);
     }
@@ -91,7 +96,7 @@ export function usePushNotifications(options: UsePushNotificationsOptions = {}) 
     if (!token) return;
 
     try {
-      await supabase.from('push_tokens').delete().eq('token', token);
+      await (supabase as any).from('push_tokens').delete().eq('token', token);
       setToken(null);
       console.log('Push token removed');
     } catch (error) {
