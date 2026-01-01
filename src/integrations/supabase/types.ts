@@ -132,14 +132,19 @@ export type Database = {
           acousticness: number | null
           added_at: string | null
           album: string | null
+          album_art_url: string | null
           artist: string | null
+          artist_genres: string[] | null
+          artist_id: string | null
           danceability: number | null
+          duration_ms: number | null
           energy: number | null
           id: string
           instrumentalness: number | null
           liveness: number | null
           name: string
           popularity: number | null
+          preview_url: string | null
           release_date: string | null
           speechiness: number | null
           tempo: number | null
@@ -151,14 +156,19 @@ export type Database = {
           acousticness?: number | null
           added_at?: string | null
           album?: string | null
+          album_art_url?: string | null
           artist?: string | null
+          artist_genres?: string[] | null
+          artist_id?: string | null
           danceability?: number | null
+          duration_ms?: number | null
           energy?: number | null
           id?: string
           instrumentalness?: number | null
           liveness?: number | null
           name: string
           popularity?: number | null
+          preview_url?: string | null
           release_date?: string | null
           speechiness?: number | null
           tempo?: number | null
@@ -170,14 +180,19 @@ export type Database = {
           acousticness?: number | null
           added_at?: string | null
           album?: string | null
+          album_art_url?: string | null
           artist?: string | null
+          artist_genres?: string[] | null
+          artist_id?: string | null
           danceability?: number | null
+          duration_ms?: number | null
           energy?: number | null
           id?: string
           instrumentalness?: number | null
           liveness?: number | null
           name?: string
           popularity?: number | null
+          preview_url?: string | null
           release_date?: string | null
           speechiness?: number | null
           tempo?: number | null
@@ -271,6 +286,8 @@ export type Database = {
         Row: {
           album_art_url: string | null
           album_name: string | null
+          artist_genres: string[] | null
+          artist_id: string | null
           artist_name: string | null
           bpm: number | null
           danceability: number | null
@@ -286,6 +303,8 @@ export type Database = {
         Insert: {
           album_art_url?: string | null
           album_name?: string | null
+          artist_genres?: string[] | null
+          artist_id?: string | null
           artist_name?: string | null
           bpm?: number | null
           danceability?: number | null
@@ -301,6 +320,8 @@ export type Database = {
         Update: {
           album_art_url?: string | null
           album_name?: string | null
+          artist_genres?: string[] | null
+          artist_id?: string | null
           artist_name?: string | null
           bpm?: number | null
           danceability?: number | null
