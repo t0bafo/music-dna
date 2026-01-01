@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCrate, useRemoveTrackFromCrate, useDeleteCrate, useUpdateCrate, useReorderCrateTracks } from '@/hooks/use-crates';
 import { useAudioPreview } from '@/hooks/use-audio-preview';
@@ -60,6 +61,7 @@ const CrateDetail = () => {
   const { crateId } = useParams<{ crateId: string }>();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   
   const [showAddTracks, setShowAddTracks] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
