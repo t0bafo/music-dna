@@ -53,7 +53,12 @@ export type Database = {
           description: string | null
           emoji: string | null
           id: string
+          last_synced_at: string | null
           name: string
+          spotify_playlist_id: string | null
+          sync_enabled: boolean | null
+          sync_error: string | null
+          sync_status: string | null
           updated_at: string
           user_id: string
           vibe_keywords: string[] | null
@@ -64,7 +69,12 @@ export type Database = {
           description?: string | null
           emoji?: string | null
           id?: string
+          last_synced_at?: string | null
           name: string
+          spotify_playlist_id?: string | null
+          sync_enabled?: boolean | null
+          sync_error?: string | null
+          sync_status?: string | null
           updated_at?: string
           user_id: string
           vibe_keywords?: string[] | null
@@ -75,7 +85,12 @@ export type Database = {
           description?: string | null
           emoji?: string | null
           id?: string
+          last_synced_at?: string | null
           name?: string
+          spotify_playlist_id?: string | null
+          sync_enabled?: boolean | null
+          sync_error?: string | null
+          sync_status?: string | null
           updated_at?: string
           user_id?: string
           vibe_keywords?: string[] | null

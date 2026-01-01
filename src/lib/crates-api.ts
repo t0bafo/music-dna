@@ -17,6 +17,12 @@ export interface Crate {
   created_at: string;
   updated_at: string;
   track_count: number;
+  // Sync fields
+  spotify_playlist_id?: string | null;
+  sync_enabled?: boolean;
+  last_synced_at?: string | null;
+  sync_status?: string | null;
+  sync_error?: string | null;
 }
 
 export interface CrateTrack {
