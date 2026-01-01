@@ -1,5 +1,6 @@
 /**
  * AI Curation Service - Generate crates with AI
+ * Now with smart hybrid search: library → liked songs → recommendations → catalog
  */
 
 const EDGE_FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-curation`;
@@ -8,14 +9,16 @@ export interface GeneratedTrack {
   track_id: string;
   track_name: string;
   artist_name: string;
+  artist_genres?: string[];
   album_name?: string;
+  album_art_url?: string;
   bpm?: number;
   energy?: number;
   danceability?: number;
   valence?: number;
   popularity?: number;
   duration_ms?: number;
-  album_art_url?: string;
+  source?: 'library' | 'liked' | 'recommendation' | 'catalog';
 }
 
 export interface GeneratedSection {
@@ -41,6 +44,7 @@ export interface GeneratedCrate {
     total: number;
   };
   vibes?: string[];
+  scenes?: string[];
 }
 
 export interface SavedCrate {
@@ -102,6 +106,33 @@ export async function saveGeneratedCrate(
   if (!response.ok) {
     const error = await response.json();
     throw new Error(error.error || 'Failed to save crate');
+  }
+
+  const result = await response.json();
+  return result.data;
+}
+
+/**
+ * Backfill missing genre data for existing tracks
+ */
+export async function backfillGenres(
+  spotifyToken: string
+): Promise<{ processed: number; failed: number }> {
+  const response = await fetch(EDGE_FUNCTION_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-spotify-token': spotifyToken,
+    },
+    body: JSON.stringify({
+      action: 'backfill_genres',
+      data: {},
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to backfill genres');
   }
 
   const result = await response.json();

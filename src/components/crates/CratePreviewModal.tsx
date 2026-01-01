@@ -162,12 +162,24 @@ export function CratePreviewModal({
                           {track.artist_name}
                         </div>
                       </div>
-                      <div className="text-xs text-muted-foreground whitespace-nowrap">
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
+                        {track.source && (
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] ${
+                            track.source === 'library' ? 'bg-green-500/20 text-green-600' :
+                            track.source === 'liked' ? 'bg-blue-500/20 text-blue-600' :
+                            track.source === 'recommendation' ? 'bg-purple-500/20 text-purple-600' :
+                            'bg-orange-500/20 text-orange-600'
+                          }`}>
+                            {track.source === 'library' ? '📚' : 
+                             track.source === 'liked' ? '❤️' : 
+                             track.source === 'recommendation' ? '✨' : '🔍'}
+                          </span>
+                        )}
                         {track.bpm && (
                           <span>{Math.round(track.bpm)} BPM</span>
                         )}
                         {track.energy != null && (
-                          <span className="ml-2">{Math.round(track.energy * 100)}%</span>
+                          <span>{Math.round(track.energy * 100)}%</span>
                         )}
                       </div>
                     </div>
