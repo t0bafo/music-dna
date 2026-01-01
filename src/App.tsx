@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { NativeAppProvider } from "@/components/NativeAppProvider";
 
 import Landing from "./pages/Landing";
 import Callback from "./pages/Callback";
@@ -26,23 +27,25 @@ const App = () => (
       <TooltipProvider>
         <BrowserRouter>
           <AuthProvider>
-            <Toaster />
-            <Sonner />
-            <InstallPrompt />
-            <Routes>
-              <Route path="/" element={<Landing />} />
-              <Route path="/callback" element={<Callback />} />
-              <Route path="/home" element={<Home />} />
-              <Route path="/dashboard" element={<Navigate to="/home" replace />} />
-              <Route path="/playlist/:playlistId" element={<PlaylistDetail />} />
-              <Route path="/intelligence" element={<MusicIntelligence />} />
-              <Route path="/crates" element={<Crates />} />
-              <Route path="/crates/:crateId" element={<CrateDetail />} />
-              <Route path="/crates/:crateId/share" element={<CrateShare />} />
-              <Route path="/curation" element={<Studio />} />
-              <Route path="/studio" element={<Studio />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <NativeAppProvider>
+              <Toaster />
+              <Sonner />
+              <InstallPrompt />
+              <Routes>
+                <Route path="/" element={<Landing />} />
+                <Route path="/callback" element={<Callback />} />
+                <Route path="/home" element={<Home />} />
+                <Route path="/dashboard" element={<Navigate to="/home" replace />} />
+                <Route path="/playlist/:playlistId" element={<PlaylistDetail />} />
+                <Route path="/intelligence" element={<MusicIntelligence />} />
+                <Route path="/crates" element={<Crates />} />
+                <Route path="/crates/:crateId" element={<CrateDetail />} />
+                <Route path="/crates/:crateId/share" element={<CrateShare />} />
+                <Route path="/curation" element={<Studio />} />
+                <Route path="/studio" element={<Studio />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </NativeAppProvider>
           </AuthProvider>
         </BrowserRouter>
       </TooltipProvider>

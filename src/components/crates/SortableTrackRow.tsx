@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useHaptics } from '@/hooks/use-haptics';
 import { cn } from '@/lib/utils';
 
 interface Track {
@@ -44,11 +45,13 @@ export function SortableTrackRow({
   onTogglePreview
 }: SortableTrackRowProps) {
   const isMobile = useIsMobile();
+  const { selectionChanged, heavyTap, lightTap, error: errorHaptic } = useHaptics();
   const [swipeX, setSwipeX] = useState(0);
   const [isSwiping, setIsSwiping] = useState(false);
   const touchStartX = useRef(0);
   const touchStartY = useRef(0);
   const isHorizontalSwipe = useRef(false);
+  const hasTriggeredDeleteHaptic = useRef(false);
 
   const isCurrentlyPlaying = currentPreviewId === track.track_id && isPreviewPlaying;
   const hasPreview = !!track.preview_url;
@@ -73,6 +76,7 @@ export function SortableTrackRow({
     touchStartX.current = e.touches[0].clientX;
     touchStartY.current = e.touches[0].clientY;
     isHorizontalSwipe.current = false;
+    hasTriggeredDeleteHaptic.current = false;
     setIsSwiping(true);
   };
 
@@ -89,7 +93,16 @@ export function SortableTrackRow({
     
     // Only handle horizontal swipes (left swipe to delete)
     if (isHorizontalSwipe.current && deltaX < 0) {
-      setSwipeX(Math.max(deltaX, -120)); // Max swipe distance
+      const newSwipeX = Math.max(deltaX, -120);
+      setSwipeX(newSwipeX); // Max swipe distance
+      
+      // Trigger haptic when crossing delete threshold
+      if (newSwipeX < -80 && !hasTriggeredDeleteHaptic.current) {
+        hasTriggeredDeleteHaptic.current = true;
+        heavyTap();
+      } else if (newSwipeX >= -80 && hasTriggeredDeleteHaptic.current) {
+        hasTriggeredDeleteHaptic.current = false;
+      }
     }
   };
 
@@ -99,11 +112,21 @@ export function SortableTrackRow({
     
     // If swiped far enough, trigger delete
     if (swipeX < -80) {
+      errorHaptic();
       onRemove(track.track_id, track.name || 'Track');
     }
     
     // Reset swipe position
     setSwipeX(0);
+  };
+
+  const handleDragStart = () => {
+    selectionChanged();
+  };
+
+  const handlePreviewToggle = () => {
+    lightTap();
+    onTogglePreview(track.track_id, track.preview_url!);
   };
 
   const deleteProgress = Math.min(Math.abs(swipeX) / 80, 1);
@@ -141,6 +164,10 @@ export function SortableTrackRow({
         <button
           {...attributes}
           {...listeners}
+          onPointerDown={(e) => {
+            handleDragStart();
+            listeners?.onPointerDown?.(e);
+          }}
           style={{ touchAction: 'none' }}
           className={cn(
             "p-2 -m-1 rounded cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground transition-all touch-target",
@@ -198,7 +225,7 @@ export function SortableTrackRow({
         {/* Preview Button */}
         {hasPreview && (
           <button
-            onClick={() => onTogglePreview(track.track_id, track.preview_url!)}
+            onClick={handlePreviewToggle}
             className={cn(
               "w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all touch-target",
               isCurrentlyPlaying
@@ -228,7 +255,10 @@ export function SortableTrackRow({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border/50">
             <DropdownMenuItem
-              onClick={() => onRemove(track.track_id, track.name || 'Track')}
+              onClick={() => {
+                heavyTap();
+                onRemove(track.track_id, track.name || 'Track');
+              }}
               className="text-destructive focus:text-destructive focus:bg-destructive/10 touch-target"
             >
               <Trash2 className="w-4 h-4 mr-2" />

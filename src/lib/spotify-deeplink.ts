@@ -1,4 +1,3 @@
-import { App } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { isNativePlatform, isIOS, isAndroid } from '@/lib/platform';
 
@@ -50,6 +49,7 @@ export function buildSpotifyWebUrl(type: SpotifyContentType, id: string): string
 
 /**
  * Open content in Spotify app or fallback to browser
+ * Uses the spotify: URI scheme which iOS/Android will handle
  * @param spotifyUri - Spotify URI (e.g., spotify:track:4iV5W9uYEdYUVa79Axb7Rh)
  * @param webUrl - Fallback web URL
  */
@@ -61,18 +61,26 @@ export async function openInSpotify(spotifyUri: string, webUrl: string): Promise
   }
 
   try {
-    // Try to open Spotify app directly
-    const canOpen = await App.canOpenUrl({ url: spotifyUri });
+    // On native platforms, try the spotify: URI scheme directly
+    // The OS will handle opening Spotify app if installed
+    // Using window.location for URI schemes works on both iOS and Android
+    window.location.href = spotifyUri;
     
-    if (canOpen.value) {
-      await App.openUrl({ url: spotifyUri });
-    } else {
-      // Spotify app not installed - open in browser
-      await Browser.open({ 
-        url: webUrl,
-        presentationStyle: 'popover'
-      });
-    }
+    // Give the app a moment to open, then check if we're still in the app
+    // If so, the Spotify app isn't installed, so open the web version
+    setTimeout(async () => {
+      // If we're still here after 500ms, Spotify app probably isn't installed
+      // Open in browser instead
+      try {
+        await Browser.open({ 
+          url: webUrl,
+          presentationStyle: 'popover'
+        });
+      } catch (browserError) {
+        console.warn('Browser fallback failed:', browserError);
+        window.open(webUrl, '_blank');
+      }
+    }, 500);
   } catch (error) {
     console.warn('Failed to open Spotify:', error);
     // Final fallback
