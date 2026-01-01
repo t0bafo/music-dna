@@ -112,7 +112,7 @@ export function useDeleteCrate() {
 }
 
 /**
- * Hook to add tracks to a crate
+ * Hook to add tracks to a crate (with auto-sync trigger)
  */
 export function useAddTracksToCrate() {
   const { accessToken } = useAuth();
@@ -121,10 +121,13 @@ export function useAddTracksToCrate() {
   return useMutation({
     mutationFn: (data: { crateId: string; tracks: TrackToAdd[] }) =>
       addTracksToCrate(data.crateId, data.tracks, accessToken!),
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['crates'] });
       queryClient.invalidateQueries({ queryKey: ['crate', variables.crateId] });
       toast.success(`Added ${variables.tracks.length} track${variables.tracks.length !== 1 ? 's' : ''}`);
+      
+      // Trigger sync in background if enabled
+      triggerSyncIfEnabled(variables.crateId, accessToken!);
     },
     onError: (error) => {
       toast.error('Failed to add tracks', {
@@ -135,7 +138,7 @@ export function useAddTracksToCrate() {
 }
 
 /**
- * Hook to remove track from crate
+ * Hook to remove track from crate (with auto-sync trigger)
  */
 export function useRemoveTrackFromCrate() {
   const { accessToken } = useAuth();
@@ -144,10 +147,13 @@ export function useRemoveTrackFromCrate() {
   return useMutation({
     mutationFn: (data: { crateId: string; trackId: string }) =>
       removeTrackFromCrate(data.crateId, data.trackId, accessToken!),
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['crates'] });
       queryClient.invalidateQueries({ queryKey: ['crate', variables.crateId] });
       toast.success('Track removed');
+      
+      // Trigger sync in background if enabled
+      triggerSyncIfEnabled(variables.crateId, accessToken!);
     },
     onError: (error) => {
       toast.error('Failed to remove track', {
@@ -158,7 +164,7 @@ export function useRemoveTrackFromCrate() {
 }
 
 /**
- * Hook to reorder tracks in crate
+ * Hook to reorder tracks in crate (with auto-sync trigger)
  */
 export function useReorderCrateTracks() {
   const { accessToken } = useAuth();
@@ -167,8 +173,11 @@ export function useReorderCrateTracks() {
   return useMutation({
     mutationFn: (data: { crateId: string; trackIds: string[] }) =>
       reorderCrateTracks(data.crateId, data.trackIds, accessToken!),
-    onSuccess: (_, variables) => {
+    onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['crate', variables.crateId] });
+      
+      // Trigger sync in background if enabled
+      triggerSyncIfEnabled(variables.crateId, accessToken!);
     },
     onError: (error) => {
       toast.error('Failed to reorder tracks', {
@@ -176,4 +185,31 @@ export function useReorderCrateTracks() {
       });
     }
   });
+}
+
+/**
+ * Helper to trigger sync if crate has sync enabled
+ */
+async function triggerSyncIfEnabled(crateId: string, accessToken: string) {
+  try {
+    // Import dynamically to avoid circular deps
+    const { syncCrateToSpotify } = await import('@/lib/spotify-sync');
+    const { getCrate } = await import('@/lib/crates-api');
+    
+    const crate = await getCrate(crateId, accessToken);
+    
+    if (crate.sync_enabled && crate.spotify_playlist_id) {
+      // Debounce: wait 1 second before syncing
+      setTimeout(async () => {
+        try {
+          await syncCrateToSpotify(crateId, accessToken);
+          console.log('[use-crates] Auto-synced crate:', crateId);
+        } catch (syncError) {
+          console.error('[use-crates] Auto-sync failed:', syncError);
+        }
+      }, 1000);
+    }
+  } catch (error) {
+    console.error('[use-crates] Failed to check sync status:', error);
+  }
 }

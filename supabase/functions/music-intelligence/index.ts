@@ -1302,6 +1302,269 @@ serve(async (req) => {
         break
       }
 
+      // ========== SPOTIFY SYNC ACTIONS ==========
+
+      case 'link_spotify_playlist': {
+        const { crate_id, playlist_id, sync_enabled } = data
+        console.log(`[music-intelligence] Linking crate ${crate_id} to playlist ${playlist_id}`)
+        
+        result = await supabaseAdmin
+          .from('crates')
+          .update({
+            spotify_playlist_id: playlist_id,
+            sync_enabled: sync_enabled ?? true,
+            sync_status: 'unsynced',
+            sync_error: null,
+          })
+          .eq('id', crate_id)
+          .eq('user_id', userId)
+        break
+      }
+
+      case 'unlink_spotify_playlist': {
+        const { crate_id } = data
+        console.log(`[music-intelligence] Unlinking crate ${crate_id} from Spotify`)
+        
+        result = await supabaseAdmin
+          .from('crates')
+          .update({
+            spotify_playlist_id: null,
+            sync_enabled: false,
+            sync_status: 'unsynced',
+            last_synced_at: null,
+            sync_error: null,
+          })
+          .eq('id', crate_id)
+          .eq('user_id', userId)
+        break
+      }
+
+      case 'update_sync_settings': {
+        const { crate_id, sync_enabled } = data
+        console.log(`[music-intelligence] Updating sync for crate ${crate_id}: enabled=${sync_enabled}`)
+        
+        result = await supabaseAdmin
+          .from('crates')
+          .update({
+            sync_enabled,
+            sync_status: sync_enabled ? 'unsynced' : 'unsynced',
+          })
+          .eq('id', crate_id)
+          .eq('user_id', userId)
+        break
+      }
+
+      case 'sync_to_spotify': {
+        const { crate_id } = data
+        console.log(`[music-intelligence] Syncing crate ${crate_id} to Spotify`)
+        
+        // Get crate info
+        const { data: crate, error: crateError } = await supabaseAdmin
+          .from('crates')
+          .select('*')
+          .eq('id', crate_id)
+          .eq('user_id', userId)
+          .single()
+        
+        if (crateError || !crate) {
+          return new Response(
+            JSON.stringify({ error: 'Crate not found' }),
+            { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        
+        if (!crate.spotify_playlist_id) {
+          return new Response(
+            JSON.stringify({ error: 'Crate not linked to Spotify playlist' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        
+        // Set status to pending
+        await supabaseAdmin
+          .from('crates')
+          .update({ sync_status: 'pending' })
+          .eq('id', crate_id)
+        
+        try {
+          // Get crate tracks in order
+          const { data: crateTracks } = await supabaseAdmin
+            .from('crate_tracks')
+            .select('track_id, position')
+            .eq('crate_id', crate_id)
+            .order('position', { ascending: true })
+          
+          const trackUris = (crateTracks || []).map(t => `spotify:track:${t.track_id}`)
+          
+          // Replace all tracks in Spotify playlist
+          const replaceResponse = await fetch(
+            `https://api.spotify.com/v1/playlists/${crate.spotify_playlist_id}/tracks`,
+            {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${spotifyToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ uris: trackUris }),
+            }
+          )
+          
+          if (!replaceResponse.ok) {
+            const errorText = await replaceResponse.text()
+            console.error('[music-intelligence] Spotify replace tracks error:', replaceResponse.status, errorText)
+            
+            if (replaceResponse.status === 404) {
+              // Playlist was deleted
+              await supabaseAdmin
+                .from('crates')
+                .update({
+                  spotify_playlist_id: null,
+                  sync_enabled: false,
+                  sync_status: 'error',
+                  sync_error: 'Playlist not found. It may have been deleted in Spotify.',
+                })
+                .eq('id', crate_id)
+              
+              return new Response(
+                JSON.stringify({ error: 'Spotify playlist not found. It may have been deleted.' }),
+                { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+              )
+            }
+            
+            throw new Error(`Spotify API error: ${replaceResponse.status}`)
+          }
+          
+          // Update playlist name/description
+          await fetch(
+            `https://api.spotify.com/v1/playlists/${crate.spotify_playlist_id}`,
+            {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${spotifyToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                name: `${crate.emoji || ''} ${crate.name}`.trim(),
+                description: crate.description || 'Synced from Music DNA',
+              }),
+            }
+          )
+          
+          // Update sync status to success
+          result = await supabaseAdmin
+            .from('crates')
+            .update({
+              sync_status: 'synced',
+              last_synced_at: new Date().toISOString(),
+              sync_error: null,
+            })
+            .eq('id', crate_id)
+          
+          console.log(`[music-intelligence] Sync complete for crate ${crate_id}`)
+          
+        } catch (syncError) {
+          console.error('[music-intelligence] Sync failed:', syncError)
+          
+          await supabaseAdmin
+            .from('crates')
+            .update({
+              sync_status: 'error',
+              sync_error: syncError instanceof Error ? syncError.message : 'Sync failed',
+            })
+            .eq('id', crate_id)
+          
+          return new Response(
+            JSON.stringify({ error: 'Sync failed' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        break
+      }
+
+      case 'create_spotify_playlist': {
+        const { crate_id, name, description, is_public, sync_enabled } = data
+        console.log(`[music-intelligence] Creating Spotify playlist for crate ${crate_id}`)
+        
+        // Get crate tracks
+        const { data: crateTracks } = await supabaseAdmin
+          .from('crate_tracks')
+          .select('track_id, position')
+          .eq('crate_id', crate_id)
+          .order('position', { ascending: true })
+        
+        if (!crateTracks || crateTracks.length === 0) {
+          return new Response(
+            JSON.stringify({ error: 'Cannot export empty crate' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        
+        // Create Spotify playlist
+        const createResponse = await fetch(
+          `https://api.spotify.com/v1/users/${userId}/playlists`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${spotifyToken}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              name,
+              description: description || 'Synced from Music DNA',
+              public: is_public ?? true,
+            }),
+          }
+        )
+        
+        if (!createResponse.ok) {
+          console.error('[music-intelligence] Failed to create playlist:', createResponse.status)
+          return new Response(
+            JSON.stringify({ error: 'Failed to create Spotify playlist' }),
+            { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          )
+        }
+        
+        const playlist = await createResponse.json()
+        const trackUris = crateTracks.map(t => `spotify:track:${t.track_id}`)
+        
+        // Add tracks in batches of 100
+        for (let i = 0; i < trackUris.length; i += 100) {
+          const batch = trackUris.slice(i, i + 100)
+          await fetch(
+            `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${spotifyToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ uris: batch }),
+            }
+          )
+        }
+        
+        // Update crate with playlist info
+        await supabaseAdmin
+          .from('crates')
+          .update({
+            spotify_playlist_id: playlist.id,
+            sync_enabled: sync_enabled ?? true,
+            last_synced_at: new Date().toISOString(),
+            sync_status: 'synced',
+            sync_error: null,
+          })
+          .eq('id', crate_id)
+          .eq('user_id', userId)
+        
+        result = {
+          data: {
+            playlistId: playlist.id,
+            playlistUrl: playlist.external_urls.spotify,
+          }
+        }
+        break
+      }
+
       default:
         console.error(`[music-intelligence] Invalid action: ${action}`)
         return new Response(

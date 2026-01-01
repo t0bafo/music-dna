@@ -12,9 +12,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { CheckCircle2, ExternalLink, Loader2, Music2 } from 'lucide-react';
-import { getCurrentUser, createPlaylist, addTracksToPlaylist } from '@/lib/spotify-api';
-import { getStoredTokens } from '@/lib/spotify-auth';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CheckCircle2, ExternalLink, Loader2, Music2, RefreshCw } from 'lucide-react';
+import { createAndLinkPlaylist } from '@/lib/spotify-sync';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CrateTrack {
   id: string;
@@ -36,6 +37,7 @@ interface ExportToSpotifyModalProps {
   onClose: () => void;
   crate: Crate;
   tracks: CrateTrack[];
+  onExported?: () => void;
 }
 
 const ExportToSpotifyModal = ({
@@ -43,55 +45,42 @@ const ExportToSpotifyModal = ({
   onClose,
   crate,
   tracks,
+  onExported,
 }: ExportToSpotifyModalProps) => {
+  const { accessToken } = useAuth();
   const [playlistName, setPlaylistName] = useState(`${crate.emoji} ${crate.name}`);
-  const [description, setDescription] = useState('Exported from Music DNA - Crates for music lovers');
+  const [description, setDescription] = useState('Synced from Music DNA - Crates for music lovers');
   const [visibility, setVisibility] = useState<'private' | 'public'>('private');
+  const [enableSync, setEnableSync] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [exportedPlaylist, setExportedPlaylist] = useState<{ id: string; url: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const handleExport = async () => {
+    if (!accessToken) {
+      setError('Please reconnect Spotify to export playlists.');
+      return;
+    }
+
     setIsExporting(true);
     setError(null);
 
     try {
-      const { accessToken } = getStoredTokens();
-      
-      if (!accessToken) {
-        setError('Please reconnect Spotify to export playlists.');
-        setIsExporting(false);
-        return;
-      }
-
-      // 1. Get current user
-      const user = await getCurrentUser(accessToken);
-
-      // 2. Create playlist
-      const playlist = await createPlaylist(
-        accessToken,
-        user.id,
+      const result = await createAndLinkPlaylist(
+        crate.id,
         playlistName.trim(),
         description.trim(),
-        visibility === 'public'
+        visibility === 'public',
+        enableSync,
+        accessToken
       );
 
-      // 3. Get track URIs in correct order
-      const sortedTracks = [...tracks].sort((a, b) => a.position - b.position);
-      const trackUris = sortedTracks.map(track => `spotify:track:${track.track_id}`);
-
-      // 4. Add tracks in chunks of 100 (Spotify limit)
-      for (let i = 0; i < trackUris.length; i += 100) {
-        const chunk = trackUris.slice(i, i + 100);
-        await addTracksToPlaylist(accessToken, playlist.id, chunk);
-      }
-
-      // 5. Success
       setExportedPlaylist({
-        id: playlist.id,
-        url: playlist.external_urls.spotify,
+        id: result.playlistId,
+        url: result.playlistUrl,
       });
 
+      onExported?.();
     } catch (err) {
       console.error('Export failed:', err);
       setError(err instanceof Error ? err.message : 'Export failed. Please try again.');
@@ -104,8 +93,9 @@ const ExportToSpotifyModal = ({
     setExportedPlaylist(null);
     setError(null);
     setPlaylistName(`${crate.emoji} ${crate.name}`);
-    setDescription('Exported from Music DNA - Crates for music lovers');
+    setDescription('Synced from Music DNA - Crates for music lovers');
     setVisibility('private');
+    setEnableSync(true);
     onClose();
   };
 
@@ -120,7 +110,11 @@ const ExportToSpotifyModal = ({
             </div>
             <h3 className="text-xl font-bold text-foreground mb-2">Playlist Created!</h3>
             <p className="text-muted-foreground text-center mb-4">
-              Your Crate is now on Spotify.
+              {enableSync ? (
+                <>Your Crate will stay in sync with Spotify.</>
+              ) : (
+                <>Your Crate is now on Spotify.</>
+              )}
             </p>
             
             <div className="bg-accent/50 rounded-lg p-4 w-full mb-4">
@@ -128,11 +122,20 @@ const ExportToSpotifyModal = ({
                 <div className="w-12 h-12 bg-[#1DB954]/20 rounded flex items-center justify-center">
                   <Music2 className="w-6 h-6 text-[#1DB954]" />
                 </div>
-                <div>
-                  <p className="font-medium text-foreground">{playlistName}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {tracks.length} tracks added
-                  </p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground truncate">{playlistName}</p>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{tracks.length} tracks</span>
+                    {enableSync && (
+                      <>
+                        <span>•</span>
+                        <span className="flex items-center gap-1 text-[#1DB954]">
+                          <RefreshCw className="w-3 h-3" />
+                          Auto-sync on
+                        </span>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -218,15 +221,35 @@ const ExportToSpotifyModal = ({
             </RadioGroup>
           </div>
 
+          {/* Sync option */}
+          <div className="flex items-start space-x-3 pt-2">
+            <Checkbox
+              id="enable-sync"
+              checked={enableSync}
+              onCheckedChange={(checked) => setEnableSync(checked === true)}
+              className="mt-0.5"
+            />
+            <div className="space-y-1">
+              <Label htmlFor="enable-sync" className="font-medium cursor-pointer">
+                Keep synced with crate
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                Changes to this crate will automatically update the Spotify playlist.
+              </p>
+            </div>
+          </div>
+
           {error && (
             <p className="text-sm text-destructive bg-destructive/10 rounded-lg p-3">
               {error}
             </p>
           )}
 
-          <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground">
-            <p>This creates a <strong>new playlist</strong>. Changes to your Crate won't sync to Spotify.</p>
-          </div>
+          {!enableSync && (
+            <div className="bg-muted/50 rounded-lg p-3 text-sm text-muted-foreground">
+              <p>This creates a <strong>one-time export</strong>. Changes to your Crate won't sync to Spotify.</p>
+            </div>
+          )}
         </div>
 
         <DialogFooter className="gap-2 sm:gap-0">
