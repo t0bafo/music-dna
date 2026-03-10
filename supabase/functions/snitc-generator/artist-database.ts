@@ -323,15 +323,15 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
     genre: 'Amapiano → Afrobeats Expansion',
     energy_arc: { start: 0.85, end: 0.80 },
     bpm_range: { min: 110, max: 120 },
-    track_count: 17,
+    track_count: 30,
     segments: [
       {
-        tracks: '1-4',
+        tracks: '1-7',
         duration_min: '0-20',
         energy: { min: 0.85, max: 0.83 },
         bpm: { min: 114, max: 118 },
         sound: 'Melodic Amapiano (softer than Niffster, more musical depth)',
-        artists: ['Kelvin Momo', 'Aymos', 'Mas Musiq', 'Sam Deep'],
+        artists: ['Kelvin Momo', 'Aymos', 'Mas Musiq', 'Sam Deep', 'Boohle', 'Azana', 'Sino Msolo'],
         example_tracks: ['Kelvin Momo - Inyembezi', 'Aymos - Lydia', 'Mas Musiq - Sengizwile', 'Sam Deep - Khuza Gogo'],
       },
       {
