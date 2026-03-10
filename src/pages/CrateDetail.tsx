@@ -233,7 +233,7 @@ const CrateDetail = () => {
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  const [pendingRemoval, setPendingRemoval] = useState<{ trackId: string; timeoutId: NodeJS.Timeout } | null>(null);
+  const [pendingRemoval, setPendingRemoval] = useState<{ trackId: string; timeoutId: ReturnType<typeof setTimeout> } | null>(null);
 
   const handleRemoveTrack = (trackId: string, trackName: string) => {
     // Cancel any pending removal
