@@ -59,11 +59,11 @@ async function searchByArtists(
   const allTracks: SpotifyTrack[] = []
   const seen = new Set<string>()
 
-  for (const artist of artists.slice(0, 8)) {
+  for (const artist of artists.slice(0, 20)) {
     try {
       const query = encodeURIComponent(`artist:${artist}`)
       const res = await fetch(
-        `https://api.spotify.com/v1/search?q=${query}&type=track&limit=${limit}&market=US`,
+        `https://api.spotify.com/v1/search?q=${query}&type=track&limit=20&market=US`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       if (!res.ok) continue
@@ -176,7 +176,9 @@ function pickTracks(tracks: TrackWithFeatures[], count: number, ascending: boole
 // ─── Parse track count from segment range like "1-3" ───
 function segmentTrackCount(seg: Segment): number {
   const parts = seg.tracks.split('-').map(Number)
-  return parts.length === 2 ? parts[1] - parts[0] + 1 : 3
+  const base = parts.length === 2 ? parts[1] - parts[0] + 1 : 3
+  // Scale up by ~2.5x with minimum 5 per segment to target 25-30 total
+  return Math.max(5, Math.round(base * 2.5))
 }
 
 // ─── Slot name mapping ───
@@ -212,7 +214,7 @@ serve(async (req) => {
     console.log(`[SNITC] Searching ${allSegArtists.length} segment artists`)
 
     // Search Spotify for all segment artists
-    const rawTracks = await searchByArtists(allSegArtists, spotifyToken, 10)
+    const rawTracks = await searchByArtists(allSegArtists, spotifyToken, 20)
     console.log(`[SNITC] Found ${rawTracks.length} raw tracks`)
 
     if (rawTracks.length === 0) {
