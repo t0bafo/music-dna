@@ -17,6 +17,7 @@ import Crates from "./pages/Crates";
 import CrateDetail from "./pages/CrateDetail";
 import CrateShare from "./pages/CrateShare";
 import Studio from "./pages/Studio";
+import SNITCGenerator from "./pages/SNITCGenerator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
