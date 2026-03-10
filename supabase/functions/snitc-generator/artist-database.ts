@@ -189,12 +189,12 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
         example_tracks: ['Black Coffee - Drive', 'Culoe De Song - Webaba', 'Enoo Napa - Journey Into Time'],
       },
       {
-        tracks: '4-7',
+        tracks: '9-18',
         duration_min: '20-45',
         energy: { min: 0.55, max: 0.62 },
         bpm: { min: 120, max: 122 },
         sound: 'Electric, percussive, tribal rhythms intensify',
-        artists: ['Shimza', 'Kususa', 'Da Capo', 'Kafele Bandele'],
+        artists: ['Shimza', 'Kususa', 'Da Capo', 'Kafele Bandele', 'Caiiro', 'Djeff Afrozila', 'Manoo'],
         example_tracks: ['Shimza - Calling Out Your Name', 'Kususa - Sondela', 'Da Capo - Thando'],
       },
       {
