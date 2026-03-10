@@ -465,12 +465,12 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
         example_tracks: ['Shimza - Shimza\'s Remix', 'Culoe De Song - Exodus', 'Enoo Napa - Spiritual Hunger', 'Zakes Bantwini - Osama (deep mix)'],
       },
       {
-        tracks: '8-10',
+        tracks: '16-21',
         duration_min: '45-55',
         energy: { min: 0.60, max: 0.57 },
         bpm: { min: 118, max: 122 },
         sound: 'Global sounds (UK Afrobeats, global bass, open format)',
-        artists: ['J Hus', 'Koffee', 'Burna Boy', 'Solomun'],
+        artists: ['J Hus', 'Koffee', 'Burna Boy', 'Solomun', 'NSG', 'Dave'],
         example_tracks: ['J Hus - Spirit', 'Koffee - Toast', 'Burna Boy - B. d\'Or', 'Solomun - Something We All Adore'],
       },
       {
