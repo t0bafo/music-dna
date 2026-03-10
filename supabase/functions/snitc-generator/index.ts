@@ -59,7 +59,7 @@ async function searchByArtists(
   const allTracks: SpotifyTrack[] = []
   const seen = new Set<string>()
 
-  for (const artist of artists.slice(0, 8)) {
+  for (const artist of artists.slice(0, 20)) {
     try {
       const query = encodeURIComponent(`artist:${artist}`)
       const res = await fetch(
