@@ -238,12 +238,12 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
         example_tracks: ['Shimza - Tarantino', 'Jullian Gomes - Late Dreamer', 'Floyd Lavine - Kaya'],
       },
       {
-        tracks: '5-8',
+        tracks: '9-18',
         duration_min: '25-45',
         energy: { min: 0.70, max: 0.75 },
         bpm: { min: 124, max: 126 },
         sound: 'Electric Afro House, percussive intensity increasing',
-        artists: ['Black Coffee', 'Themba', 'Ryan Murgatroyd', 'Caiiro'],
+        artists: ['Black Coffee', 'Themba', 'Ryan Murgatroyd', 'Caiiro', 'Ralf GUM', 'Fka Mash', 'Ed-Ward'],
         example_tracks: ['Black Coffee - We Dance Again', 'Themba - Who Is Themba?', 'Caiiro - Thanda'],
       },
       {
