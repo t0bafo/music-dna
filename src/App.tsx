@@ -44,6 +44,7 @@ const App = () => (
                 <Route path="/crates/:crateId/share" element={<CrateShare />} />
                 <Route path="/curation" element={<Studio />} />
                 <Route path="/studio" element={<Studio />} />
+                <Route path="/snitc-generator" element={<SNITCGenerator />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </NativeAppProvider>
