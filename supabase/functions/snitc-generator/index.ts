@@ -176,7 +176,9 @@ function pickTracks(tracks: TrackWithFeatures[], count: number, ascending: boole
 // ─── Parse track count from segment range like "1-3" ───
 function segmentTrackCount(seg: Segment): number {
   const parts = seg.tracks.split('-').map(Number)
-  return parts.length === 2 ? parts[1] - parts[0] + 1 : 3
+  const base = parts.length === 2 ? parts[1] - parts[0] + 1 : 3
+  // Scale up by ~2.5x with minimum 5 per segment to target 25-30 total
+  return Math.max(5, Math.round(base * 2.5))
 }
 
 // ─── Slot name mapping ───
