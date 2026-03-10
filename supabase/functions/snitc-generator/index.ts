@@ -63,7 +63,7 @@ async function searchByArtists(
     try {
       const query = encodeURIComponent(`artist:${artist}`)
       const res = await fetch(
-        `https://api.spotify.com/v1/search?q=${query}&type=track&limit=${limit}&market=US`,
+        `https://api.spotify.com/v1/search?q=${query}&type=track&limit=20&market=US`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
       if (!res.ok) continue
