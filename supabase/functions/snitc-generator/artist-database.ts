@@ -274,15 +274,15 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
     genre: 'Amapiano',
     energy_arc: { start: 0.75, end: 0.85 },
     bpm_range: { min: 112, max: 118 },
-    track_count: 12,
+    track_count: 25,
     segments: [
       {
-        tracks: '1-3',
+        tracks: '1-8',
         duration_min: '0-18',
         energy: { min: 0.75, max: 0.78 },
         bpm: { min: 116, max: 118 },
         sound: 'Pure Amapiano — log drums, basslines, piano melodies, groovy',
-        artists: ['Uncle Waffles', 'DBN Gogo', 'Major League DJz'],
+        artists: ['Uncle Waffles', 'DBN Gogo', 'Major League DJz', 'Vigro Deep', 'Mr JazziQ', 'DJ Stokie'],
         example_tracks: ['Uncle Waffles - Tanzania', 'DBN Gogo - French Kiss', 'Major League DJz - Dinaledi'],
       },
       {
