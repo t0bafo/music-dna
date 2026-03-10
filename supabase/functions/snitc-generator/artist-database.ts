@@ -226,15 +226,15 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
     genre: 'Afro House',
     energy_arc: { start: 0.65, end: 0.75 },
     bpm_range: { min: 122, max: 126 },
-    track_count: 12,
+    track_count: 25,
     segments: [
       {
-        tracks: '1-4',
+        tracks: '1-8',
         duration_min: '0-25',
         energy: { min: 0.65, max: 0.70 },
         bpm: { min: 122, max: 124 },
         sound: 'Afro House with more drive, more energy',
-        artists: ['Shimza', 'Jullian Gomes', 'Floyd Lavine', 'Hyenah'],
+        artists: ['Shimza', 'Jullian Gomes', 'Floyd Lavine', 'Hyenah', 'Cornelius SA', 'Nitefreak', 'Pablo Fierro'],
         example_tracks: ['Shimza - Tarantino', 'Jullian Gomes - Late Dreamer', 'Floyd Lavine - Kaya'],
       },
       {
