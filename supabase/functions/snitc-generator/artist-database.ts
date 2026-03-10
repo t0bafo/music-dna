@@ -456,12 +456,12 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
         example_tracks: ['Black Coffee - Your Eyes (tech mix)', 'Themba - Ashamed (extended)', 'Âme - Rej', 'Dixon - Where Were You'],
       },
       {
-        tracks: '4-7',
+        tracks: '8-15',
         duration_min: '20-45',
         energy: { min: 0.65, max: 0.60 },
         bpm: { min: 120, max: 124 },
         sound: 'Afro House return (full circle bookend)',
-        artists: ['Shimza', 'Culoe De Song', 'Enoo Napa', 'Zakes Bantwini'],
+        artists: ['Shimza', 'Culoe De Song', 'Enoo Napa', 'Zakes Bantwini', 'Ralf GUM', 'Jazzuelle', 'Stones & Bones'],
         example_tracks: ['Shimza - Shimza\'s Remix', 'Culoe De Song - Exodus', 'Enoo Napa - Spiritual Hunger', 'Zakes Bantwini - Osama (deep mix)'],
       },
       {
