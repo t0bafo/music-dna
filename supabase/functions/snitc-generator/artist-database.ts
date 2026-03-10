@@ -444,15 +444,15 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
     genre: 'Afro-Tech & Global Sounds',
     energy_arc: { start: 0.68, end: 0.55 },
     bpm_range: { min: 118, max: 126 },
-    track_count: 12,
+    track_count: 25,
     segments: [
       {
-        tracks: '1-3',
+        tracks: '1-7',
         duration_min: '0-20',
         energy: { min: 0.68, max: 0.65 },
         bpm: { min: 122, max: 126 },
         sound: 'Afro-tech (Afro House + techno elements, melodic, deep)',
-        artists: ['Black Coffee', 'Themba', 'Âme', 'Dixon'],
+        artists: ['Black Coffee', 'Themba', 'Âme', 'Dixon', 'Rampa', '&ME', 'Adam Port'],
         example_tracks: ['Black Coffee - Your Eyes (tech mix)', 'Themba - Ashamed (extended)', 'Âme - Rej', 'Dixon - Where Were You'],
       },
       {
