@@ -1,8 +1,13 @@
 /**
- * Music DNA Artist Database v1.0
+ * Music DNA Artist Database v2.0 — SNITC Brooklyn Sound Progression Blueprint
  * Maintained by Apollo Wrldx
  * Last updated: 2026-03-10
  * 300+ artists for SNITC event playlist generation
+ * 
+ * Event: Saturday Night in the City (SNITC Brooklyn)
+ * Date: April 25, 2026
+ * Venue: The House, Brooklyn
+ * Duration: 6 hours (10:00 PM - 4:00 AM)
  */
 
 export type SlotType =
@@ -12,6 +17,30 @@ export type SlotType =
   | 'late_peak_curator'
   | 'deep_dive'
   | 'global_closer'
+
+export interface Segment {
+  tracks: string
+  duration_min: string
+  energy: { min: number; max: number }
+  bpm: { min: number; max: number }
+  sound: string
+  artists: string[]
+  example_tracks: string[]
+  transition_to?: string
+  handoff_notes?: string
+}
+
+export interface SetBlueprint {
+  dj: string
+  time: string
+  role: string
+  genre: string
+  energy_arc: { start: number; end: number }
+  bpm_range: { min: number; max: number }
+  track_count: number
+  segments: Segment[]
+  rules: string[]
+}
 
 export const ARTIST_DATABASE = {
   afro_house: {
@@ -138,47 +167,347 @@ export const ARTIST_DATABASE = {
   },
 } as const
 
-export const DJ_SET_CRITERIA = {
+// ─── Full Sound Progression Blueprint ───────────────────────────────────────
+
+export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
   foundation_setter: {
+    dj: 'SAMINO',
     time: '10:00-11:00 PM',
+    role: 'Foundation Setter',
     genre: 'Afro House',
-    energy: { min: 0.5, max: 0.7 },
-    tempo: { min: 118, max: 124 },
-    characteristics: 'Grounded, percussive, minimal or deep soulful vocals',
+    energy_arc: { start: 0.5, end: 0.65 },
+    bpm_range: { min: 118, max: 122 },
+    track_count: 12,
+    segments: [
+      {
+        tracks: '1-3',
+        duration_min: '0-20',
+        energy: { min: 0.5, max: 0.55 },
+        bpm: { min: 118, max: 120 },
+        sound: 'Deep, grounded, percussive Afro House',
+        artists: ['Black Coffee', 'Culoe De Song', 'Enoo Napa'],
+        example_tracks: ['Black Coffee - Drive', 'Culoe De Song - Webaba', 'Enoo Napa - Journey Into Time'],
+      },
+      {
+        tracks: '4-7',
+        duration_min: '20-45',
+        energy: { min: 0.55, max: 0.62 },
+        bpm: { min: 120, max: 122 },
+        sound: 'Electric, percussive, tribal rhythms intensify',
+        artists: ['Shimza', 'Kususa', 'Da Capo', 'Kafele Bandele'],
+        example_tracks: ['Shimza - Calling Out Your Name', 'Kususa - Sondela', 'Da Capo - Thando'],
+      },
+      {
+        tracks: '8-10',
+        duration_min: '45-60',
+        energy: { min: 0.62, max: 0.68 },
+        bpm: { min: 122, max: 124 },
+        sound: 'Transition zone: Afro House with subtle log drum hints',
+        artists: ['Themba', 'Zakes Bantwini', 'Sun-El Musician'],
+        example_tracks: ['Themba - Ashamed', 'Zakes Bantwini - Osama (Afro House version)', 'Sun-El Musician - Akanamali (deep mix)'],
+        transition_to: 'MUDIA',
+        handoff_notes: 'Introduce subtle Amapiano elements, prepare for energy build',
+      },
+    ],
+    rules: [
+      'No Amapiano (even if log drums present)',
+      'No Afrobeats',
+      'No commercial house or tech house',
+      'Stay grounded, percussive, cultural',
+      'Minimal but intentional',
+      'Set the vibe, don\'t chase energy',
+    ],
   },
+
   energy_builder: {
+    dj: 'MUDIA',
     time: '11:00 PM-12:00 AM',
+    role: 'Energy Builder',
     genre: 'Afro House',
-    energy: { min: 0.65, max: 0.8 },
-    tempo: { min: 122, max: 126 },
-    characteristics: 'Building momentum, transition-friendly, subtle Amapiano elements',
+    energy_arc: { start: 0.65, end: 0.75 },
+    bpm_range: { min: 122, max: 126 },
+    track_count: 12,
+    segments: [
+      {
+        tracks: '1-4',
+        duration_min: '0-25',
+        energy: { min: 0.65, max: 0.70 },
+        bpm: { min: 122, max: 124 },
+        sound: 'Afro House with more drive, more energy',
+        artists: ['Shimza', 'Jullian Gomes', 'Floyd Lavine', 'Hyenah'],
+        example_tracks: ['Shimza - Tarantino', 'Jullian Gomes - Late Dreamer', 'Floyd Lavine - Kaya'],
+      },
+      {
+        tracks: '5-8',
+        duration_min: '25-45',
+        energy: { min: 0.70, max: 0.75 },
+        bpm: { min: 124, max: 126 },
+        sound: 'Electric Afro House, percussive intensity increasing',
+        artists: ['Black Coffee', 'Themba', 'Ryan Murgatroyd', 'Caiiro'],
+        example_tracks: ['Black Coffee - We Dance Again', 'Themba - Who Is Themba?', 'Caiiro - Thanda'],
+      },
+      {
+        tracks: '9-12',
+        duration_min: '45-60',
+        energy: { min: 0.75, max: 0.78 },
+        bpm: { min: 118, max: 122 },
+        sound: 'Transition zone: Afro House with CLEAR Amapiano elements',
+        artists: ['Kelvin Momo', 'Mas Musiq', 'MFR Souls'],
+        example_tracks: ['Kelvin Momo - Bayekele', 'MFR Souls - Isphithiphithi', 'Mas Musiq - Zaka'],
+        transition_to: 'NIFFSTER',
+        handoff_notes: 'Log drums clearly present, basslines start, BPM drops to 118-122 for Amapiano handoff',
+      },
+    ],
+    rules: [
+      'No Afrobeats',
+      'Don\'t fully commit to Amapiano (Niffster owns that)',
+      'Build energy from 0.65 → 0.75',
+      'Last 10-15 min MUST tease Amapiano',
+      'Smooth handoff (not jarring genre jump)',
+    ],
   },
+
   peak_energy: {
+    dj: 'NIFFSTER',
     time: '12:00-1:00 AM',
+    role: 'The First Impression / Peak Ignition',
     genre: 'Amapiano',
-    energy: { min: 0.75, max: 0.9 },
-    tempo: { min: 112, max: 118 },
-    characteristics: 'Log drums, basslines, piano, peak danceability',
+    energy_arc: { start: 0.75, end: 0.85 },
+    bpm_range: { min: 112, max: 118 },
+    track_count: 12,
+    segments: [
+      {
+        tracks: '1-3',
+        duration_min: '0-18',
+        energy: { min: 0.75, max: 0.78 },
+        bpm: { min: 116, max: 118 },
+        sound: 'Pure Amapiano — log drums, basslines, piano melodies, groovy',
+        artists: ['Uncle Waffles', 'DBN Gogo', 'Major League DJz'],
+        example_tracks: ['Uncle Waffles - Tanzania', 'DBN Gogo - French Kiss', 'Major League DJz - Dinaledi'],
+      },
+      {
+        tracks: '4-7',
+        duration_min: '18-42',
+        energy: { min: 0.78, max: 0.83 },
+        bpm: { min: 114, max: 118 },
+        sound: 'High-energy Amapiano, heavier basslines, driving log drums',
+        artists: ['Focalistic', 'Kamo Mphela', 'Kabza De Small', 'DJ Maphorisa'],
+        example_tracks: ['Focalistic - Ke Star', 'Kamo Mphela - Nkulunkulu', 'Kabza De Small - Sponono'],
+      },
+      {
+        tracks: '8-10',
+        duration_min: '42-60',
+        energy: { min: 0.83, max: 0.85 },
+        bpm: { min: 112, max: 116 },
+        sound: 'Peak Amapiano energy, crowd favorites, anthems',
+        artists: ["Ch'cco", 'Mellow & Sleazy', 'Young Stunna', 'MFR Souls'],
+        example_tracks: ["Ch'cco - Nkao Tempela", 'Mellow & Sleazy - Bopha', 'MFR Souls - Amanikiniki'],
+        transition_to: 'DESTINEE',
+        handoff_notes: 'Stay in PURE Amapiano, hand off at HIGH energy (0.83-0.85)',
+      },
+    ],
+    rules: [
+      'No Afro House regression',
+      'No Afrobeats (Destinee handles expansion)',
+      'Pure Amapiano only (log drums, basslines, piano)',
+      'Build energy from 0.75 → 0.85',
+      'Make early crowd feel validated',
+      'Hand off at HIGH energy',
+    ],
   },
+
   late_peak_curator: {
+    dj: 'DESTINEE',
     time: '1:00-2:00 AM',
+    role: 'Late Peak Curator',
     genre: 'Amapiano → Afrobeats Expansion',
-    energy: { min: 0.7, max: 0.85 },
-    tempo: { min: 110, max: 120 },
-    characteristics: 'Melodic Amapiano, Afrobeats club edits, Alte, Afro-fusion',
+    energy_arc: { start: 0.85, end: 0.80 },
+    bpm_range: { min: 110, max: 120 },
+    track_count: 17,
+    segments: [
+      {
+        tracks: '1-4',
+        duration_min: '0-20',
+        energy: { min: 0.85, max: 0.83 },
+        bpm: { min: 114, max: 118 },
+        sound: 'Melodic Amapiano (softer than Niffster, more musical depth)',
+        artists: ['Kelvin Momo', 'Aymos', 'Mas Musiq', 'Sam Deep'],
+        example_tracks: ['Kelvin Momo - Inyembezi', 'Aymos - Lydia', 'Mas Musiq - Sengizwile', 'Sam Deep - Khuza Gogo'],
+      },
+      {
+        tracks: '5-8',
+        duration_min: '20-42',
+        energy: { min: 0.83, max: 0.82 },
+        bpm: { min: 112, max: 118 },
+        sound: 'Amapiano/Afrobeats hybrids (log drums + Nigerian/Ghanaian vocals)',
+        artists: ['DJ Maphorisa', 'Wizkid', 'Focalistic', 'Davido', 'Cassper Nyovest', 'Major League DJz'],
+        example_tracks: ['DJ Maphorisa, Wizkid - Money Constant', 'Focalistic, Davido - Ke Star remix', 'Cassper Nyovest - Siyathandana'],
+      },
+      {
+        tracks: '9-12',
+        duration_min: '42-52',
+        energy: { min: 0.82, max: 0.80 },
+        bpm: { min: 110, max: 118 },
+        sound: 'Afrobeats club edits + Alté (less log drums, more Afrobeats rhythm)',
+        artists: ['Rema', 'Asake', 'Ayra Starr', 'Cruel Santino', 'Odunsi (The Engine)', 'Santi'],
+        example_tracks: ['Rema - Calm Down (Amapiano remix)', 'Asake - Terminator', 'Cruel Santino - Gangster Fear', 'Odunsi - Tipsy'],
+      },
+      {
+        tracks: '13-17',
+        duration_min: '52-60',
+        energy: { min: 0.80, max: 0.78 },
+        bpm: { min: 108, max: 115 },
+        sound: 'Afro-fusion handoff (NO more log drums, pure Afrobeats/Afro-fusion)',
+        artists: ['Burna Boy', 'Tems', 'Omah Lay', 'Wizkid', 'Ayra Starr'],
+        example_tracks: ['Burna Boy - Last Last', 'Tems - Free Mind', 'Omah Lay - Soso', 'Wizkid - Essence (club edit)'],
+        transition_to: 'MIKEWEST',
+        handoff_notes: 'CRITICAL: Amapiano GONE, pure Afrobeats/Afro-fusion, melodic, sets up deep dive',
+      },
+    ],
+    rules: [
+      'NO staying in pure Amapiano (must expand)',
+      'NO jarring genre jumps (gradual evolution)',
+      'NO random pop music',
+      'Start melodic Amapiano (0-20 min)',
+      'Introduce Amapiano/Afrobeats hybrids (20-42 min)',
+      'Expand into Afrobeats club edits + Alté (42-52 min)',
+      'Close with Afro-fusion handoff (52-60 min)',
+      'Maintain peak energy (0.80-0.85)',
+      'Add personality and depth (not just bangers)',
+    ],
   },
+
   deep_dive: {
+    dj: 'MIKEWEST',
     time: '2:00-3:00 AM',
+    role: 'Deep Dive / Curator',
     genre: 'Afrobeats',
-    energy: { min: 0.6, max: 0.75 },
-    tempo: { min: 100, max: 118 },
-    characteristics: 'B-sides, deep cuts, current sound, discovery-focused',
+    energy_arc: { start: 0.78, end: 0.70 },
+    bpm_range: { min: 100, max: 118 },
+    track_count: 15,
+    segments: [
+      {
+        tracks: '1-4',
+        duration_min: '0-20',
+        energy: { min: 0.78, max: 0.76 },
+        bpm: { min: 110, max: 118 },
+        sound: 'Pure Afrobeats (NOT the hits everyone knows)',
+        artists: ['Omah Lay', 'Ayra Starr', 'Asake', 'Victony'],
+        example_tracks: ['Omah Lay - Understand', 'Ayra Starr - Beggie Beggie', 'Asake - Peace Be Unto You', 'Victony - Kolomental'],
+      },
+      {
+        tracks: '5-9',
+        duration_min: '20-45',
+        energy: { min: 0.76, max: 0.73 },
+        bpm: { min: 105, max: 115 },
+        sound: 'Current Afrobeats, emerging artists, deep album cuts',
+        artists: ['Seyi Vibez', 'Ruger', 'BNXN', 'Zinoleesky', 'Young Jonn'],
+        example_tracks: ['Seyi Vibez - Catalyst', 'Ruger - Kristy', 'BNXN - Outside', 'Zinoleesky - Caro', 'Young Jonn - Xtra Cool'],
+      },
+      {
+        tracks: '10-12',
+        duration_min: '45-55',
+        energy: { min: 0.73, max: 0.70 },
+        bpm: { min: 100, max: 112 },
+        sound: 'Afro-fusion / Alté depth',
+        artists: ['Tems', 'Cruel Santino', 'Tay Iwar', 'Nonso Amadi', 'The Cavemen'],
+        example_tracks: ['Tems - Damages', 'Cruel Santino - Sparky', 'Tay Iwar - Sideline', 'Nonso Amadi - Tonight', 'The Cavemen - Osondu'],
+      },
+      {
+        tracks: '13-15',
+        duration_min: '55-60',
+        energy: { min: 0.70, max: 0.68 },
+        bpm: { min: 105, max: 115 },
+        sound: 'Melodic Afrobeats, prep for Afro-tech handoff',
+        artists: ['Burna Boy', 'Wizkid', 'Adekunle Gold'],
+        example_tracks: ['Burna Boy - It\'s Plenty', 'Wizkid - Longtime', 'Adekunle Gold - Before You Wake Up'],
+        transition_to: 'TOBEGO',
+        handoff_notes: 'Melodic, reflective, sets up Tobego\'s Afro-tech/global sounds close',
+      },
+    ],
+    rules: [
+      'No going back to Amapiano',
+      'No playing the hits (already played by Destinee)',
+      'No commercial Afrobeats (overplayed tracks)',
+      'Deep cuts, B-sides, album tracks only',
+      'Current sound (2024-2026 releases)',
+      'Discovery-focused (emerging artists)',
+      'Trust curation (people came for this)',
+      'Slow energy from 0.78 → 0.70',
+    ],
   },
+
   global_closer: {
+    dj: 'TOBEGO',
     time: '3:00-4:00 AM',
+    role: 'Global Closer',
     genre: 'Afro-Tech & Global Sounds',
-    energy: { min: 0.5, max: 0.7 },
-    tempo: { min: 118, max: 126 },
-    characteristics: 'Afro-tech, Afro House, global sounds, satisfying wind-down',
+    energy_arc: { start: 0.68, end: 0.55 },
+    bpm_range: { min: 118, max: 126 },
+    track_count: 12,
+    segments: [
+      {
+        tracks: '1-3',
+        duration_min: '0-20',
+        energy: { min: 0.68, max: 0.65 },
+        bpm: { min: 122, max: 126 },
+        sound: 'Afro-tech (Afro House + techno elements, melodic, deep)',
+        artists: ['Black Coffee', 'Themba', 'Âme', 'Dixon'],
+        example_tracks: ['Black Coffee - Your Eyes (tech mix)', 'Themba - Ashamed (extended)', 'Âme - Rej', 'Dixon - Where Were You'],
+      },
+      {
+        tracks: '4-7',
+        duration_min: '20-45',
+        energy: { min: 0.65, max: 0.60 },
+        bpm: { min: 120, max: 124 },
+        sound: 'Afro House return (full circle bookend)',
+        artists: ['Shimza', 'Culoe De Song', 'Enoo Napa', 'Zakes Bantwini'],
+        example_tracks: ['Shimza - Shimza\'s Remix', 'Culoe De Song - Exodus', 'Enoo Napa - Spiritual Hunger', 'Zakes Bantwini - Osama (deep mix)'],
+      },
+      {
+        tracks: '8-10',
+        duration_min: '45-55',
+        energy: { min: 0.60, max: 0.57 },
+        bpm: { min: 118, max: 122 },
+        sound: 'Global sounds (UK Afrobeats, global bass, open format)',
+        artists: ['J Hus', 'Koffee', 'Burna Boy', 'Solomun'],
+        example_tracks: ['J Hus - Spirit', 'Koffee - Toast', 'Burna Boy - B. d\'Or', 'Solomun - Something We All Adore'],
+      },
+      {
+        tracks: '11-12',
+        duration_min: '55-60',
+        energy: { min: 0.57, max: 0.55 },
+        bpm: { min: 118, max: 120 },
+        sound: 'The landing (Afro House, Afro-tech, melodic, reflective)',
+        artists: ['Black Coffee', 'Themba', 'Osunlade'],
+        example_tracks: ['Black Coffee - We Dance Again (outro)', 'Themba - Who Is Themba? (extended)', 'Osunlade - Envision (Yoruba Soul Mix)'],
+        transition_to: 'END',
+        handoff_notes: 'Let people leave feeling full, not exhausted. Satisfying close.',
+      },
+    ],
+    rules: [
+      'No regression to Amapiano or Afrobeats',
+      'No abrupt ending (no crashing the energy)',
+      'No commercial EDM or tech house',
+      'Afro-tech + Afro House + global sounds',
+      'Bookend the night (started Afro House, close Afro House)',
+      'Wind down energy gradually (0.68 → 0.55)',
+      'Satisfying, not jarring',
+      'Let people leave feeling whole',
+    ],
   },
-} as const
+}
+
+// Legacy export for backward compat
+export const DJ_SET_CRITERIA = Object.fromEntries(
+  Object.entries(SET_BLUEPRINTS).map(([slot, bp]) => [
+    slot,
+    {
+      time: bp.time,
+      genre: bp.genre,
+      energy: { min: bp.energy_arc.start, max: bp.energy_arc.end },
+      tempo: bp.bpm_range,
+      characteristics: bp.segments.map(s => s.sound).join(' → '),
+    },
+  ])
+) as Record<SlotType, { time: string; genre: string; energy: { min: number; max: number }; tempo: { min: number; max: number }; characteristics: string }>
