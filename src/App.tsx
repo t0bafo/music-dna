@@ -17,6 +17,7 @@ import Crates from "./pages/Crates";
 import CrateDetail from "./pages/CrateDetail";
 import CrateShare from "./pages/CrateShare";
 import Studio from "./pages/Studio";
+import SNITCGenerator from "./pages/SNITCGenerator";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +44,7 @@ const App = () => (
                 <Route path="/crates/:crateId/share" element={<CrateShare />} />
                 <Route path="/curation" element={<Studio />} />
                 <Route path="/studio" element={<Studio />} />
+                <Route path="/snitc-generator" element={<SNITCGenerator />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </NativeAppProvider>
