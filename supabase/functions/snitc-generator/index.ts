@@ -26,15 +26,26 @@ interface TrackWithFeatures extends SpotifyTrack {
 
 // ─── Get Spotify token via existing edge function ───
 async function getSpotifyToken(): Promise<string> {
-  const supabaseUrl = Deno.env.get('SUPABASE_URL')!
-  const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!
-  
-  const res = await fetch(`${supabaseUrl}/functions/v1/spotify-public-token`, {
+  // Use client credentials directly since we're server-side
+  const clientId = Deno.env.get('SPOTIFY_CLIENT_ID')
+  const clientSecret = Deno.env.get('SPOTIFY_CLIENT_SECRET')
+
+  if (!clientId || !clientSecret) throw new Error('Missing Spotify credentials')
+
+  const res = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Authorization': `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
+    },
+    body: 'grant_type=client_credentials',
   })
-  
-  if (!res.ok) throw new Error('Failed to get Spotify token')
+
+  if (!res.ok) {
+    const err = await res.text()
+    console.error('Spotify token error:', err)
+    throw new Error('Failed to get Spotify token')
+  }
   const data = await res.json()
   if (!data.access_token) throw new Error('No access token returned')
   return data.access_token
