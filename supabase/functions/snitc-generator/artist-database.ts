@@ -396,12 +396,12 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
         example_tracks: ['Omah Lay - Understand', 'Ayra Starr - Beggie Beggie', 'Asake - Peace Be Unto You', 'Victony - Kolomental'],
       },
       {
-        tracks: '5-9',
+        tracks: '8-17',
         duration_min: '20-45',
         energy: { min: 0.76, max: 0.73 },
         bpm: { min: 105, max: 115 },
         sound: 'Current Afrobeats, emerging artists, deep album cuts',
-        artists: ['Seyi Vibez', 'Ruger', 'BNXN', 'Zinoleesky', 'Young Jonn'],
+        artists: ['Seyi Vibez', 'Ruger', 'BNXN', 'Zinoleesky', 'Young Jonn', 'Shallipopi', 'Spyro', 'Boy Spyce', 'Magixx'],
         example_tracks: ['Seyi Vibez - Catalyst', 'Ruger - Kristy', 'BNXN - Outside', 'Zinoleesky - Caro', 'Young Jonn - Xtra Cool'],
       },
       {
