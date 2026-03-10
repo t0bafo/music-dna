@@ -405,12 +405,12 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
         example_tracks: ['Seyi Vibez - Catalyst', 'Ruger - Kristy', 'BNXN - Outside', 'Zinoleesky - Caro', 'Young Jonn - Xtra Cool'],
       },
       {
-        tracks: '10-12',
+        tracks: '18-23',
         duration_min: '45-55',
         energy: { min: 0.73, max: 0.70 },
         bpm: { min: 100, max: 112 },
         sound: 'Afro-fusion / Alté depth',
-        artists: ['Tems', 'Cruel Santino', 'Tay Iwar', 'Nonso Amadi', 'The Cavemen'],
+        artists: ['Tems', 'Cruel Santino', 'Tay Iwar', 'Nonso Amadi', 'The Cavemen', 'Amaarae', 'Lady Donli'],
         example_tracks: ['Tems - Damages', 'Cruel Santino - Sparky', 'Tay Iwar - Sideline', 'Nonso Amadi - Tonight', 'The Cavemen - Osondu'],
       },
       {
