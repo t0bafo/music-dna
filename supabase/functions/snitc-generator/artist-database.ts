@@ -344,12 +344,12 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
         example_tracks: ['DJ Maphorisa, Wizkid - Money Constant', 'Focalistic, Davido - Ke Star remix', 'Cassper Nyovest - Siyathandana'],
       },
       {
-        tracks: '9-12',
+        tracks: '16-22',
         duration_min: '42-52',
         energy: { min: 0.82, max: 0.80 },
         bpm: { min: 110, max: 118 },
         sound: 'Afrobeats club edits + Alté (less log drums, more Afrobeats rhythm)',
-        artists: ['Rema', 'Asake', 'Ayra Starr', 'Cruel Santino', 'Odunsi (The Engine)', 'Santi'],
+        artists: ['Rema', 'Asake', 'Ayra Starr', 'Cruel Santino', 'Odunsi (The Engine)', 'Santi', 'Amaarae'],
         example_tracks: ['Rema - Calm Down (Amapiano remix)', 'Asake - Terminator', 'Cruel Santino - Gangster Fear', 'Odunsi - Tipsy'],
       },
       {
