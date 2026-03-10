@@ -384,15 +384,15 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
     genre: 'Afrobeats',
     energy_arc: { start: 0.78, end: 0.70 },
     bpm_range: { min: 100, max: 118 },
-    track_count: 15,
+    track_count: 28,
     segments: [
       {
-        tracks: '1-4',
+        tracks: '1-7',
         duration_min: '0-20',
         energy: { min: 0.78, max: 0.76 },
         bpm: { min: 110, max: 118 },
         sound: 'Pure Afrobeats (NOT the hits everyone knows)',
-        artists: ['Omah Lay', 'Ayra Starr', 'Asake', 'Victony'],
+        artists: ['Omah Lay', 'Ayra Starr', 'Asake', 'Victony', 'Fireboy DML', 'Lojay', 'Khaid'],
         example_tracks: ['Omah Lay - Understand', 'Ayra Starr - Beggie Beggie', 'Asake - Peace Be Unto You', 'Victony - Kolomental'],
       },
       {
