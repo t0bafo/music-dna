@@ -102,22 +102,19 @@ async function searchSpotifyByArtists(
   const allTracks: SpotifyTrack[] = []
   const seen = new Set<string>()
 
-  // Search 3 artists at a time via OR queries
-  const batchSize = 3
-  const maxBatches = Math.ceil(Math.min(artists.length, 30) / batchSize) // cap at 30 artists to avoid timeout
+  // Search individual artists, cap at 20 to stay within timeout
+  const artistsToSearch = artists.slice(0, 20)
 
-  for (let i = 0; i < maxBatches; i++) {
-    const batch = artists.slice(i * batchSize, (i + 1) * batchSize)
-    const query = batch.map(a => `artist:"${a}"`).join(' OR ')
-
+  for (const artist of artistsToSearch) {
     try {
+      const query = encodeURIComponent(`artist:${artist}`)
       const res = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=50`,
+        `https://api.spotify.com/v1/search?q=${query}&type=track&limit=10&market=US`,
         { headers: { Authorization: `Bearer ${token}` } }
       )
 
       if (!res.ok) {
-        console.warn(`Spotify search failed for batch ${i}:`, res.status)
+        console.warn(`Spotify search failed for "${artist}":`, res.status, await res.text())
         continue
       }
 
@@ -129,12 +126,13 @@ async function searchSpotifyByArtists(
         }
       }
     } catch (err) {
-      console.warn(`Search batch ${i} error:`, err)
+      console.warn(`Search error for "${artist}":`, err)
     }
 
     if (allTracks.length >= limit) break
   }
 
+  console.log(`[SNITC] Searched ${artistsToSearch.length} artists, found ${allTracks.length} unique tracks`)
   return allTracks.slice(0, limit)
 }
 
