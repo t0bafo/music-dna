@@ -214,7 +214,7 @@ serve(async (req) => {
     console.log(`[SNITC] Searching ${allSegArtists.length} segment artists`)
 
     // Search Spotify for all segment artists
-    const rawTracks = await searchByArtists(allSegArtists, spotifyToken, 10)
+    const rawTracks = await searchByArtists(allSegArtists, spotifyToken, 20)
     console.log(`[SNITC] Found ${rawTracks.length} raw tracks`)
 
     if (rawTracks.length === 0) {
