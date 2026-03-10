@@ -286,12 +286,12 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
         example_tracks: ['Uncle Waffles - Tanzania', 'DBN Gogo - French Kiss', 'Major League DJz - Dinaledi'],
       },
       {
-        tracks: '4-7',
+        tracks: '9-18',
         duration_min: '18-42',
         energy: { min: 0.78, max: 0.83 },
         bpm: { min: 114, max: 118 },
         sound: 'High-energy Amapiano, heavier basslines, driving log drums',
-        artists: ['Focalistic', 'Kamo Mphela', 'Kabza De Small', 'DJ Maphorisa'],
+        artists: ['Focalistic', 'Kamo Mphela', 'Kabza De Small', 'DJ Maphorisa', 'Lady Du', 'Busta 929', 'Tyler ICU'],
         example_tracks: ['Focalistic - Ke Star', 'Kamo Mphela - Nkulunkulu', 'Kabza De Small - Sponono'],
       },
       {
