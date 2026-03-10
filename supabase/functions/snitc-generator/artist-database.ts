@@ -177,15 +177,15 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
     genre: 'Afro House',
     energy_arc: { start: 0.5, end: 0.65 },
     bpm_range: { min: 118, max: 122 },
-    track_count: 12,
+    track_count: 25,
     segments: [
       {
-        tracks: '1-3',
+        tracks: '1-8',
         duration_min: '0-20',
         energy: { min: 0.5, max: 0.55 },
         bpm: { min: 118, max: 120 },
         sound: 'Deep, grounded, percussive Afro House',
-        artists: ['Black Coffee', 'Culoe De Song', 'Enoo Napa'],
+        artists: ['Black Coffee', 'Culoe De Song', 'Enoo Napa', 'Atjazz', 'Boddhi Satva', 'Osunlade'],
         example_tracks: ['Black Coffee - Drive', 'Culoe De Song - Webaba', 'Enoo Napa - Journey Into Time'],
       },
       {
