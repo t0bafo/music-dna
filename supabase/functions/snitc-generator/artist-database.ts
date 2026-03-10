@@ -335,12 +335,12 @@ export const SET_BLUEPRINTS: Record<SlotType, SetBlueprint> = {
         example_tracks: ['Kelvin Momo - Inyembezi', 'Aymos - Lydia', 'Mas Musiq - Sengizwile', 'Sam Deep - Khuza Gogo'],
       },
       {
-        tracks: '5-8',
+        tracks: '8-15',
         duration_min: '20-42',
         energy: { min: 0.83, max: 0.82 },
         bpm: { min: 112, max: 118 },
         sound: 'Amapiano/Afrobeats hybrids (log drums + Nigerian/Ghanaian vocals)',
-        artists: ['DJ Maphorisa', 'Wizkid', 'Focalistic', 'Davido', 'Cassper Nyovest', 'Major League DJz'],
+        artists: ['DJ Maphorisa', 'Wizkid', 'Focalistic', 'Davido', 'Cassper Nyovest', 'Major League DJz', 'DJ Tunez'],
         example_tracks: ['DJ Maphorisa, Wizkid - Money Constant', 'Focalistic, Davido - Ke Star remix', 'Cassper Nyovest - Siyathandana'],
       },
       {
