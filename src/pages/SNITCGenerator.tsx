@@ -11,6 +11,7 @@ import UserProfile from '@/components/UserProfile';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { usePageTitle } from '@/hooks/use-page-title';
 import { createPlaylist, addTracksToPlaylist } from '@/lib/spotify-api';
+import { addTracksToCrate } from '@/lib/crates-api';
 import { toast } from 'sonner';
 import {
   Loader2, Music, Zap, Clock, ExternalLink, Save,
