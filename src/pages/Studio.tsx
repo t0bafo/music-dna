@@ -65,6 +65,15 @@ const TOOL_CARDS: ToolCard[] = [
     buttonText: 'Create a Set',
     color: 'chart-cyan',
   },
+  {
+    id: 'snitc',
+    icon: <Radio className="w-8 h-8" />,
+    emoji: '🎧',
+    title: 'SNITC Event Generator',
+    description: 'Generate professionally curated 6-hour event playlists for Apollo Wrldx events with proper energy progression and genre transitions.',
+    buttonText: 'Generate Event Sets',
+    color: 'chart-orange',
+  },
 ];
 
 const Studio = () => {
