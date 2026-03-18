@@ -11,6 +11,7 @@ import UserProfile from '@/components/UserProfile';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { usePageTitle } from '@/hooks/use-page-title';
 import { createPlaylist, addTracksToPlaylist } from '@/lib/spotify-api';
+import { addTracksToCrate } from '@/lib/crates-api';
 import { toast } from 'sonner';
 import {
   Loader2, Music, Zap, Clock, ExternalLink, Save,
@@ -164,12 +165,32 @@ const SNITCGenerator = () => {
     setIsSaving(true);
     try {
       const slotInfo = SLOT_OPTIONS.find(s => s.value === result.slot);
-      await supabase.functions.invoke('music-intelligence', {
-        body: { action: 'create_crate', name: result.name, description: result.metadata.criteria.characteristics, emoji: slotInfo?.emoji || '🎵' },
+      const { data: response } = await supabase.functions.invoke('music-intelligence', {
+        body: { action: 'create_crate', data: { name: result.name, description: result.metadata.criteria.characteristics, emoji: slotInfo?.emoji || '🎵' } },
         headers: { 'x-spotify-token': accessToken },
       });
-      toast.success('Saved as crate!');
-      navigate('/crates');
+
+      const crateId = response?.data?.id;
+      if (!crateId) throw new Error('Failed to create crate');
+
+      // Map SNITC tracks to TrackToAdd format and add to the crate
+      const tracksToAdd = result.tracks.map(t => ({
+        track_id: t.id,
+        name: t.name,
+        artist_name: t.artists.join(', '),
+        album_name: t.album_name || '',
+        album_art_url: t.album_art || '',
+        duration_ms: t.duration_ms,
+        bpm: t.bpm ?? undefined,
+        energy: t.energy ?? undefined,
+        danceability: t.danceability ?? undefined,
+        valence: t.valence ?? undefined,
+      }));
+
+      await addTracksToCrate(crateId, tracksToAdd, accessToken);
+
+      toast.success(`Saved ${result.tracks.length} tracks to crate '${result.name}'`);
+      navigate(`/crates/${crateId}`);
     } catch (err: any) {
       toast.error(err.message || 'Save failed');
     } finally {
