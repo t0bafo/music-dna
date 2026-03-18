@@ -7,6 +7,7 @@ import {
   Sparkles, 
   BarChart3,
   Music,
+  Radio,
   Home,
   Package,
   Palette,
@@ -25,7 +26,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePageTitle } from '@/hooks/use-page-title';
 
-type ToolType = 'none' | 'analyzer' | 'find' | 'build';
+type ToolType = 'none' | 'analyzer' | 'find' | 'build' | 'snitc';
 
 interface ToolCard {
   id: ToolType;
@@ -65,6 +66,15 @@ const TOOL_CARDS: ToolCard[] = [
     buttonText: 'Create a Set',
     color: 'chart-cyan',
   },
+  {
+    id: 'snitc',
+    icon: <Radio className="w-8 h-8" />,
+    emoji: '🎧',
+    title: 'SNITC Event Generator',
+    description: 'Generate professionally curated 6-hour event playlists for Apollo Wrldx events with proper energy progression and genre transitions.',
+    buttonText: 'Generate Event Sets',
+    color: 'chart-orange',
+  },
 ];
 
 const Studio = () => {
@@ -81,6 +91,10 @@ const Studio = () => {
   }, [authLoading, isAuthenticated, navigate]);
 
   const handleToolClick = (toolId: ToolType) => {
+    if (toolId === 'snitc') {
+      navigate('/snitc-generator');
+      return;
+    }
     setActiveTool(toolId);
   };
 
@@ -187,7 +201,8 @@ const Studio = () => {
                             "w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center flex-shrink-0",
                             tool.color === 'primary' && "bg-primary/10 text-primary",
                             tool.color === 'chart-purple' && "bg-chart-purple/10 text-chart-purple",
-                            tool.color === 'chart-cyan' && "bg-chart-cyan/10 text-chart-cyan"
+                            tool.color === 'chart-cyan' && "bg-chart-cyan/10 text-chart-cyan",
+                            tool.color === 'chart-orange' && "bg-chart-orange/10 text-chart-orange"
                           )}>
                             <span className="text-4xl lg:text-5xl">{tool.emoji}</span>
                           </div>
@@ -205,7 +220,8 @@ const Studio = () => {
                               className={cn(
                                 "gap-2 group-hover:gap-3 transition-all btn-scale",
                                 tool.color === 'chart-purple' && "bg-chart-purple hover:bg-chart-purple/90",
-                                tool.color === 'chart-cyan' && "bg-chart-cyan hover:bg-chart-cyan/90 text-chart-cyan-foreground"
+                                tool.color === 'chart-cyan' && "bg-chart-cyan hover:bg-chart-cyan/90 text-chart-cyan-foreground",
+                                tool.color === 'chart-orange' && "bg-chart-orange hover:bg-chart-orange/90"
                               )}
                               onClick={(e) => {
                                 e.stopPropagation();
