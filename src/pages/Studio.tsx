@@ -202,7 +202,7 @@ const Studio = () => {
                             tool.color === 'primary' && "bg-primary/10 text-primary",
                             tool.color === 'chart-purple' && "bg-chart-purple/10 text-chart-purple",
                             tool.color === 'chart-cyan' && "bg-chart-cyan/10 text-chart-cyan",
-                            tool.color === 'chart-orange' && "bg-orange-500/10 text-orange-500"
+                            tool.color === 'chart-orange' && "bg-chart-orange/10 text-chart-orange"
                           )}>
                             <span className="text-4xl lg:text-5xl">{tool.emoji}</span>
                           </div>
