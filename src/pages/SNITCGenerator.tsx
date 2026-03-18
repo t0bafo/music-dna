@@ -165,12 +165,12 @@ const SNITCGenerator = () => {
     setIsSaving(true);
     try {
       const slotInfo = SLOT_OPTIONS.find(s => s.value === result.slot);
-      const { data } = await supabase.functions.invoke('music-intelligence', {
-        body: { action: 'create_crate', name: result.name, description: result.metadata.criteria.characteristics, emoji: slotInfo?.emoji || '🎵' },
+      const { data: response } = await supabase.functions.invoke('music-intelligence', {
+        body: { action: 'create_crate', data: { name: result.name, description: result.metadata.criteria.characteristics, emoji: slotInfo?.emoji || '🎵' } },
         headers: { 'x-spotify-token': accessToken },
       });
 
-      const crateId = data?.crate?.id;
+      const crateId = response?.data?.id;
       if (!crateId) throw new Error('Failed to create crate');
 
       // Map SNITC tracks to TrackToAdd format and add to the crate
