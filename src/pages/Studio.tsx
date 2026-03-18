@@ -7,6 +7,7 @@ import {
   Sparkles, 
   BarChart3,
   Music,
+  Radio,
   Home,
   Package,
   Palette,
