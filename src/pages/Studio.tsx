@@ -91,6 +91,10 @@ const Studio = () => {
   }, [authLoading, isAuthenticated, navigate]);
 
   const handleToolClick = (toolId: ToolType) => {
+    if (toolId === 'snitc') {
+      navigate('/snitc-generator');
+      return;
+    }
     setActiveTool(toolId);
   };
 
