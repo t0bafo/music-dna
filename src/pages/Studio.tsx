@@ -201,7 +201,8 @@ const Studio = () => {
                             "w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center flex-shrink-0",
                             tool.color === 'primary' && "bg-primary/10 text-primary",
                             tool.color === 'chart-purple' && "bg-chart-purple/10 text-chart-purple",
-                            tool.color === 'chart-cyan' && "bg-chart-cyan/10 text-chart-cyan"
+                            tool.color === 'chart-cyan' && "bg-chart-cyan/10 text-chart-cyan",
+                            tool.color === 'chart-orange' && "bg-orange-500/10 text-orange-500"
                           )}>
                             <span className="text-4xl lg:text-5xl">{tool.emoji}</span>
                           </div>
