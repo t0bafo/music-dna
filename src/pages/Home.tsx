@@ -140,6 +140,16 @@ const Home = () => {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
+          {/* Your Music Year */}
+          {accessToken && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 1.0 }}
+            >
+              <YourMusicYearSection accessToken={accessToken} />
+            </motion.div>
+          )}
 
   if (authLoading) {
     return (
