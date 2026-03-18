@@ -24,6 +24,7 @@ import IdentityStatCards from '@/components/identity/IdentityStatCards';
 import TopDefiningTracks from '@/components/identity/TopDefiningTracks';
 import HorizontalTrackScroller, { ScrollerTrack } from '@/components/identity/HorizontalTrackScroller';
 import ShareIdentityModal from '@/components/identity/ShareIdentityModal';
+import YourMusicYearSection from '@/components/music-year/YourMusicYearSection';
 
 const Home = () => {
   usePageTitle('Your Music DNA | Organize by Vibe, Not Genre');
@@ -139,6 +140,16 @@ const Home = () => {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
+          {/* Your Music Year */}
+          {accessToken && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 1.0 }}
+            >
+              <YourMusicYearSection accessToken={accessToken} />
+            </motion.div>
+          )}
 
   if (authLoading) {
     return (
