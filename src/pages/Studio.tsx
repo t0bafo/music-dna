@@ -221,7 +221,7 @@ const Studio = () => {
                                 "gap-2 group-hover:gap-3 transition-all btn-scale",
                                 tool.color === 'chart-purple' && "bg-chart-purple hover:bg-chart-purple/90",
                                 tool.color === 'chart-cyan' && "bg-chart-cyan hover:bg-chart-cyan/90 text-chart-cyan-foreground",
-                                tool.color === 'chart-orange' && "bg-orange-500 hover:bg-orange-500/90"
+                                tool.color === 'chart-orange' && "bg-chart-orange hover:bg-chart-orange/90"
                               )}
                               onClick={(e) => {
                                 e.stopPropagation();
