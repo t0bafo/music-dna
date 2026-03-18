@@ -26,7 +26,7 @@ import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePageTitle } from '@/hooks/use-page-title';
 
-type ToolType = 'none' | 'analyzer' | 'find' | 'build';
+type ToolType = 'none' | 'analyzer' | 'find' | 'build' | 'snitc';
 
 interface ToolCard {
   id: ToolType;
