@@ -276,6 +276,32 @@ const Home = () => {
             delay={1.2}
           />
 
+          {/* Deep Dive into Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 1.25 }}
+          >
+            <Link to="/intelligence">
+              <Card className="bg-gradient-to-br from-card/90 via-card/80 to-primary/5 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer group">
+                <CardContent className="p-5 lg:p-6 flex items-center gap-4 lg:gap-5">
+                  <div className="p-3 bg-primary/10 rounded-xl flex-shrink-0">
+                    <BarChart3 className="w-6 h-6 lg:w-7 lg:h-7 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-display text-base lg:text-lg font-bold text-foreground mb-0.5">
+                      Deep Dive into Your Music Stats
+                    </h3>
+                    <p className="text-sm text-muted-foreground">
+                      Analyze your listening patterns, BPM distribution, energy preferences, and audio DNA
+                    </p>
+                  </div>
+                  <span className="text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all">→</span>
+                </CardContent>
+              </Card>
+            </Link>
+          </motion.div>
+
           {/* 7. Your Crates */}
           <HomeCratesSection />
 
