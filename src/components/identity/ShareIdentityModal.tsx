@@ -90,7 +90,7 @@ ${trackList}
 💎 Underground Index: ${undergroundIndex}/100
 🎵 Avg BPM: ${avgBpm} | Energy: ${avgEnergy}%
 
-Discover your music identity at musicdna.app`;
+Discover your music identity at musicdna.tobiafo.com`;
   }, [archetype, topTracks, undergroundIndex, avgBpm, avgEnergy]);
 
   const handleCopy = useCallback(async () => {
@@ -233,7 +233,7 @@ Discover your music identity at musicdna.app`;
       footer.style.cssText = 'text-align: center;';
       footer.innerHTML = `
         <div style="font-size: ${format === 'story' ? '18px' : '14px'}; color: rgba(255,255,255,0.7); margin-bottom: 4px;">Discover your music identity at</div>
-        <div style="font-size: ${format === 'story' ? '24px' : format === 'twitter' ? '18px' : '20px'}; color: white; font-weight: 700;">musicdna.app</div>
+        <div style="font-size: ${format === 'story' ? '24px' : format === 'twitter' ? '18px' : '20px'}; color: white; font-weight: 700;">musicdna.tobiafo.com</div>
       `;
 
       // Build card content

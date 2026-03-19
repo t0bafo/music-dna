@@ -4,7 +4,7 @@
 
 A Spotify-connected music intelligence platform that analyzes your listening DNA, surfaces hidden patterns in your taste, and organizes your library into vibe-based collections called *Crates*.
 
-🔗 **Live:** [musicdna.lovable.app](https://musicdna.lovable.app)
+🔗 **Live:** [musicdna.tobiafo.com](https://musicdna.tobiafo.com)
 
 ---
 

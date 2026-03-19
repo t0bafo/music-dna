@@ -292,7 +292,7 @@ const MusicalIdentityHero = ({
               Share My Identity
             </Button>
             <p className="text-white/60 text-[11px] md:text-xs">
-              musicdna.app
+              musicdna.tobiafo.com
             </p>
           </motion.div>
         </div>
