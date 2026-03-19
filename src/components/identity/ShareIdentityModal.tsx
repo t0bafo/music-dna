@@ -90,7 +90,7 @@ ${trackList}
 💎 Underground Index: ${undergroundIndex}/100
 🎵 Avg BPM: ${avgBpm} | Energy: ${avgEnergy}%
 
-Discover your music identity at musicdna.app`;
+Discover your music identity at musicdna.tobiafo.com`;
   }, [archetype, topTracks, undergroundIndex, avgBpm, avgEnergy]);
 
   const handleCopy = useCallback(async () => {
