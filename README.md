@@ -123,6 +123,12 @@ Requires a Spotify Developer App with redirect URI pointing to your local/deploy
 
 ---
 
+## Access
+
+Music DNA's Spotify integration is currently in **Development Mode**, which means users must be manually registered before they can log in. If you'd like to try the app, reach out to **assist@tobiafo.com** to request access.
+
+---
+
 ## License
 
 Private project. All rights reserved.
