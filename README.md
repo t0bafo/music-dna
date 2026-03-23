@@ -99,7 +99,7 @@ Music DNA is a Creative Technologist portfolio piece exploring the question: *"W
 
 It's an exercise in **engineering a mirror** — translating the subjective experience of musical preference into queryable data structures. The challenge isn't the tech stack; it's designing interfaces that make abstract audio features feel personal and actionable.
 
-Built by [Tobi Afo](https://github.com/tobiafo).
+Built by [Tobi Afolayan](https://tobiafo.com).
 
 ---
 
