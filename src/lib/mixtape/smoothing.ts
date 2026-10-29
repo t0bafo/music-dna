@@ -19,10 +19,11 @@ export function avoidBackToBack(tracks: MixtapeTrack[], pinnedSlots: Set<number>
   const free = out.map((_, i) => i).filter((i) => !pinnedSlots.has(i));
   for (let k = 0; k < free.length; k++) {
     const p = free[k];
-    if (p === 0 || out[p].albumId !== out[p - 1].albumId) continue;
-    const prevAlbum = out[p - 1].albumId;
+    const prevAlbum = p > 0 ? out[p - 1].albumId : undefined;
+    const nextPinnedAlbum = pinnedSlots.has(p + 1) ? out[p + 1]?.albumId : undefined;
+    if (out[p].albumId !== prevAlbum && out[p].albumId !== nextPinnedAlbum) continue;
     let m = k + 1;
-    while (m < free.length && out[free[m]].albumId === prevAlbum) m++;
+    while (m < free.length && (out[free[m]].albumId === prevAlbum || out[free[m]].albumId === nextPinnedAlbum)) m++;
     if (m >= free.length) continue;
     const moved = out[free[m]];
     for (let j = m; j > k; j--) out[free[j]] = out[free[j - 1]];

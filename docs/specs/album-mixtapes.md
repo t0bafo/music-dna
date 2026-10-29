@@ -1,7 +1,7 @@
 # Album Mixtapes — Requirements Spec (Music DNA web app)
 
 Target project: [t0bafo/music-dna](https://github.com/t0bafo/music-dna) (Lovable, React + TypeScript + Vite, Supabase, Spotify OAuth, ReccoBeats).
-Status: proposal. Not started.
+Status: Phase 1 engine implemented and tested. Album picker, preview UI, persistence, and export integration are not implemented yet.
 Origin: replaces the Python "Album Playlist Curator" prototype that briefly lived in `diaspora-mir-engine` (`packages/music_dna`). That prototype was removed from the MIR repo; its useful ideas are carried over below. Nothing in this spec depends on the MIR repo.
 
 ---
@@ -162,6 +162,18 @@ Mobile: same steps as full-screen sheets, consistent with the existing bottom-na
 - All database writes go through the `music-intelligence` edge function with token validation, same as crates.
 - No new heavy dependencies; the engine is plain TypeScript. The repo has no test runner yet, so Phase 1 adds `vitest` as a dev dependency and an `npm test` script.
 - New edge function actions follow the existing `switch (action)` in `supabase/functions/music-intelligence/index.ts` (next to `create_crate`, `update_crate`).
+
+## 13. Phase 1 implementation notes
+
+The public engine entry is `src/lib/mixtape-engine.ts`; implementation is split into pure modules under `src/lib/mixtape/`. See [engine handoff](../album-mixtapes-engine.md) for usage, validation, diagnostics, tests, and subsequent phases.
+
+Resolved precedence from the approved Phase 1 plan:
+
+- With no length target, use every unique available track. A track target and a minute target cannot be set together.
+- Pins take priority over adjacency, Journey order, and minute limits. A minute-limit overrun caused by pins is reported in diagnostics. Pins outside the requested track-count result are ignored with a note.
+- Album quotas reserve pinned tracks first and distribute remaining slots as evenly as possible. Clustered pins can override even album shares; they do not inflate the track target.
+- Journey preserves disc/track order when no pins override it. Album positions are normalized from that order before selection.
+- Invalid lengths and durations raise `RangeError`. Missing optional audio features never prevent Journey or Interleave generation.
 
 ---
 

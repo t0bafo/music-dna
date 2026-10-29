@@ -1,7 +1,7 @@
 import { isValidBpm, isValidUnit } from './features';
 import type { MixtapeAlbum, MixtapeOrdering, MixtapeTrack } from './types';
 
-type Orderer = (albums: MixtapeAlbum[], rng: () => number) => MixtapeTrack[];
+type Orderer = (albums: MixtapeAlbum[], rng: () => number, openerId?: string) => MixtapeTrack[];
 
 /** Openers first, closers last; ties broken by the user's album order. Stable within each album. */
 export const journey: Orderer = (albums) =>
@@ -19,13 +19,14 @@ export const interleave: Orderer = (albums) => {
 };
 
 /** Greedy nearest-neighbour on BPM from the journey opener. Tracks without BPM go last, in journey order. */
-export const bpmFlow: Orderer = (albums, rng) => {
+export const bpmFlow: Orderer = (albums, rng, openerId) => {
   const base = journey(albums, rng);
   const withBpm = base.filter((t) => isValidBpm(t.bpm));
   const without = base.filter((t) => !isValidBpm(t.bpm));
   if (withBpm.length === 0) return base;
-  const out = [withBpm[0]];
-  const pool = withBpm.slice(1);
+  const opener = withBpm.find((t) => t.trackId === openerId) ?? withBpm[0];
+  const out = [opener];
+  const pool = withBpm.filter((t) => t.trackId !== opener.trackId);
   while (pool.length) {
     const cur = out[out.length - 1].bpm as number;
     let best = Infinity;

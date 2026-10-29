@@ -46,7 +46,19 @@ export function selectTracks(
   rng: () => number,
   useJitter: boolean,
 ): MixtapeAlbum[] {
-  const quotas = albumQuotas(albums.map((a) => a.tracks.length), target);
+  const sizes = albums.map((a) => a.tracks.length);
+  // Reserve pins before distributing the remaining slots. An album with more
+  // pins than its normal share must not inflate the requested track count.
+  const quotas = albums.map((a) => a.tracks.filter((t) => pinnedIds.has(t.trackId)).length);
+  let left = Math.min(target, sizes.reduce((a, b) => a + b, 0)) - quotas.reduce((a, b) => a + b, 0);
+  while (left > 0) {
+    const eligible = quotas.map((q, i) => ({ q, i })).filter(({ q, i }) => q < sizes[i]);
+    eligible.sort((a, b) => a.q - b.q || a.i - b.i);
+    const next = eligible[0];
+    if (!next) break;
+    quotas[next.i]++;
+    left--;
+  }
   return albums.map((album, ai) => {
     const pinned = album.tracks.filter((t) => pinnedIds.has(t.trackId));
     const rest = album.tracks.filter((t) => !pinnedIds.has(t.trackId));
