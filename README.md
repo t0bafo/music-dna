@@ -53,6 +53,18 @@ Analyze any Spotify playlist's flow. Track-by-track energy mapping, flow score, 
 | **Native** | Capacitor (PWA + iOS/Android) |
 | **Data** | ReccoBeats API (audio features), Spotify Web API |
 
+## Album Mixtapes — engine ready, interface pending
+
+The first phase of Album Mixtapes is implemented as a pure TypeScript engine. It weaves album tracks using Journey, Interleave, BPM Flow, or Energy Arc ordering, with even selection, fixed-slot pins, seeded variations, minute/track limits, and duration-balanced sides. Optional audio features can be missing; feature-based styles fall back to Journey below 80% coverage.
+
+This is **not yet a screen in the live app**. Spotify album browsing, preview editing, crate/settings persistence, and export/reopen integration remain subsequent phases. Read the [requirements](docs/specs/album-mixtapes.md) and [engine handoff](docs/album-mixtapes-engine.md).
+
+Run the engine's rule tests:
+
+```sh
+npm test -- src/lib/mixtape-engine.test.ts
+```
+
 ---
 
 ## Architecture
