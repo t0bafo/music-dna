@@ -281,4 +281,14 @@ describe('mixtape engine', () => {
       expect(() => generateMixtape([album('A', 2, { durationMs }), album('B', 2)], { ordering: 'journey' })).toThrow(RangeError);
     }
   });
+
+  it('generates from five loaded albums within two seconds', () => {
+    const albums = ['A', 'B', 'C', 'D', 'E'].map((id) => album(id, 100));
+    for (const ordering of ORDERINGS) {
+      const start = performance.now();
+      const result = generateMixtape(albums, { ordering, targetTracks: 25, sides: true });
+      expect(result.tracks).toHaveLength(25);
+      expect(performance.now() - start).toBeLessThan(2000);
+    }
+  });
 });

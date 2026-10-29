@@ -54,6 +54,8 @@ The result contains ordered `tracks`, optional `sides: { a, b }` (track counts),
 
 Run `npm test` or `bun run test`. The suite covers the four strategies, deterministic variation, input immutability, album order and shares, exact spread selection, pins and their conflicts, count/minute limits, sides, the 80% threshold, fallback, duplicate tracks, small pools, and invalid inputs.
 
+Completion verification: 30 tests pass. In Chromium, all four strategies generated a pinned, 25-track result from five loaded 100-track albums in under 4 ms (including a repeat determinism check). The existing public preview opens without page errors and the preview compiler reports success. This is an engine/browser smoke check, not a signed-in save/export check.
+
 ## Cleanup
 
 Removed 16 confirmed-unreferenced files from the approved cleanup list: ActionCards, AudioDNACard, ComparisonView, FlowTrackTable, MusicSignatureHero, NavLink, PlaylistGrid, SimplifiedMetricsGrid, SmartPlaylistCreator, TrackSuggestionsTool, GenreBreakdownCard, TopSongsGrid, use-native-app, use-push-notifications, spotify-deeplink, and the unrouted Index page. Retained TopAlbumsGrid for the upcoming album picker. Active operational logs in backend functions were left unchanged; stray frontend debug logs in the deleted code disappeared with those files. No dependency or database removal was attempted.
