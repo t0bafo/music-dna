@@ -17,8 +17,14 @@ function prepare(albums: MixtapeAlbum[], notes: string[]): MixtapeAlbum[] {
   let dupes = 0;
   const out = albums.map((a) => {
     const tracks = a.tracks
-      .map((t) => ({ ...t, artists: [...t.artists] }))
+      .map((t) => {
+        if (!Number.isFinite(t.durationMs) || t.durationMs < 0) {
+          throw new RangeError(`Invalid duration for track ${t.trackId}.`);
+        }
+        return { ...t, albumId: a.albumId, albumName: a.albumName, artists: [...t.artists] };
+      })
       .sort((x, y) => x.discNumber - y.discNumber || x.trackNumber - y.trackNumber)
+      .map((t, i, sorted) => ({ ...t, albumPosition: sorted.length < 2 ? 0 : i / (sorted.length - 1) }))
       .filter((t) => {
         if (seen.has(t.trackId)) { dupes++; return false; }
         seen.add(t.trackId);
@@ -31,6 +37,15 @@ function prepare(albums: MixtapeAlbum[], notes: string[]): MixtapeAlbum[] {
 }
 
 export function generateMixtape(albums: MixtapeAlbum[], settings: MixtapeSettings): MixtapeResult {
+  if (settings.targetTracks !== undefined && (!Number.isInteger(settings.targetTracks) || settings.targetTracks < 0)) {
+    throw new RangeError('Track target must be a non-negative integer.');
+  }
+  if (settings.targetMinutes !== undefined && (!Number.isFinite(settings.targetMinutes) || settings.targetMinutes < 0)) {
+    throw new RangeError('Minute target must be a finite non-negative number.');
+  }
+  if (settings.targetTracks !== undefined && settings.targetMinutes !== undefined) {
+    throw new RangeError('Choose a track target or a minute target, not both.');
+  }
   const notes: string[] = [];
   if (albums.length < MIN_ALBUMS || albums.length > MAX_ALBUMS) {
     notes.push(`Expected ${MIN_ALBUMS}–${MAX_ALBUMS} albums, got ${albums.length}.`);
@@ -56,18 +71,27 @@ export function generateMixtape(albums: MixtapeAlbum[], settings: MixtapeSetting
     else pinEntries.push([s, id]);
   }
 
+  // A slot outside the requested result cannot be retained without changing
+  // its length. Ignore it before selection, so it cannot consume another slot.
+  const maxSlots = Math.min(settings.targetTracks ?? pool.length, pool.length);
+  const validPins = pinEntries.filter(([slot]) => {
+    if (slot < maxSlots) return true;
+    notes.push(`Ignored pin at slot ${slot}: mixtape has ${maxSlots} tracks.`);
+    return false;
+  });
+
   // Selection
   let target = pool.length;
   if (settings.targetTracks !== undefined) {
     if (settings.targetTracks > pool.length) {
       notes.push(`Requested ${settings.targetTracks} tracks but only ${pool.length} available; using all.`);
     } else {
-      target = Math.max(settings.targetTracks, pinEntries.length);
+      target = settings.targetTracks;
     }
   }
   const selected =
     target < pool.length
-      ? selectTracks(prepared, target, new Set(pinEntries.map(([, id]) => id)), rng, (settings.seed ?? 0) !== 0)
+      ? selectTracks(prepared, target, new Set(validPins.map(([, id]) => id)), rng, (settings.seed ?? 0) !== 0)
       : prepared;
 
   // Ordering (with fallback)
@@ -77,16 +101,19 @@ export function generateMixtape(albums: MixtapeAlbum[], settings: MixtapeSetting
     notes.push(`Fell back to journey: ${blocked.reason}.`);
     ordering = 'journey';
   }
-  let tracks: MixtapeTrack[] = ORDERINGS[ordering](selected, rng);
+  let tracks: MixtapeTrack[] = ORDERINGS[ordering](selected, rng, validPins.find(([slot]) => slot === 0)?.[1]);
 
   // Pins
   const pins = new Map<number, MixtapeTrack>();
-  for (const [slot, id] of pinEntries) {
-    if (slot >= tracks.length) notes.push(`Ignored pin at slot ${slot}: mixtape has ${tracks.length} tracks.`);
-    else pins.set(slot, byId.get(id) as MixtapeTrack);
+  for (const [slot, id] of validPins) {
+    const track = byId.get(id);
+    if (track) pins.set(slot, track);
   }
   tracks = applyPins(tracks, pins);
   tracks = avoidBackToBack(tracks, new Set(pins.keys()));
+  if (tracks.some((t, i) => i > 0 && t.albumId === tracks[i - 1].albumId && tracks.slice(i).some((later) => later.albumId !== t.albumId))) {
+    notes.push('Some adjacent album tracks could not be separated without moving pinned slots.');
+  }
 
   // Length
   if (settings.targetMinutes !== undefined) {

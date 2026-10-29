@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { generateMixtape, type MixtapeAlbum, type MixtapeTrack } from './mixtape-engine';
+import { bpmFlow, energyArc, interleave, journey } from './mixtape/orderings';
+import { createRng } from './mixtape/random';
+import { disabledOrderings } from './mixtape/features';
 
 function album(id: string, n: number, opts: { features?: boolean; durationMs?: number } = {}): MixtapeAlbum {
   const features = opts.features ?? true;
@@ -93,7 +96,7 @@ describe('mixtape engine', () => {
   it('selection spreads across each album (opener and closer included)', () => {
     const res = generateMixtape(fixtures(), { ordering: 'journey', targetTracks: 9 });
     const a = res.tracks.filter((t) => t.albumId === 'A').map((t) => t.trackNumber);
-    expect(a).toEqual([1, 6, 10].length === a.length ? a : a); // 3 tracks
+    expect(a).toEqual([1, 6, 10]);
     expect(a[0]).toBe(1);
     expect(a[a.length - 1]).toBe(10);
   });
@@ -133,7 +136,9 @@ describe('mixtape engine', () => {
     });
     expect(res.sides).toEqual({ a: 5, b: 5 });
     const uneven = generateMixtape(fixtures(), { ordering: 'journey', sides: true });
-    const { a, b } = uneven.sides!;
+    expect(uneven.sides).toBeDefined();
+    if (!uneven.sides) throw new Error('Expected sides');
+    const { a, b } = uneven.sides;
     expect(a + b).toBe(uneven.tracks.length);
     const total = uneven.tracks.reduce((s, t) => s + t.durationMs, 0);
     const sideA = uneven.tracks.slice(0, a).reduce((s, t) => s + t.durationMs, 0);
@@ -178,6 +183,102 @@ describe('mixtape engine', () => {
       const res = generateMixtape([a, b], { ordering });
       expect(new Set(ids(res.tracks)).size).toBe(res.tracks.length);
       expect(res.tracks).toHaveLength(11);
+    }
+  });
+
+  it('uses user album order to break journey ties', () => {
+    const res = journey([album('B', 3), album('A', 3)], createRng(0));
+    expect(ids(res)).toEqual(['B1', 'A1', 'B2', 'A2', 'B3', 'A3']);
+  });
+
+  it('round-robins all albums in track order', () => {
+    expect(ids(interleave([album('A', 3), album('B', 2), album('C', 1)], createRng(0))))
+      .toEqual(['A1', 'B1', 'C1', 'A2', 'B2', 'A3']);
+  });
+
+  it('chooses the nearest BPM from the selected opener', () => {
+    const a = album('A', 3);
+    const b = album('B', 2);
+    [a.tracks[0].bpm, a.tracks[1].bpm, a.tracks[2].bpm] = [90, 100, 120];
+    [b.tracks[0].bpm, b.tracks[1].bpm] = [95, 110];
+    expect(ids(bpmFlow([a, b], createRng(0), 'B2'))).toEqual(['B2', 'A2', 'B1', 'A1', 'A3']);
+  });
+
+  it('builds energy, peaks, then cools down', () => {
+    const a = album('A', 3);
+    const b = album('B', 3);
+    [...a.tracks, ...b.tracks].forEach((t, i) => { t.energy = (i + 1) / 10; });
+    expect(energyArc([a, b], createRng(0)).map((t) => t.energy)).toEqual([0.1, 0.2, 0.5, 0.6, 0.4, 0.3]);
+  });
+
+  it('allows feature-based ordering at exactly 80% coverage', () => {
+    const tracks = album('A', 10).tracks;
+    tracks.slice(0, 2).forEach((t) => { delete t.bpm; delete t.energy; });
+    expect(disabledOrderings(tracks)).toEqual([]);
+    delete tracks[2].bpm;
+    expect(disabledOrderings(tracks).map((d) => d.ordering)).toEqual(['bpm_flow']);
+  });
+
+  it('reserves clustered pins without exceeding the track target', () => {
+    const pinned = { 0: 'A1', 2: 'A2', 4: 'A3', 5: 'A4' };
+    const res = generateMixtape(fixtures(), { ordering: 'journey', targetTracks: 6, pinned });
+    expect(res.tracks).toHaveLength(6);
+    for (const [slot, id] of Object.entries(pinned)) expect(res.tracks[Number(slot)].trackId).toBe(id);
+    expect(new Set(ids(res.tracks)).size).toBe(6);
+  });
+
+  it('ignores out-of-range pins without consuming a selection slot', () => {
+    const res = generateMixtape(fixtures(), { ordering: 'journey', targetTracks: 3, pinned: { 9: 'A5' } });
+    expect(res.tracks).toHaveLength(3);
+    expect(res.tracks.map((t) => t.albumId).sort()).toEqual(['A', 'B', 'C']);
+    expect(res.diagnostics.notes).toContain('Ignored pin at slot 9: mixtape has 3 tracks.');
+  });
+
+  it('separates albums before a pinned slot when possible', () => {
+    const res = generateMixtape([album('A', 2), album('B', 2)], { ordering: 'journey', pinned: { 1: 'A2' } });
+    expect(res.tracks[1].trackId).toBe('A2');
+    expect(res.tracks.map((t) => t.albumId)).toEqual(['B', 'A', 'B', 'A']);
+  });
+
+  it('preserves minute-limit pins and reports the overrun', () => {
+    const res = generateMixtape([album('A', 3, { durationMs: 240_000 }), album('B', 3, { durationMs: 240_000 })], {
+      ordering: 'journey', targetMinutes: 4, pinned: { 3: 'B3' },
+    });
+    expect(res.tracks).toHaveLength(4);
+    expect(res.tracks[3].trackId).toBe('B3');
+    expect(res.diagnostics.notes).toContain('Kept tracks past the minute limit to preserve pinned slots.');
+  });
+
+  it('normalizes album positions from disc and track order', () => {
+    const a = album('A', 3);
+    a.tracks.reverse().forEach((t) => { t.albumPosition = NaN; });
+    expect(generateMixtape([a, album('B', 3)], { ordering: 'journey' }).tracks.filter((t) => t.albumId === 'A').map((t) => t.trackNumber))
+      .toEqual([1, 2, 3]);
+  });
+
+  it('returns an empty mixtape for a zero track target', () => {
+    expect(generateMixtape(fixtures(), { ordering: 'journey', targetTracks: 0, sides: true }).tracks).toEqual([]);
+  });
+
+  it('rejects invalid track targets', () => {
+    for (const targetTracks of [-1, 1.5, Infinity, NaN]) {
+      expect(() => generateMixtape(fixtures(), { ordering: 'journey', targetTracks })).toThrow(RangeError);
+    }
+  });
+
+  it('rejects invalid minute targets', () => {
+    for (const targetMinutes of [-1, Infinity, NaN]) {
+      expect(() => generateMixtape(fixtures(), { ordering: 'journey', targetMinutes })).toThrow(RangeError);
+    }
+  });
+
+  it('requires a single length mode', () => {
+    expect(() => generateMixtape(fixtures(), { ordering: 'journey', targetTracks: 10, targetMinutes: 30 })).toThrow(RangeError);
+  });
+
+  it('rejects invalid durations rather than corrupting length and sides', () => {
+    for (const durationMs of [-1, Infinity, NaN]) {
+      expect(() => generateMixtape([album('A', 2, { durationMs }), album('B', 2)], { ordering: 'journey' })).toThrow(RangeError);
     }
   });
 });
