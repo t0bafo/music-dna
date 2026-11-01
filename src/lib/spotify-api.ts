@@ -301,3 +301,38 @@ export const getNigeriaTop100 = async (): Promise<{
 
   return { tracks: enrichedTracks, features };
 };
+
+export interface SpotifyAlbumSummary {
+  id: string;
+  name: string;
+  artists: { id: string; name: string }[];
+  images: { url: string; height: number; width: number }[];
+  total_tracks: number;
+}
+
+export interface SpotifyAlbumTrack {
+  id: string;
+  name: string;
+  artists: { id: string; name: string }[];
+  duration_ms: number;
+  disc_number: number;
+  track_number: number;
+}
+
+export const searchAlbums = async (
+  accessToken: string,
+  query: string,
+  limit: number = 12
+): Promise<SpotifyAlbumSummary[]> => {
+  const params = new URLSearchParams({ q: query, type: 'album', limit: String(limit) });
+  const data = await spotifyFetch<{ albums: { items: SpotifyAlbumSummary[] } }>(`/search?${params}`, accessToken);
+  return data.albums.items;
+};
+
+export const getAlbumTracks = async (
+  accessToken: string,
+  albumId: string
+): Promise<SpotifyAlbumTrack[]> => {
+  const data = await spotifyFetch<{ items: SpotifyAlbumTrack[] }>(`/albums/${albumId}/tracks?limit=50`, accessToken);
+  return data.items.filter((t) => t?.id);
+};
