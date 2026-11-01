@@ -21,12 +21,13 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import SmartDiscoveryEngine from '@/components/SmartDiscoveryEngine';
 import ContextPlaylistGenerator from '@/components/ContextPlaylistGenerator';
 import PlaylistFlowAnalyzer from '@/components/PlaylistFlowAnalyzer';
+import AlbumMixtapeStudio from '@/components/AlbumMixtapeStudio';
 import { searchLibraryTracks, generateContextPlaylist } from '@/lib/curation-tools';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePageTitle } from '@/hooks/use-page-title';
 
-type ToolType = 'none' | 'analyzer' | 'find' | 'build' | 'snitc';
+type ToolType = 'none' | 'analyzer' | 'find' | 'build' | 'snitc' | 'mixtape';
 
 interface ToolCard {
   id: ToolType;
@@ -178,6 +179,34 @@ const Studio = () => {
                 </p>
               </div>
 
+              {/* Featured: Album Mixtapes */}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-8">
+                <Card
+                  className="relative overflow-hidden cursor-pointer group border-primary/40 bg-gradient-to-br from-primary/15 via-card/80 to-card/70 backdrop-blur-xl hover:-translate-y-1 hover:shadow-glow transition-all duration-200"
+                  onClick={() => handleToolClick('mixtape')}
+                >
+                  <CardContent className="p-6 lg:p-10">
+                    <span className="inline-block mb-4 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-bold tracking-wider">NEW · FEATURED</span>
+                    <div className="flex items-start gap-5 lg:gap-6">
+                      <div className="w-20 h-20 lg:w-24 lg:h-24 rounded-2xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+                        <span className="text-5xl lg:text-6xl">📼</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h2 className="font-display text-2xl lg:text-3xl font-bold text-foreground mb-2">Album Mixtapes</h2>
+                        <p className="text-sm lg:text-base text-muted-foreground mb-5 leading-relaxed">
+                          Blend 2–5 albums into one sequenced mixtape. Choose Journey, Interleave, BPM Flow, or Energy Arc, split into A/B sides, and save it as a crate.
+                        </p>
+                        <Button size="lg" className="gap-2 group-hover:gap-3 transition-all btn-scale" onClick={(e) => { e.stopPropagation(); handleToolClick('mixtape'); }}>
+                          Curate a Mixtape <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4">More tools</p>
+
               {/* Tool Cards */}
               <div className="space-y-5 lg:space-y-6">
                 {TOOL_CARDS.map((tool, index) => (
@@ -271,6 +300,20 @@ const Studio = () => {
                 </div>
               )}
               
+              {activeTool === 'mixtape' && (
+                <div>
+                  <div className="mb-8">
+                    <h2 className="font-display text-2xl lg:text-3xl font-bold text-foreground flex items-center gap-3">
+                      <span>📼</span> Album Mixtapes
+                    </h2>
+                    <p className="text-muted-foreground mt-2 text-base lg:text-lg">
+                      Pick albums, shape the flow, and get a sequenced mixtape
+                    </p>
+                  </div>
+                  <AlbumMixtapeStudio accessToken={accessToken!} />
+                </div>
+              )}
+
               {activeTool === 'find' && (
                 <div>
                   <div className="mb-8">
