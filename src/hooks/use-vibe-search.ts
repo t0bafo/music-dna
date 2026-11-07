@@ -16,7 +16,8 @@ const expansionCache = new Map<string, SearchFilters | null>();
 /**
  * Call the vibe-search-expand edge function
  */
-async function expandQueryWithAI(query: string): Promise<SearchFilters | null> {
+async function expandQueryWithAI(query: string, spotifyToken: string | null): Promise<SearchFilters | null> {
+  if (!spotifyToken) return null;
   const cacheKey = query.toLowerCase().trim();
   
   if (expansionCache.has(cacheKey)) {
@@ -29,6 +30,7 @@ async function expandQueryWithAI(query: string): Promise<SearchFilters | null> {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        'x-spotify-token': spotifyToken,
       },
       body: JSON.stringify({ query }),
     });
@@ -249,6 +251,7 @@ function hybridSearch(
  * Main hook for vibe search with AI expansion
  */
 export function useVibeSearch(query: string, debounceMs: number = 400) {
+  const { accessToken } = useAuth();
   const [debouncedQuery, setDebouncedQuery] = useState(query);
   const [expandedFilters, setExpandedFilters] = useState<SearchFilters | null>(null);
   const [isExpanding, setIsExpanding] = useState(false);
@@ -283,7 +286,7 @@ export function useVibeSearch(query: string, debounceMs: number = 400) {
     setIsExpanding(true);
     setExpansionError(null);
 
-    expandQueryWithAI(debouncedQuery)
+    expandQueryWithAI(debouncedQuery, accessToken ?? null)
       .then(filters => {
         setExpandedFilters(filters);
       })
@@ -295,7 +298,7 @@ export function useVibeSearch(query: string, debounceMs: number = 400) {
       .finally(() => {
         setIsExpanding(false);
       });
-  }, [debouncedQuery]);
+  }, [debouncedQuery, accessToken]);
 
   // Perform hybrid search
   const { results, totalCount } = useMemo(() => {
