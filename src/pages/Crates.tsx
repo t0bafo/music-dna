@@ -58,7 +58,7 @@ export default function Crates() {
     };
     window.addEventListener('scroll', save, { passive: true });
     save();
-    return () => { save(); window.removeEventListener('scroll', save); };
+    return () => { window.removeEventListener('scroll', save); };
   }, [query, view, key, user, hydratedKey]);
   if (authLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 aria-label="Loading Library" className="w-6 h-6 animate-spin text-primary" /></div>;
   return <div className="min-h-screen bg-background pb-28 lg:pb-8">
