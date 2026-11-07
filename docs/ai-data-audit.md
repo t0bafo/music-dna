@@ -1,8 +1,69 @@
 # AI data audit — what leaves the app
 
 Scope: `supabase/functions/ai-curation` and `supabase/functions/vibe-search-expand`.
-Both call the Lovable AI Gateway (`ai.gateway.lovable.dev`, model `google/gemini-2.5-flash`).
-No changes were made to either function in this pass.
+Both source files use Lovable AI Gateway (`ai.gateway.lovable.dev`, model `google/gemini-3.8-flash`). Existing model, endpoint and output limits are preserved.
+
+## Current status — Nov 7, 2026, 12:35 UTC
+
+This recheck changes preview source only. No publishing, shared function deployment,
+log deletion, real-crate updates or per-track notes were performed. Cloud functions
+are shared with production: the additional server fixes below are **not deployed**.
+
+- The actual shared HTTP transport (`_shared/ai-request.ts`) is tested through an
+  injected mock fetch, rather than constructing a separate illustrative request.
+  Curation sends fixed instructions plus the user's description, limited to 500
+  characters; vibe expansion sends fixed instructions plus query text. Neither
+  request includes candidate tracks, account IDs or Spotify tokens. Selection is
+  deterministic, after description interpretation, and never calls the model.
+- Fixed a reproduced search bug: missing BPM and energy previously received a
+  combined-filter bonus. Unknown measurements now never earn that bonus; valid
+  energy zero remains eligible for low-energy matches.
+- Curation energy quality now reports unknown flow/balance when evidence is missing,
+  does not bridge unknown tracks when assessing transitions, and leaves overall
+  quality unknown when either score is unavailable. The preview reports measurement
+  coverage and labels section prose as planned mood, not measured evidence.
+- Removed the still-present browser top-results payload and raw caught-error logs;
+  removed server error objects, derived target genres/ranges and crate identifiers.
+  Remaining diagnostics are static stages, counts and error status/codes.
+- Kept the existing valid-Spotify-session check and 20 requests / 600 seconds limit.
+  Authentication and limiter failures now fail closed before the model. Single words
+  bypass both checks because they make no AI call. Terminal upstream errors preserve
+  their status and safe message, without retries.
+- AI Curation discloses description-only use before Generate and now has a matching
+  500-character input maximum. The old `useVibeSearch` hook has **no active UI caller**;
+  if reintroduced, its optional AI action must receive a visible query-only disclosure
+  before invocation. Current sample memory search remains local and unchanged.
+
+### Validation in this recheck
+- `bun run test`: **74 tests passed**, including 19 AI-boundary tests.
+- The mock captures the real transport request for both paths, checking absence of
+  track identifiers/metadata and identity/token context; curation keeps its 2000-token cap.
+- Checks cover zero/missing energy, unknown quality, unknown transition gaps, unauthorized
+  and rate-limited requests, protection-service failures, single-word bypass, terminal
+  denial with one call only, model-unavailable fallback, and literal title/artist search.
+- Chromium signed-out `/sample/lagos-night-drive`: searching Tems displays Essence and
+  Free Mind, with zero page errors; screenshot checked. This is not signed-in verification.
+- Preview compilation reported `build OK` after edits.
+
+### Log history and remaining limitations
+- Targeted recent log searches returned no entries for ai-curation (`analyzing`) and
+  vibe-search-expand (`query`). This **does not establish that older logs do not exist**.
+- Cloud Logs document searching/filtering and relative or absolute time ranges; these
+  are viewing controls, not a verified retention duration or deletion control.
+  https://docs.lovable.dev/features/logs
+- No documented per-entry delete/purge or configurable retention control was verified
+  for Cloud function or AI Gateway logs. Workspace audit-log retention is a separate
+  facility and must not be applied to these logs. No logs were deleted.
+- Existing hosted rate-limit function/table permissions and persistence were not
+  reverified here; the existing limiter was reused without a migration or changed limit.
+- Real provider availability and signed-in model requests were not tested: mock-gateway
+  success is not a live-provider result. New server fixes await deployment to the shared
+  backend; deploying them would affect production even without publishing the frontend.
+- Signed-in Home, Crates, Add to Crate and Share remain a separate browser pass requiring
+  an eligible Spotify session; they are **not verified** by these sample tests.
+
+## Historical baseline (before the earlier fixes)
+The findings below describe the original audit, not the current preview implementation.
 
 ## vibe-search-expand
 
@@ -67,7 +128,7 @@ It never creates or modifies crates. Demo lives on the sample crate page.
    model call (`handleVibeSearch` in `_shared/vibe-search-core.ts`). Single-word
    queries return immediately with no auth or model call.
 
-### Tests (`src/lib/server/ai-boundaries.test.ts`, 12 tests, all pass)
+### Earlier tests (`src/lib/server/ai-boundaries.test.ts`, then 12 tests)
 - Mock-gateway request body contains the description and no track ids, titles, artists or account id.
 - Description length cap.
 - Zero vs missing energy; missing energy is score-neutral; zero is ranked as low energy.
