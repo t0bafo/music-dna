@@ -100,7 +100,7 @@ const Crates = () => {
         <div className="container mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4 lg:gap-6">
             <div 
-              className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-primary to-sonic-dark rounded-xl flex items-center justify-center shadow-glow cursor-pointer hover:scale-105 transition-transform touch-target"
+              className="w-9 h-9 lg:w-10 lg:h-10 bg-primary rounded-xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform touch-target"
               onClick={() => navigate('/home')}
             >
               <Music className="w-4 h-4 lg:w-5 lg:h-5 text-primary-foreground" />

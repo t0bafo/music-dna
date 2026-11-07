@@ -166,7 +166,7 @@ const Home = () => {
         <div className="container mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4 lg:gap-6">
             <div 
-              className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-primary to-sonic-dark rounded-xl flex items-center justify-center shadow-glow cursor-pointer hover:scale-105 transition-transform"
+              className="w-9 h-9 lg:w-10 lg:h-10 bg-primary rounded-xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
               onClick={() => navigate('/home')}
             >
               <Music className="w-4 h-4 lg:w-5 lg:h-5 text-primary-foreground" />
@@ -302,7 +302,7 @@ const Home = () => {
             transition={{ duration: 0.4, delay: 1.25 }}
           >
             <Link to="/intelligence">
-              <Card className="bg-gradient-to-br from-card/90 via-card/80 to-primary/5 border-primary/20 hover:border-primary/40 transition-colors cursor-pointer group">
+              <Card className="bg-card border-border hover:border-primary/40 transition-colors cursor-pointer group">
                 <CardContent className="p-5 lg:p-6 flex items-center gap-4 lg:gap-5">
                   <div className="p-3 bg-primary/10 rounded-xl flex-shrink-0">
                     <BarChart3 className="w-6 h-6 lg:w-7 lg:h-7 text-primary" />

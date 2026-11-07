@@ -198,16 +198,13 @@
 @layer utilities {
   /* Gradient background - adapts to theme */
   .gradient-bg {
-    @apply bg-gradient-to-b from-background via-background to-muted/20;
+    @apply bg-background;
   }
   
   /* Glassmorphic card styling */
   .glass-card {
-    background: hsl(var(--glass-bg));
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid hsl(var(--glass-border));
-    box-shadow: var(--shadow-lg);
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
   }
   
   .glass-card-hover {
@@ -215,25 +212,18 @@
   }
   
   .glass-card-hover:hover {
-    transform: translateY(-4px);
-    border-color: hsl(var(--glass-border-hover));
-    box-shadow: var(--shadow-xl), 0 0 50px hsl(var(--sonic-green) / 0.12);
+    border-color: hsl(var(--primary) / 0.4);
   }
   
   /* Premium card styling */
   .premium-card {
-    background: linear-gradient(135deg, hsl(var(--card)) 0%, hsl(var(--card) / 0.9) 100%);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid hsl(var(--glass-border));
-    box-shadow: var(--shadow-lg);
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
   .premium-card:hover {
-    transform: translateY(-4px);
-    border-color: hsl(var(--primary) / 0.3);
-    box-shadow: var(--shadow-xl), var(--shadow-glow);
+    border-color: hsl(var(--primary) / 0.4);
   }
   
   /* Glow effects */
