@@ -38,8 +38,8 @@ const CrateCard = ({ crate }: CrateCardProps) => {
 
           {/* Description Preview */}
           {crate.description && (
-            <p className="text-sm text-muted-foreground/80 mt-2.5 line-clamp-2 leading-relaxed">
-              {crate.description}
+            <p className="text-sm text-muted-foreground mt-2.5 line-clamp-2 leading-relaxed italic">
+              “{crate.description}”
             </p>
           )}
         </CardContent>

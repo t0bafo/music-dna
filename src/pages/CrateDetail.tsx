@@ -382,9 +382,12 @@ const CrateDetail = () => {
                     {crate.name}
                   </h1>
                   {crate.description && (
-                    <p className="text-muted-foreground text-sm lg:text-base mb-3">
-                      {crate.description}
-                    </p>
+                    <figure className="mb-3 max-w-prose">
+                      <figcaption className="label-meta text-muted-foreground mb-1">Liner notes</figcaption>
+                      <blockquote className="text-muted-foreground text-sm lg:text-base italic leading-relaxed">
+                        “{crate.description}”
+                      </blockquote>
+                    </figure>
                   )}
                   <div className="flex items-center gap-3 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">

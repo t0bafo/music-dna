@@ -13,18 +13,10 @@ interface IdentitySleeveProps {
 
 /** Compact record-sleeve identity card: title + description, then the tracks behind it. */
 const IdentitySleeve = ({ archetype, isLoading, onShare, children }: IdentitySleeveProps) => (
-  <section className="relative overflow-hidden rounded-2xl border border-border bg-card">
-    {/* subtle groove texture */}
-    <div
-      aria-hidden
-      className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full opacity-[0.07]"
-      style={{
-        background:
-          'repeating-radial-gradient(circle, hsl(var(--foreground)) 0 1px, transparent 1px 6px)',
-      }}
-    />
-    <div className="relative p-5 sm:p-6 border-b border-border">
-      <p className="text-xs uppercase tracking-[0.18em] text-primary font-medium">Your Music DNA</p>
+  <section className="overflow-hidden rounded-md border border-border bg-card">
+    <div className="sleeve-ink overflow-hidden p-5 sm:p-6">
+      <div aria-hidden className="sleeve-groove" />
+      <p className="label-meta sleeve-muted">Liner notes · Your listening snapshot</p>
       {isLoading || !archetype ? (
         <div className="mt-3 space-y-2">
           <Skeleton className="h-8 w-56" />
@@ -33,15 +25,14 @@ const IdentitySleeve = ({ archetype, isLoading, onShare, children }: IdentitySle
       ) : (
         <div className="mt-2 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div className="min-w-0">
-            <h2 className="font-display text-3xl sm:text-4xl font-bold tracking-tight text-foreground leading-tight">
+            <h2 className="font-display text-3xl sm:text-4xl font-semibold leading-tight">
               {archetype.name}
             </h2>
-            <p className="mt-1 text-sm text-muted-foreground">{archetype.description}</p>
+            <p className="mt-1 text-sm sleeve-muted">{archetype.description}</p>
           </div>
           <Button
-            variant="outline"
             onClick={onShare}
-            className="h-11 shrink-0 self-start sm:self-auto"
+            className="h-11 shrink-0 self-start sm:self-auto rounded-full bg-[hsl(var(--sleeve-accent))] text-[hsl(80_8%_8%)] hover:bg-[hsl(var(--sleeve-accent)/0.9)]"
           >
             <Share2 className="w-4 h-4 mr-2" />
             Share my Music DNA
@@ -49,7 +40,7 @@ const IdentitySleeve = ({ archetype, isLoading, onShare, children }: IdentitySle
         </div>
       )}
     </div>
-    <div className="relative p-3 sm:p-4">{children}</div>
+    <div className="p-3 sm:p-4">{children}</div>
   </section>
 );
 
