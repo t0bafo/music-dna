@@ -28,6 +28,7 @@ export default function Crates() {
   const [view, setView] = useState<'list' | 'grid'>('list');
   const [recent, setRecent] = useState<string[]>([]);
   const restored = useRef(false);
+  const restoreScroll = useRef(0);
   const { data: crates = [], isLoading, isError, refetch } = useCrates();
   const { data: fullCrates = [], isLoading: searchLoading, isError: searchError, refetch: retrySearch } = useAllCratesWithTracks();
   const matches = useMemo(() => searchLibrary(query, fullCrates), [query, fullCrates]);
@@ -38,12 +39,13 @@ export default function Crates() {
   useEffect(() => {
     if (!user) return;
     const state = readLibraryState(key);
+    restoreScroll.current = state.scroll;
     setQuery(state.query); setView(state.view); setRecent(state.recent);
     restored.current = false;
   }, [key, user]);
   useEffect(() => {
     if (!user || isLoading || restored.current) return;
-    const frame = requestAnimationFrame(() => window.scrollTo(0, readLibraryState(key).scroll));
+    const frame = requestAnimationFrame(() => window.scrollTo(0, restoreScroll.current));
     restored.current = true;
     return () => cancelAnimationFrame(frame);
   }, [isLoading, key, user]);
