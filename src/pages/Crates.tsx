@@ -27,6 +27,7 @@ export default function Crates() {
   const [query, setQuery] = useState('');
   const [view, setView] = useState<'list' | 'grid'>('list');
   const [recent, setRecent] = useState<string[]>([]);
+  const [hydratedKey, setHydratedKey] = useState('');
   const restored = useRef(false);
   const restoreScroll = useRef(0);
   const { data: crates = [], isLoading, isError, refetch } = useCrates();
@@ -41,6 +42,7 @@ export default function Crates() {
     const state = readLibraryState(key);
     restoreScroll.current = state.scroll;
     setQuery(state.query); setView(state.view); setRecent(state.recent);
+    setHydratedKey(key);
     restored.current = false;
   }, [key, user]);
   useEffect(() => {
@@ -50,14 +52,14 @@ export default function Crates() {
     return () => cancelAnimationFrame(frame);
   }, [isLoading, key, user]);
   useEffect(() => {
-    if (!user) return;
+    if (!user || hydratedKey !== key) return;
     const save = () => {
       try { sessionStorage.setItem(key, JSON.stringify({ ...readLibraryState(key), query, view, scroll: window.scrollY })); } catch { /* Optional history. */ }
     };
     window.addEventListener('scroll', save, { passive: true });
     save();
     return () => { save(); window.removeEventListener('scroll', save); };
-  }, [query, view, key, user]);
+  }, [query, view, key, user, hydratedKey]);
   if (authLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 aria-label="Loading Library" className="w-6 h-6 animate-spin text-primary" /></div>;
   return <div className="min-h-screen bg-background pb-28 lg:pb-8">
     <header className="bg-background border-b border-border sticky top-0 z-40 safe-top">
