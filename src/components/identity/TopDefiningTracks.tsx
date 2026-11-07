@@ -128,12 +128,8 @@ const TopDefiningTracks = ({ tracks, isLoading }: TopDefiningTracksProps) => {
   if (top3.length === 0) {
     return (
       <section>
-        <h3 className="font-display text-xl lg:text-2xl font-bold text-foreground mb-2">
-          🎵 Top 3 Tracks That Define You
-        </h3>
-        <p className="text-sm text-muted-foreground mb-5">
-          Listen to more music to unlock your defining tracks
-        </p>
+        <h3 className="px-1 text-sm font-medium text-muted-foreground">Tracks behind your Music DNA</h3>
+        <p className="px-1 mt-1 text-sm text-muted-foreground">Listen to more music to unlock your defining tracks</p>
       </section>
     );
   }
@@ -143,27 +139,21 @@ const TopDefiningTracks = ({ tracks, isLoading }: TopDefiningTracksProps) => {
       <motion.section
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9, duration: 0.4 }}
+        transition={{ delay: 0.1, duration: 0.3 }}
       >
-        <h3 className="font-display text-xl lg:text-2xl font-bold text-foreground mb-2">
-          🎵 Top 3 Tracks That Define You
-        </h3>
-        <p className="text-sm text-muted-foreground mb-5">
-          These songs capture your essence
-        </p>
-        
-        <div className="space-y-3 mb-4">
+        <h3 className="px-1 mb-2 text-sm font-medium text-muted-foreground">Tracks behind your Music DNA</h3>
+        <div className="divide-y divide-border mb-3">
           {top3.map((track, index) => (
             <motion.div
               key={track.id}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.9 + index * 0.1, duration: 0.3 }}
+              transition={{ delay: 0.15 + index * 0.05, duration: 0.3 }}
             >
-              <Card className="bg-card/70 backdrop-blur-xl border-border/40 hover:border-primary/30 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group">
-                <CardContent className="p-4 flex items-center gap-4">
+              <div className="group">
+                <div className="px-1 py-3 flex items-center gap-3 sm:gap-4">
                   {/* Album Art */}
-                  <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-muted relative">
+                  <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-md overflow-hidden flex-shrink-0 bg-muted relative">
                     {track.albumImage ? (
                       <img
                         src={track.albumImage}
@@ -218,8 +208,8 @@ const TopDefiningTracks = ({ tracks, isLoading }: TopDefiningTracksProps) => {
                       variant="outline"
                     />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </motion.div>
           ))}
         </div>
@@ -227,11 +217,11 @@ const TopDefiningTracks = ({ tracks, isLoading }: TopDefiningTracksProps) => {
         {/* Bulk Create Button */}
         <Button
           onClick={() => setShowBulkCreate(true)}
-          className="w-full max-w-md mx-auto flex gap-2 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
+          className="w-full flex gap-2 min-h-11 bg-primary/10 text-primary hover:bg-primary/20 border border-primary/30"
           variant="ghost"
         >
           <Package className="w-4 h-4" />
-          Create Crate from My Top Songs
+          Create a crate from my top 50
         </Button>
       </motion.section>
       

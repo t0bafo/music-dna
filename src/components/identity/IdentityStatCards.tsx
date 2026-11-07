@@ -49,14 +49,14 @@ const IdentityStatCards = ({
     );
   }
 
-  const cards = [
+  const all = [
     {
       icon: Music,
       iconColor: 'text-primary',
       iconBg: 'bg-primary/10',
       title: 'Your Sound',
       mainStat: `${avgBpm} BPM`,
-      subStat: `${avgEnergy}% Energy`,
+      subStat: avgEnergy > 0 ? `${avgEnergy}% Energy` : '',
       description: getBpmLabel(avgBpm),
       delay: 0.6,
     },
@@ -76,11 +76,13 @@ const IdentityStatCards = ({
       iconBg: 'bg-chart-cyan/10',
       title: 'Hidden Gems',
       mainStat: `${hiddenGemsCount}`,
-      subStat: 'tracks <50k',
+      subStat: 'top tracks with Spotify popularity under 50',
       description: hiddenGemsCount > 10 ? 'True curator' : 'Dig deeper!',
       delay: 0.8,
     },
   ];
+  // Omit values we can't back with data (e.g. no BPM from Spotify)
+  const cards = all.filter((c) => c.title !== 'Your Sound' || avgBpm > 0);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
