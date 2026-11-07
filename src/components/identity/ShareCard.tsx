@@ -144,10 +144,10 @@ const TrackList = ({
 );
 
 const Wordmark = ({ size }: { size: number }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: size * 0.5, height: size * 1.2 }}>
-    <div style={{ width: size * 0.45, height: size * 0.45, borderRadius: '50%', background: ACCENT, flexShrink: 0 }} />
-    <div style={{ fontSize: size, lineHeight: 1, fontWeight: 700, color: INK, letterSpacing: -0.5 }}>Music DNA</div>
-    <div style={{ fontSize: size * 0.8, lineHeight: 1, color: MUTED }}>musicdna.tobiafo.com</div>
+  <div style={{ fontSize: size, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+    <span style={{ color: ACCENT, fontSize: size * 0.7 }}>●</span>
+    <span style={{ fontWeight: 700, color: INK, letterSpacing: -0.5, marginLeft: size * 0.4 }}>Music DNA</span>
+    <span style={{ fontSize: size * 0.8, color: MUTED, marginLeft: size * 0.5 }}>musicdna.tobiafo.com</span>
   </div>
 );
 
