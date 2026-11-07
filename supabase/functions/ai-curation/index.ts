@@ -6,10 +6,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-spotify-token',
 }
 
-import { buildStructureMessages, rankCandidates } from '../_shared/curation-core.ts'
+import { buildStructureMessages, rankCandidates, energyEvidence } from '../_shared/curation-core.ts'
 
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
-const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions'
+import { requestTextPlan } from '../_shared/ai-request.ts'
 
 interface SectionPlan {
   name: string
@@ -60,33 +60,7 @@ async function callLovableAI(messages: { role: string; content: string }[]): Pro
     throw new Error('LOVABLE_API_KEY is not configured')
   }
 
-  const response = await fetch(AI_GATEWAY_URL, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      model: 'google/gemini-3.8-flash',
-      messages,
-      max_tokens: 2000,
-    }),
-  })
-
-  if (!response.ok) {
-    console.error('[ai-curation] AI gateway error status', response.status)
-    
-    if (response.status === 429) {
-      throw new Error('Rate limit exceeded. Please try again in a moment.')
-    }
-    if (response.status === 402) {
-      throw new Error('AI credits exhausted. Please add credits to your workspace.')
-    }
-    throw new Error('AI service temporarily unavailable')
-  }
-
-  const data = await response.json()
-  return data.choices?.[0]?.message?.content || ''
+  return requestTextPlan(messages, LOVABLE_API_KEY, fetch, 2000)
 }
 
 async function analyzeCrateStructure(prompt: string): Promise<CrateStructure> {
@@ -192,7 +166,7 @@ async function fetchArtistGenres(artistId: string, spotifyToken: string): Promis
     const artist = await response.json()
     return artist.genres || []
   } catch (error) {
-    console.error('[ai-curation] Failed to fetch artist genres:', error)
+    console.error('[ai-curation] Failed to fetch artist genres:')
     return []
   }
 }
@@ -299,7 +273,7 @@ async function searchUserLibrary(
   excludeIds: string[],
   supabaseAdmin: any
 ): Promise<CachedTrack[]> {
-  console.log(`[ai-curation] Searching user library for genres: ${scenes.join(', ')}`)
+
 
   let query = supabaseAdmin
     .from('music_library')
@@ -409,7 +383,7 @@ async function searchLikedSongs(
     return matchingTracks
 
   } catch (error) {
-    console.error('[ai-curation] Liked songs error:', error)
+    console.error('[ai-curation] Liked songs error:')
     return []
   }
 }
@@ -491,7 +465,7 @@ async function getSpotifyRecommendations(
     return cachedTracks
 
   } catch (error) {
-    console.error('[ai-curation] Recommendations error:', error)
+    console.error('[ai-curation] Recommendations error:')
     return []
   }
 }
@@ -555,7 +529,7 @@ async function searchSpotifyCatalog(
     return cachedTracks
 
   } catch (error) {
-    console.error('[ai-curation] Catalog search error:', error)
+    console.error('[ai-curation] Catalog search error:')
     return []
   }
 }
@@ -574,9 +548,9 @@ async function findTracksForSection(
   const allCandidates: CachedTrack[] = []
 
   
-  console.log(`[ai-curation] Target genres: ${globalScenes.join(', ') || 'any'}`)
-  console.log(`[ai-curation] Target BPM: ${sectionPlan.bpmRange[0]}-${sectionPlan.bpmRange[1]}`)
-  console.log(`[ai-curation] Target energy: ${Math.round(sectionPlan.energyRange[0] * 100)}%-${Math.round(sectionPlan.energyRange[1] * 100)}%`)
+
+
+
 
   // Priority 1: User's library
   const libraryTracks = await searchUserLibrary(
@@ -663,38 +637,11 @@ async function findTracksForSection(
 // ============= QUALITY SCORING =============
 
 function calculateQualityScore(tracks: any[]) {
-  let flowScore = 3
-  let balanceScore = 3
+  const evidence = energyEvidence(tracks)
+  const flowScore = evidence.flow
+  const balanceScore = evidence.balance
   let undergroundScore = 2
   let lengthScore = 2
-
-  if (tracks.length < 3) {
-    return { flow: flowScore, balance: balanceScore, underground: undergroundScore, length: lengthScore, total: 10 }
-  }
-
-  // Flow score (smooth energy transitions)
-  const energyValues = tracks.filter(t => t.energy != null).map(t => t.energy)
-  
-  if (energyValues.length >= 2) {
-    let sharpJumps = 0
-    for (let i = 1; i < energyValues.length; i++) {
-      if (Math.abs(energyValues[i] - energyValues[i - 1]) > 0.3) {
-        sharpJumps++
-      }
-    }
-    flowScore = Math.max(0, 3 - (sharpJumps * 0.5))
-  }
-
-  // Balance score (variety in energy)
-  if (energyValues.length > 0) {
-    const avgEnergy = energyValues.reduce((a, b) => a + b, 0) / energyValues.length
-    const varietyCount = energyValues.filter(e => Math.abs(e - avgEnergy) > 0.2).length
-    const varietyRatio = varietyCount / energyValues.length
-
-    if (varietyRatio < 0.2) balanceScore = 1.5
-    else if (varietyRatio < 0.4) balanceScore = 2.5
-    else balanceScore = 3
-  }
 
   // Underground score
   const undergroundPercent = (tracks.filter(t => (t.popularity || 100) < 50).length / tracks.length) * 100
@@ -714,7 +661,9 @@ function calculateQualityScore(tracks: any[]) {
     balance: balanceScore,
     underground: undergroundScore,
     length: lengthScore,
-    total: flowScore + balanceScore + undergroundScore + lengthScore,
+    total: flowScore == null || balanceScore == null ? null : flowScore + balanceScore + undergroundScore + lengthScore,
+    energyKnownCount: evidence.knownCount,
+    energyTotalCount: evidence.totalCount,
   }
 }
 
@@ -752,7 +701,7 @@ serve(async (req) => {
 
     const spotifyUser = await spotifyResponse.json()
     const userId = spotifyUser.id
-    console.log(`[ai-curation] action=${action}`)
+    console.log('[ai-curation] Request authenticated')
 
     // Create Supabase admin client
     const supabaseAdmin = createClient(
@@ -764,7 +713,7 @@ serve(async (req) => {
     if (action === 'generate_crate') {
       const { prompt } = data
       
-      if (!prompt || prompt.trim().length < 5) {
+      if (typeof prompt !== 'string' || prompt.trim().length < 5 || prompt.length > 500) {
         return new Response(
           JSON.stringify({ error: 'Please provide a more detailed description' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -849,7 +798,7 @@ serve(async (req) => {
         scenes: structure.scenes,
       }
 
-      console.log(`\n[ai-curation] ✅ Generated crate: ${result.totalTracks} tracks, quality ${quality.total.toFixed(1)}`)
+      console.log(`\n[ai-curation] ✅ Generated crate: ${result.totalTracks} tracks, quality ${quality.total?.toFixed(1) ?? "unknown"}`)
 
       return new Response(
         JSON.stringify({ data: result }),
@@ -925,7 +874,7 @@ serve(async (req) => {
           .upsert(trackCacheData, { onConflict: 'track_id' })
       }
 
-      console.log(`[ai-curation] Saved crate ${newCrate.id} with ${allTracks.length} tracks`)
+      console.log(`[ai-curation] Saved ${allTracks.length} tracks`)
 
       return new Response(
         JSON.stringify({ data: newCrate }),
@@ -987,11 +936,11 @@ serve(async (req) => {
     )
 
   } catch (error: unknown) {
-    console.error('[ai-curation] Error:', error instanceof Error ? error.message : 'unknown')
+    console.error('[ai-curation] Request failed')
     const message = error instanceof Error ? error.message : 'An error occurred'
     return new Response(
       JSON.stringify({ error: message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { status: typeof (error as { status?: number })?.status === 'number' ? (error as { status: number }).status : 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })

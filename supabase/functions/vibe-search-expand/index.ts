@@ -96,10 +96,9 @@ Query: "songs for the gym"
 Response: {"vibes": ["energy", "hype", "intense", "workout", "gym"], "tempo": "fast", "energy": "high", "bpmRange": [130, 180]}`;
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { handleVibeSearch, hashUserKey } from '../_shared/vibe-search-core.ts'
+import { handleVibeSearch, hashUserKey, buildVibeMessages, VIBE_WINDOW_SECONDS, VIBE_MAX_PER_WINDOW } from '../_shared/vibe-search-core.ts'
 
-const WINDOW_SECONDS = 600
-const MAX_PER_WINDOW = 20
+import { requestTextPlan } from '../_shared/ai-request.ts'
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
@@ -121,27 +120,14 @@ serve(async (req) => {
         return me?.id ? await hashUserKey(me.id) : null
       },
       allow: async (userKey) => {
-        const { data, error } = await admin.rpc('ai_rate_limit_hit', { _user_key: userKey, _window_seconds: WINDOW_SECONDS, _max: MAX_PER_WINDOW })
+        const { data, error } = await admin.rpc('ai_rate_limit_hit', { _user_key: userKey, _window_seconds: VIBE_WINDOW_SECONDS, _max: VIBE_MAX_PER_WINDOW })
         if (error) { console.error('[vibe-search-expand] rate limit check failed:', error.code); return false }
         return data === true
       },
       callModel: async (query) => {
         const key = Deno.env.get('LOVABLE_API_KEY')
         if (!key) throw { status: 500 }
-        const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            model: 'google/gemini-3.8-flash',
-            messages: [
-              { role: 'system', content: EXPANSION_PROMPT },
-              { role: 'user', content: `Now parse this query and return JSON only:\n\nQuery: "${query}"` },
-            ],
-          }),
-        })
-        if (!r.ok) { console.error('[vibe-search-expand] gateway status', r.status); throw { status: r.status } }
-        const data = await r.json()
-        return data.choices?.[0]?.message?.content ?? ''
+        return requestTextPlan(buildVibeMessages(EXPANSION_PROMPT, query), key)
       },
     },
   )
