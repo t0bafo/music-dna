@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
-import { buildStructureMessages, knownEnergy, rankCandidates, scoreTrack } from '../../../supabase/functions/_shared/curation-core';
-import { handleVibeSearch, hashUserKey } from '../../../supabase/functions/_shared/vibe-search-core';
+import { buildStructureMessages, knownEnergy, rankCandidates, scoreTrack, energyEvidence } from '../../../supabase/functions/_shared/curation-core';
+import { handleVibeSearch, hashUserKey, buildVibeMessages, VIBE_MAX_PER_WINDOW, VIBE_WINDOW_SECONDS } from '../../../supabase/functions/_shared/vibe-search-core';
+import { requestTextPlan } from '../../../supabase/functions/_shared/ai-request';
 
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({}) }));
 vi.mock('@/hooks/use-crates-search', () => ({ useAllCratesWithTracks: () => ({ data: [] }) }));
@@ -15,11 +16,14 @@ const candidates = [
 describe('AI Curation: outbound model request (mock gateway)', () => {
   it('contains only the description — no track data or account ids', async () => {
     const sent: string[] = [];
-    const mockGateway = vi.fn(async (_url: string, init: { body: string }) => { sent.push(init.body); return { ok: true, json: async () => ({}) }; });
+    const mockGateway: typeof fetch = vi.fn(async (_url, init) => {
+      sent.push(String(init?.body));
+      return new Response(JSON.stringify({ choices: [{ message: { content: '{}' } }] }));
+    });
     const messages = buildStructureMessages('SYSTEM', 'late night drive in Lagos');
     // Rank candidates (the only place tracks are used) and then "send" what the function sends.
     rankCandidates(candidates, { name: 'Open', bpmRange: [90, 110], energyRange: [0.4, 0.6] }, ['afrobeats'], 1);
-    await mockGateway('https://ai.gateway.lovable.dev/v1/chat/completions', { body: JSON.stringify({ messages }) });
+    await requestTextPlan(messages, 'mock-key', mockGateway, 2000);
     const body = sent.join('\n');
     expect(body).toContain('late night drive in Lagos');
     for (const c of candidates) {
@@ -28,6 +32,7 @@ describe('AI Curation: outbound model request (mock gateway)', () => {
       expect(body).not.toContain(c.artist);
     }
     expect(body).not.toContain(SPOTIFY_ID);
+    expect(JSON.parse(sent[0]).max_tokens).toBe(2000);
   });
 
   it('caps the description length sent to the model', () => {
@@ -37,6 +42,15 @@ describe('AI Curation: outbound model request (mock gateway)', () => {
 });
 
 describe('missing vs zero energy', () => {
+  it('does not invent flow, balance or quality evidence for unknown energy', () => {
+    expect(energyEvidence([{ track_id: 'a' }, { track_id: 'b', energy: null }])).toEqual({
+      knownCount: 0, totalCount: 2, flow: null, balance: null,
+    });
+  });
+  it('preserves zero in measured quality evidence and never bridges unknown gaps', () => {
+    expect(energyEvidence([{ track_id: 'a', energy: 0 }, { track_id: 'b', energy: 0 }]).flow).toBe(3);
+    expect(energyEvidence([{ track_id: 'a', energy: 0 }, { track_id: 'b' }, { track_id: 'c', energy: 1 }]).flow).toBeNull();
+  });
   it('keeps 0 as a real value and missing as unknown', () => {
     expect(knownEnergy(0)).toBe(0);
     expect(knownEnergy(null)).toBeNull();
@@ -56,6 +70,43 @@ describe('missing vs zero energy', () => {
 });
 
 describe('vibe search protection', () => {
+  it('preserves the existing 20 requests per 10 minute limit', () => {
+    expect(VIBE_MAX_PER_WINDOW).toBe(20);
+    expect(VIBE_WINDOW_SECONDS).toBe(600);
+  });
+  it('fails closed when authentication or limiter checks throw', async () => {
+    const callModel = vi.fn();
+    const base = { verifyUser: async () => 'opaque', allow: async () => true, callModel };
+    expect((await handleVibeSearch({ query: 'night drive', spotifyToken: 'mock' }, { ...base, verifyUser: async () => { throw Error('failure'); } })).status).toBe(401);
+    expect((await handleVibeSearch({ query: 'night drive', spotifyToken: 'mock' }, { ...base, allow: async () => { throw Error('failure'); } })).status).toBe(503);
+    expect(callModel).not.toHaveBeenCalled();
+  });
+  it('uses the actual transport with only search text after auth and rate limiting', async () => {
+    let sent = '';
+    const gateway: typeof fetch = vi.fn(async (_url, init) => {
+      sent = String(init?.body);
+      return new Response(JSON.stringify({ choices: [{ message: { content: '{"vibes":["night"]}' } }] }));
+    });
+    await handleVibeSearch({ query: 'night drive', spotifyToken: 'private-mock-token' }, {
+      verifyUser: async () => SPOTIFY_ID,
+      allow: async () => true,
+      callModel: q => requestTextPlan(buildVibeMessages('fixed prompt', q), 'mock-key', gateway),
+    });
+    expect(sent).toContain('night drive');
+    expect(sent).not.toContain(SPOTIFY_ID);
+    expect(sent).not.toContain('private-mock-token');
+    for (const track of candidates) expect(sent).not.toContain(track.track_id);
+  });
+  it('preserves terminal provider denial without retrying', async () => {
+    const gateway: typeof fetch = vi.fn(async () => new Response(JSON.stringify({ message: 'Access denied' }), { status: 403 }));
+    const result = await handleVibeSearch({ query: 'night drive', spotifyToken: 'mock' }, {
+      verifyUser: async () => 'opaque', allow: async () => true,
+      callModel: q => requestTextPlan(buildVibeMessages('fixed', q), 'mock-key', gateway),
+    });
+    expect(result.status).toBe(403);
+    expect(result.body.error).toBe('Access denied');
+    expect(gateway).toHaveBeenCalledTimes(1);
+  });
   const deps = (over: Partial<Parameters<typeof handleVibeSearch>[1]> = {}) => {
     const callModel = vi.fn(async () => '{"vibes":["late-night"]}');
     return { callModel, d: { verifyUser: async (t: string | null) => (t === 'good' ? 'k' : null), allow: async () => true, callModel, ...over } };
@@ -99,6 +150,16 @@ describe('vibe search protection', () => {
 });
 
 describe('manual title/artist search with the model unavailable', () => {
+  it('never awards a matching-audio bonus to missing values, but accepts valid zero energy', async () => {
+    const { hybridSearch } = await import('@/hooks/use-vibe-search');
+    const crates = [{ id: 'c', name: 'Archive', tracks: [
+      { id: 'unknown', track_id: 'unknown', name: 'Unknown', artist_name: 'A' },
+      { id: 'zero', track_id: 'zero', name: 'Zero', artist_name: 'B', bpm: 100, energy: 0 },
+    ] }] as never;
+    const result = hybridSearch('no literal match', { vibes: [], scenes: [], bpmRange: [90, 110], energy: 'low' }, crates);
+    expect(result.totalCount).toBe(1);
+    expect(result.results[0].tracks[0].track_id).toBe('zero');
+  });
   it('still finds tracks by title and artist', async () => {
     const { hybridSearch } = await import('@/hooks/use-vibe-search');
     const crates = [{ id: 'c1', name: 'Night', tracks: [{ id: 't1', name: 'Essence', artist_name: 'Wizkid', track_id: 'x' }] }] as never;

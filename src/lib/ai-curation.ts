@@ -37,11 +37,13 @@ export interface GeneratedCrate {
   totalTracks: number;
   estimatedDuration: string;
   quality: {
-    flow: number;
-    balance: number;
+    flow: number | null;
+    balance: number | null;
     underground: number;
     length: number;
-    total: number;
+    total: number | null;
+    energyKnownCount?: number;
+    energyTotalCount?: number;
   };
   vibes?: string[];
   scenes?: string[];

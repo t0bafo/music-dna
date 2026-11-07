@@ -54,7 +54,7 @@ async function expandQueryWithAI(query: string, spotifyToken: string | null): Pr
 
     return filters;
   } catch (error) {
-    console.error('[vibe-search] Expansion error:', error);
+    console.error('[vibe-search] Expansion unavailable');
     return null;
   }
 }
@@ -132,8 +132,8 @@ export function hybridSearch(
 
       // === AUDIO FEATURE MATCHING ===
       if (hasAudioFilters) {
-        let matchesBpm = true;
-        let matchesEnergy = true;
+        let matchesBpm = !bpmRange;
+        let matchesEnergy = !energyRange;
 
         if (bpmRange && track.bpm != null) {
           const [minBpm, maxBpm] = bpmRange;
@@ -210,14 +210,6 @@ export function hybridSearch(
   // Limit to 50 results
   const limitedTracks = scoredTracks.slice(0, 50);
 
-  console.log('[vibe-search] Top results:', limitedTracks.slice(0, 5).map(t => ({
-    name: t.track.name,
-    artist: t.track.artist_name,
-    bpm: t.track.bpm,
-    energy: t.track.energy,
-    score: t.score,
-  })));
-
   // Group by crate
   const groupedMap = new Map<string, GroupedSearchResult>();
 
@@ -230,7 +222,7 @@ export function hybridSearch(
         tracks: [],
       });
     }
-    groupedMap.get(track.crate_id)!.tracks.push(track);
+    groupedMap.get(track.crate_id)?.tracks.push(track);
   }
 
   return {
@@ -283,7 +275,7 @@ export function useVibeSearch(query: string, debounceMs: number = 400) {
         setExpandedFilters(filters);
       })
       .catch(error => {
-        console.error('[vibe-search] Expansion failed:', error);
+        console.error('[vibe-search] Expansion unavailable');
         setExpansionError('Search expansion unavailable');
         setExpandedFilters(null);
       })

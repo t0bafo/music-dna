@@ -50,7 +50,7 @@ export function CratePreviewModal({
       // Navigate to the new crate
       navigate(`/crates/${savedCrate.id}`);
     } catch (error: any) {
-      console.error('Save failed:', error);
+      console.error('Save failed');
       toast.error(error.message || 'Failed to save crate');
     } finally {
       setIsSaving(false);
@@ -104,13 +104,13 @@ export function CratePreviewModal({
             <div className="text-right">
               <div className="text-xs text-muted-foreground uppercase tracking-wide">Quality</div>
               <div className="flex items-baseline gap-1">
-                <span className={`text-2xl font-bold ${getQualityColor(crate.quality.total)}`}>
-                  {crate.quality.total.toFixed(1)}
+                <span className="text-2xl font-bold text-foreground">
+                  {crate.quality.total?.toFixed(1) ?? 'Unknown'}
                 </span>
-                <span className="text-muted-foreground">/10</span>
+                {crate.quality.total != null && <span className="text-muted-foreground">/10</span>}
               </div>
               <div className="text-xs text-muted-foreground">
-                {getQualityLabel(crate.quality.total)}
+                {crate.quality.total == null ? 'Energy data incomplete' : getQualityLabel(crate.quality.total)}
               </div>
             </div>
           </DialogTitle>
@@ -137,7 +137,7 @@ export function CratePreviewModal({
                     </span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">
-                    {section.description}
+                    Planned mood: {section.description}
                   </div>
                 </div>
 
@@ -193,6 +193,10 @@ export function CratePreviewModal({
         {/* Quality Breakdown */}
         <div className="px-6 py-4 bg-secondary/20 border-t border-border/50">
           <div className="text-sm font-medium mb-3">Quality Analysis</div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Energy available for {crate.quality.energyKnownCount ?? 0} of {crate.quality.energyTotalCount ?? crate.totalTracks} tracks.
+            Unknown values are not scored; section descriptions are planned moods, not measured track energy.
+          </p>
           <div className="grid grid-cols-4 gap-3">
             <QualityItem 
               label="Flow" 
@@ -264,16 +268,16 @@ function QualityItem({
   maxScore 
 }: { 
   label: string; 
-  score: number; 
+  score: number | null;
   maxScore: number;
 }) {
-  const percentage = (score / maxScore) * 100;
+  const percentage = score == null ? 0 : (score / maxScore) * 100;
   
   return (
     <div>
       <div className="flex items-center justify-between text-xs mb-1">
         <span className="text-muted-foreground">{label}</span>
-        <span className="font-medium">{score.toFixed(1)}/{maxScore}</span>
+        <span className="font-medium">{score == null ? 'Unknown' : `${score.toFixed(1)}/${maxScore}`}</span>
       </div>
       <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
         <div

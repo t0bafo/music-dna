@@ -35,6 +35,30 @@ export function buildStructureMessages(systemPrompt: string, description: string
   ];
 }
 
+/** Quality evidence, not an invented energy-based score. Never bridge unknown gaps. */
+export function energyEvidence(tracks: RankableTrack[]) {
+  const values = tracks.map(t => knownEnergy(t.energy));
+  const known = values.filter((v): v is number => v !== null);
+  const jumps: number[] = [];
+  for (let i = 1; i < values.length; i++) {
+    const previous = values[i - 1];
+    const current = values[i];
+    if (previous !== null && previous !== undefined && current !== null && current !== undefined) {
+      jumps.push(Math.abs(current - previous));
+    }
+  }
+  return {
+    knownCount: known.length,
+    totalCount: tracks.length,
+    flow: jumps.length ? Math.max(0, 3 - jumps.filter(d => d > 0.3).length * 0.5) : null,
+    balance: known.length >= 2 ? (() => {
+      const mean = known.reduce((a, b) => a + b, 0) / known.length;
+      const ratio = known.filter(e => Math.abs(e - mean) > 0.2).length / known.length;
+      return ratio < 0.2 ? 1.5 : ratio < 0.4 ? 2.5 : 3;
+    })() : null,
+  };
+}
+
 /** Returns a 0–1 energy value, or null when unknown. Zero is a real value. */
 export function knownEnergy(v: unknown): number | null {
   return typeof v === 'number' && Number.isFinite(v) && v >= 0 && v <= 1 ? v : null;
