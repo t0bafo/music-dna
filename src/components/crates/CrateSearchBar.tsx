@@ -71,12 +71,12 @@ export function CrateSearchBar({
   return (
     <div className="space-y-3 mb-4">
       {/* Search Input Row */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
+      <div className="flex flex-wrap gap-2">
+        <div className="relative w-full sm:w-auto sm:flex-1 min-w-0">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Search tracks in this crate"
-            aria-label="Search tracks in this crate"
+            placeholder="Search this crate"
+            aria-label="Search this crate"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-9 pr-8 bg-card/60 border-border/40 focus:border-primary/50"
