@@ -398,11 +398,7 @@ const Home = () => {
         open={showShareModal}
         onOpenChange={setShowShareModal}
         archetype={archetype}
-        undergroundIndex={undergroundIndex}
-        avgBpm={stats?.avgBpm || 0}
-        avgEnergy={stats?.avgEnergy || 0}
-        undergroundGemsCount={undergroundCount}
-        topTracks={topTracks.slice(0, 3).map(t => ({ name: t.name, artist: t.artist }))}
+        topTracks={topTracksForShare}
       />
     </div>
   );
