@@ -105,7 +105,7 @@ const AddToCrateDropdown = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent 
         align="end" 
-        className="w-64 bg-card/95 backdrop-blur-xl border-border/50"
+        className="w-64 bg-card/95 border-border/50"
       >
         <div className="px-3 py-2">
           <p className="text-sm font-medium text-foreground truncate">

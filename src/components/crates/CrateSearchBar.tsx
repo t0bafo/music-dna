@@ -105,7 +105,7 @@ export function CrateSearchBar({
               <ChevronDown className="w-3.5 h-3.5 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-card/95 backdrop-blur-xl border-border/50">
+          <DropdownMenuContent align="end" className="w-48 bg-card/95 border-border/50">
             <DropdownMenuLabel className="text-xs text-muted-foreground">BPM Range</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {BPM_PRESETS.map((preset) => (
@@ -137,7 +137,7 @@ export function CrateSearchBar({
               <ChevronDown className="w-3.5 h-3.5 opacity-50" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-card/95 backdrop-blur-xl border-border/50">
+          <DropdownMenuContent align="end" className="w-48 bg-card/95 border-border/50">
             <DropdownMenuLabel className="text-xs text-muted-foreground">Energy Level</DropdownMenuLabel>
             <DropdownMenuSeparator />
             {ENERGY_OPTIONS.map((option) => (

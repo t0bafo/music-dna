@@ -197,11 +197,11 @@ const MusicIntelligence = () => {
   return (
     <div className="min-h-screen gradient-bg pb-24 lg:pb-0">
       {/* Header with Navigation */}
-      <header className="bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50">
+      <header className="bg-card/90 border-b border-border/50 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4 lg:gap-6">
             <div 
-              className="w-9 h-9 lg:w-10 lg:h-10 bg-gradient-to-br from-primary to-sonic-dark rounded-xl flex items-center justify-center cursor-pointer shadow-glow"
+              className="w-9 h-9 lg:w-10 lg:h-10 bg-primary rounded-xl flex items-center justify-center cursor-pointer shadow-glow"
               onClick={() => navigate('/home')}
             >
               <Music className="w-4 h-4 lg:w-5 lg:h-5 text-primary-foreground" />

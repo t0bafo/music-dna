@@ -60,7 +60,7 @@ const TopAlbumsGrid = ({ tracks, isLoading }: TopAlbumsGridProps) => {
 
   if (isLoading) {
     return (
-      <Card className="bg-card/80 backdrop-blur-xl border-border/50">
+      <Card className="bg-card/80 border-border/50">
         <CardHeader>
           <Skeleton className="h-6 w-48" />
           <Skeleton className="h-4 w-64 mt-1" />
@@ -90,7 +90,7 @@ const TopAlbumsGrid = ({ tracks, isLoading }: TopAlbumsGridProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 }}
     >
-      <Card className="bg-card/80 backdrop-blur-xl border-border/50">
+      <Card className="bg-card/80 border-border/50">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
             🎧 Your Current Favorites

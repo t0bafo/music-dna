@@ -465,7 +465,7 @@ const AddTracksToCrateModal = ({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={handleClose}>
-        <DrawerContent className="max-h-[90vh] bg-card/95 backdrop-blur-xl">
+        <DrawerContent className="max-h-[90vh] bg-card/95">
           <DrawerHeader className="text-left">
             <DrawerTitle className="font-display text-xl">
               Add to {crateName ? `"${crateName}"` : 'Crate'}
@@ -481,7 +481,7 @@ const AddTracksToCrateModal = ({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col bg-card/95 backdrop-blur-xl">
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col bg-card/95">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">
             Add to {crateName ? `"${crateName}"` : 'Crate'}

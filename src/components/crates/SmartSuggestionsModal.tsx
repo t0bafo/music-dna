@@ -184,7 +184,7 @@ const SmartSuggestionsModal = ({ open, onOpenChange, crate, onComplete }: SmartS
       }
       onOpenChange(isOpen);
     }}>
-      <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl">
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col bg-card/95 border-border/50 shadow-2xl">
         <DialogHeader className="pb-2">
           <DialogTitle className="flex items-center gap-2 font-display text-xl">
             <Sparkles className="w-5 h-5 text-primary" />

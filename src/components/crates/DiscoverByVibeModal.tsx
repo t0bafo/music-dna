@@ -416,7 +416,7 @@ export function DiscoverByVibeModal({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[550px] bg-card/95 backdrop-blur-xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[550px] bg-card/95 max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display">
             {view === 'filters' ? 'Discover Tracks by Vibe' : `Found ${results.length} tracks`}

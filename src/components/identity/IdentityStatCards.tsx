@@ -36,7 +36,7 @@ const IdentityStatCards = ({
     return (
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[1, 2, 3].map((i) => (
-          <Card key={i} className="bg-card/70 backdrop-blur-xl border-border/40">
+          <Card key={i} className="bg-card/70 border-border/40">
             <CardContent className="p-6">
               <Skeleton className="w-8 h-8 rounded-lg mb-4" />
               <Skeleton className="h-4 w-24 mb-3" />
@@ -93,7 +93,7 @@ const IdentityStatCards = ({
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: card.delay, duration: 0.4 }}
         >
-          <Card className="bg-card/70 backdrop-blur-xl border-border/40 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-200 h-full">
+          <Card className="bg-card/70 border-border/40 shadow-md hover:shadow-lg hover:-translate-y-1 transition-all duration-200 h-full">
             <CardContent className="p-6">
               <div className={`w-10 h-10 rounded-xl ${card.iconBg} flex items-center justify-center mb-4`}>
                 <card.icon className={`w-5 h-5 ${card.iconColor}`} />

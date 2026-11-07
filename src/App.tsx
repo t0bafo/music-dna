@@ -9,7 +9,6 @@ import { InstallPrompt } from "@/components/InstallPrompt";
 import { NativeAppProvider } from "@/components/NativeAppProvider";
 
 import SampleCrate from "./pages/SampleCrate";
-import LinerNotesPreview from "./pages/LinerNotesPreview";
 import Landing from "./pages/Landing";
 import Callback from "./pages/Callback";
 import Home from "./pages/Home";
@@ -25,7 +24,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <ThemeProvider defaultTheme="dark" storageKey="music-dna-theme">
+  <ThemeProvider defaultTheme="light" storageKey="music-dna-theme">
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <BrowserRouter>
@@ -37,7 +36,6 @@ const App = () => (
               <Routes>
                 <Route path="/" element={<Landing />} />
                 <Route path="/sample/lagos-night-drive" element={<SampleCrate />} />
-                <Route path="/design/liner-notes/:variant" element={<LinerNotesPreview />} />
                 <Route path="/callback" element={<Callback />} />
                 <Route path="/home" element={<Home />} />
                 <Route path="/dashboard" element={<Navigate to="/home" replace />} />

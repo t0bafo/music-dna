@@ -73,7 +73,7 @@ const MusicStatsSection = ({ topTracks, accessToken, isLoading }: MusicStatsSect
 
   if (isLoading) {
     return (
-      <Card className="bg-card/60 backdrop-blur-xl border-border/50">
+      <Card className="bg-card/60 border-border/50">
         <CardContent className="py-8 flex items-center justify-center">
           <Loader2 className="w-6 h-6 animate-spin text-primary mr-2" />
           <span className="text-muted-foreground">Loading stats...</span>
@@ -95,7 +95,7 @@ const MusicStatsSection = ({ topTracks, accessToken, isLoading }: MusicStatsSect
           📊 Your Music Stats
         </h2>
         
-        <Card className="bg-card/70 backdrop-blur-xl border-border/40 overflow-hidden">
+        <Card className="bg-card/70 border-border/40 overflow-hidden">
           <CardContent className="p-5 lg:p-8">
             {/* Compact Stats Grid */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 mb-6">

@@ -127,7 +127,7 @@ export function CreateCrateFromSearchModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[460px] max-h-[85vh] overflow-y-auto bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl">
+      <DialogContent className="sm:max-w-[460px] max-h-[85vh] overflow-y-auto bg-card/95 border-border/50 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="font-display text-lg">
             Create Crate from Search
@@ -158,7 +158,7 @@ export function CreateCrateFromSearchModal({
               </button>
               
               {showEmojiPicker && (
-                <div className="absolute top-full left-0 mt-2 p-2 bg-card/95 backdrop-blur-xl rounded-lg border border-border/50 shadow-xl z-50">
+                <div className="absolute top-full left-0 mt-2 p-2 bg-card/95 rounded-lg border border-border/50 shadow-xl z-50">
                   <div className="grid grid-cols-6 gap-1.5">
                     {CRATE_EMOJIS.map((emoji) => (
                       <button

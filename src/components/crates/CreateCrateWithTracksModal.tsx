@@ -125,7 +125,7 @@ const CreateCrateWithTracksModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl">
+      <DialogContent className="sm:max-w-[500px] bg-card/95 border-border/50 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="font-display text-xl">
             Create Crate with {tracks.length} Track{tracks.length !== 1 ? 's' : ''}
@@ -176,7 +176,7 @@ const CreateCrateWithTracksModal = ({
               </button>
               
               {showEmojiPicker && (
-                <div className="absolute top-full left-0 mt-2 p-3 bg-card/95 backdrop-blur-xl rounded-xl border border-border/50 shadow-xl z-50 animate-fade-in">
+                <div className="absolute top-full left-0 mt-2 p-3 bg-card/95 rounded-xl border border-border/50 shadow-xl z-50 animate-fade-in">
                   <div className="grid grid-cols-6 gap-2">
                     {CRATE_EMOJIS.map((emoji) => (
                       <button

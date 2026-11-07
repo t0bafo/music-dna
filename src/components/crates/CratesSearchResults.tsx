@@ -485,7 +485,7 @@ export function CratesSearchResults({
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-[900px] mx-auto"
       >
-        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-8 text-center shadow-lg">
+        <div className="bg-card/80 border border-border/50 rounded-2xl p-8 text-center shadow-lg">
           <span className="text-4xl mb-4 block">😕</span>
           <h3 className="text-lg font-semibold text-foreground mb-2">No tracks found</h3>
           <p className="text-muted-foreground mb-4">Try searching for:</p>
@@ -517,7 +517,7 @@ export function CratesSearchResults({
         />
 
         <div 
-          className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-lg mt-4 max-h-[600px] overflow-y-auto"
+          className="bg-card/80 border border-border/50 rounded-2xl p-6 shadow-lg mt-4 max-h-[600px] overflow-y-auto"
           role="region"
           aria-live="polite"
           aria-label={`Found ${totalTrackCount} tracks across ${crateCount} crates`}
@@ -602,7 +602,7 @@ export function SearchLoadingState() {
       animate={{ opacity: 1, y: 0 }}
       className="w-full max-w-[900px] mx-auto"
     >
-      <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-8 text-center shadow-lg">
+      <div className="bg-card/80 border border-border/50 rounded-2xl p-8 text-center shadow-lg">
         <Loader2 className="w-6 h-6 animate-spin mx-auto mb-3 text-primary" />
         <p className="text-muted-foreground">Searching your crates...</p>
       </div>

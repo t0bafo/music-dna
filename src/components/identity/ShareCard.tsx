@@ -27,12 +27,13 @@ export interface ShareCardProps {
   tracks: ShareCardTrack[];
 }
 
-const INK = '#F3EFE6';
-const MUTED = 'rgba(243, 239, 230, 0.56)';
-const FAINT = 'rgba(243, 239, 230, 0.14)';
-const PAPER = '#121211';
-const ACCENT = '#00CC88';
-const FONT = '"Space Grotesk", Inter, system-ui, sans-serif';
+const INK = '#F4F0E8';
+const MUTED = 'rgba(244, 240, 232, 0.66)';
+const FAINT = 'rgba(244, 240, 232, 0.14)';
+const PAPER = '#151613';
+const ACCENT = '#8FBFA8';
+const FONT = '"IBM Plex Sans", system-ui, sans-serif';
+const DISPLAY = '"Fraunces", Georgia, serif';
 
 export const truncate = (s: string, max: number) =>
   s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s;
@@ -146,7 +147,7 @@ const TrackList = ({
 const Wordmark = ({ size }: { size: number }) => (
   <div style={{ fontSize: size, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
     <span style={{ color: ACCENT, fontSize: size * 0.7 }}>●</span>
-    <span style={{ fontWeight: 700, color: INK, letterSpacing: -0.5, marginLeft: size * 0.4 }}>Music DNA</span>
+    <span style={{ fontFamily: DISPLAY, fontWeight: 600, color: INK, marginLeft: size * 0.4 }}>Music DNA</span>
     <span style={{ fontSize: size * 0.8, color: MUTED, marginLeft: size * 0.5 }}>musicdna.tobiafo.com</span>
   </div>
 );
@@ -155,10 +156,11 @@ const Headline = ({ title, size }: { title: string; size: number }) => (
   <div
     style={{
       fontSize: size,
-      lineHeight: 0.92,
-      fontWeight: 700,
-      letterSpacing: -size * 0.035,
-      textTransform: 'uppercase',
+      fontFamily: DISPLAY,
+      fontVariationSettings: '"opsz" 144',
+      lineHeight: 0.95,
+      fontWeight: 600,
+      letterSpacing: -size * 0.02,
       color: INK,
       wordBreak: 'keep-all',
     }}

@@ -69,7 +69,7 @@ export const WelcomeModal = ({ forceShow = false }: WelcomeModalProps) => {
     <AnimatePresence>
       {isOpen && (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-          <DialogContent className="max-w-[500px] w-[90vw] p-0 bg-card/95 backdrop-blur-xl border-border/30 rounded-2xl overflow-hidden">
+          <DialogContent className="max-w-[500px] w-[90vw] p-0 bg-card/95 border-border/30 rounded-2xl overflow-hidden">
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}

@@ -32,7 +32,7 @@ export function SelectionTray({
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
           className="fixed bottom-0 left-0 right-0 z-50 safe-bottom"
         >
-          <div className="bg-card/95 backdrop-blur-xl border-t-2 border-primary shadow-2xl">
+          <div className="bg-card/95 border-t-2 border-primary shadow-2xl">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 py-4">
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="text-base sm:text-lg font-semibold text-foreground">

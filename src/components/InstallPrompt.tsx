@@ -79,7 +79,7 @@ export function InstallPrompt() {
 
   return (
     <div className="fixed bottom-20 left-4 right-4 z-50 md:left-auto md:right-6 md:max-w-sm animate-in slide-in-from-bottom-4 duration-300">
-      <div className="relative rounded-2xl border border-border/50 bg-background/95 backdrop-blur-xl p-4 shadow-2xl">
+      <div className="relative rounded-2xl border border-border/50 bg-background/95 p-4 shadow-2xl">
         <button
           onClick={handleDismiss}
           className="absolute top-3 right-3 text-muted-foreground hover:text-foreground transition-colors"

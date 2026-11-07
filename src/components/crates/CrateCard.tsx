@@ -14,7 +14,7 @@ const CrateCard = ({ crate }: CrateCardProps) => {
   return (
     <Link to={`/crates/${crate.id}`} onClick={lightTap} title={crate.name} className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <Card 
-        className="group bg-card/70 backdrop-blur-xl border-border/40 hover:border-primary/40 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl overflow-hidden cursor-pointer h-full"
+        className="group bg-card/70 border-border/40 hover:border-primary/40 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl overflow-hidden cursor-pointer h-full"
       >
         <CardContent className="p-5 lg:p-6">
           {/* Emoji & Color Header */}
@@ -38,8 +38,8 @@ const CrateCard = ({ crate }: CrateCardProps) => {
 
           {/* Description Preview */}
           {crate.description && (
-            <p className="text-sm text-muted-foreground/80 mt-2.5 line-clamp-2 leading-relaxed">
-              {crate.description}
+            <p className="text-sm text-muted-foreground mt-2.5 line-clamp-2 leading-relaxed italic">
+              “{crate.description}”
             </p>
           )}
         </CardContent>
