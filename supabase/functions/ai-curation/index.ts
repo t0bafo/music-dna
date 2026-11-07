@@ -6,6 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-spotify-token',
 }
 
+import { buildStructureMessages, rankCandidates } from '../_shared/curation-core.ts'
+
 const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
 const AI_GATEWAY_URL = 'https://ai.gateway.lovable.dev/v1/chat/completions'
 
@@ -65,15 +67,14 @@ async function callLovableAI(messages: { role: string; content: string }[]): Pro
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model: 'google/gemini-2.5-flash',
+      model: 'google/gemini-3.8-flash',
       messages,
       max_tokens: 2000,
     }),
   })
 
   if (!response.ok) {
-    const errorText = await response.text()
-    console.error('[ai-curation] AI gateway error:', response.status, errorText)
+    console.error('[ai-curation] AI gateway error status', response.status)
     
     if (response.status === 429) {
       throw new Error('Rate limit exceeded. Please try again in a moment.')
@@ -150,10 +151,7 @@ Examples:
 - "Deep underground Amapiano only" → scenes: ["amapiano"], vibes: ["underground", "deep"]
 - "Afrobeats party mix" → scenes: ["afrobeats", "afropop"], vibes: ["party", "upbeat"]`
 
-  const responseText = await callLovableAI([
-    { role: 'system', content: systemPrompt },
-    { role: 'user', content: `Create a crate structure for: "${prompt}"` }
-  ])
+  const responseText = await callLovableAI(buildStructureMessages(systemPrompt, prompt))
 
   // Parse JSON (strip markdown if present)
   let jsonText = responseText.trim()
@@ -175,68 +173,8 @@ Examples:
     
     return structure
   } catch (error) {
-    console.error('[ai-curation] Failed to parse structure:', jsonText)
+    console.error('[ai-curation] Failed to parse structure (len', jsonText.length, ')')
     throw new Error('Failed to analyze crate structure. Please try a different description.')
-  }
-}
-
-async function selectBestTracks(
-  candidates: CachedTrack[],
-  sectionPlan: SectionPlan,
-  targetCount: number
-): Promise<string[]> {
-  if (candidates.length <= targetCount) {
-    return candidates.map(t => t.track_id)
-  }
-
-  const candidateInfo = candidates.slice(0, 40).map(t => ({
-    id: t.track_id,
-    name: t.name || t.track_name,
-    artist: t.artist || t.artist_name,
-    genres: (t.artist_genres || []).slice(0, 3).join(', '),
-    bpm: t.tempo || t.bpm,
-    energy: Math.round((t.energy || 0.5) * 100),
-    popularity: t.popularity,
-    source: t.source || 'library',
-  }))
-
-  const systemPrompt = `You are selecting tracks for a music crate section.
-
-Section: ${sectionPlan.name}
-Goal: ${sectionPlan.description}
-Target: ${targetCount} tracks
-Target BPM: ${sectionPlan.bpmRange[0]}-${sectionPlan.bpmRange[1]}
-Target Energy: ${Math.round(sectionPlan.energyRange[0] * 100)}%-${Math.round(sectionPlan.energyRange[1] * 100)}%
-Vibe: ${sectionPlan.vibeKeywords.join(', ')}
-
-Select the ${targetCount} BEST tracks considering:
-1. Match target BPM and energy closely
-2. PRIORITIZE tracks with matching genres
-3. Avoid repetitive artists (prefer variety)
-4. Balance underground (low popularity) and popular tracks
-5. Prefer "library" or "liked" source over "recommendation" or "catalog"
-6. Create smooth flow between tracks
-
-Return ONLY a JSON array of track IDs (no explanation):
-["track_id_1", "track_id_2", ...]`
-
-  try {
-    const responseText = await callLovableAI([
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: `Available tracks:\n${JSON.stringify(candidateInfo)}` }
-    ])
-
-    let jsonText = responseText.trim()
-    if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/```json\n?|\n?```/g, '')
-    }
-
-    const selectedIds: string[] = JSON.parse(jsonText)
-    return selectedIds.slice(0, targetCount)
-  } catch (error) {
-    console.error('[ai-curation] Track selection fallback:', error)
-    // Fallback: just take first N tracks
-    return candidates.slice(0, targetCount).map(t => t.track_id)
   }
 }
 
@@ -384,7 +322,7 @@ async function searchUserLibrary(
   if (sectionPlan.energyRange) {
     const energyMin = Math.max(0, sectionPlan.energyRange[0] - 0.2)
     const energyMax = Math.min(1, sectionPlan.energyRange[1] + 0.2)
-    query = query.gte('energy', energyMin).lte('energy', energyMax)
+    query = query.or(`energy.is.null,and(energy.gte.${energyMin},energy.lte.${energyMax})`)
   }
 
   query = query.limit(100)
@@ -392,7 +330,7 @@ async function searchUserLibrary(
   const { data, error } = await query
 
   if (error || !data) {
-    console.error('[ai-curation] Library query error:', error)
+    console.error('[ai-curation] Library query error', error?.code)
     return []
   }
 
@@ -590,7 +528,7 @@ async function searchSpotifyCatalog(
       return []
     }
 
-    console.log(`[ai-curation] Catalog search query: "${searchQuery}"`)
+    console.log('[ai-curation] Catalog search')
 
     const response = await fetch(
       `https://api.spotify.com/v1/search?q=${encodeURIComponent(searchQuery)}&type=track&limit=30`,
@@ -635,7 +573,7 @@ async function findTracksForSection(
   const targetCount = sectionPlan.trackCount
   const allCandidates: CachedTrack[] = []
 
-  console.log(`\n[ai-curation] 🔍 Finding ${targetCount} tracks for section: ${sectionPlan.name}`)
+  
   console.log(`[ai-curation] Target genres: ${globalScenes.join(', ') || 'any'}`)
   console.log(`[ai-curation] Target BPM: ${sectionPlan.bpmRange[0]}-${sectionPlan.bpmRange[1]}`)
   console.log(`[ai-curation] Target energy: ${Math.round(sectionPlan.energyRange[0] * 100)}%-${Math.round(sectionPlan.energyRange[1] * 100)}%`)
@@ -718,12 +656,8 @@ async function findTracksForSection(
     return allCandidates
   }
 
-  // Use AI to select best tracks
-  const selectedIds = await selectBestTracks(allCandidates, sectionPlan, targetCount)
-  
-  return selectedIds
-    .map(id => allCandidates.find(t => t.track_id === id))
-    .filter((t): t is CachedTrack => t != null)
+  // Deterministic in-app ranking. Candidate tracks never go to the model.
+  return rankCandidates(allCandidates, sectionPlan, globalScenes, targetCount)
 }
 
 // ============= QUALITY SCORING =============
@@ -818,7 +752,7 @@ serve(async (req) => {
 
     const spotifyUser = await spotifyResponse.json()
     const userId = spotifyUser.id
-    console.log(`[ai-curation] User: ${userId}, Action: ${action}`)
+    console.log(`[ai-curation] action=${action}`)
 
     // Create Supabase admin client
     const supabaseAdmin = createClient(
@@ -837,21 +771,18 @@ serve(async (req) => {
         )
       }
 
-      console.log(`[ai-curation] Generating crate for prompt: "${prompt}"`)
-
+      
       // Step 1: Analyze structure
       const structure = await analyzeCrateStructure(prompt)
-      console.log(`[ai-curation] Structure: ${structure.name} with ${structure.sections.length} sections`)
-      console.log(`[ai-curation] Extracted scenes: ${structure.scenes?.join(', ') || 'none'}`)
-
+      console.log(`[ai-curation] structure sections=${structure.sections.length}`)
+      
       // Step 2: For each section, find and select tracks using smart hybrid search
       const sections = []
       const usedTrackIds: string[] = []
       let totalDurationMs = 0
 
       for (const sectionPlan of structure.sections) {
-        console.log(`\n[ai-curation] ========== Section: ${sectionPlan.name} ==========`)
-
+        
         // Use smart hybrid search
         const selectedTracks = await findTracksForSection(
           userId,
@@ -893,7 +824,7 @@ serve(async (req) => {
           }))
         })
 
-        console.log(`[ai-curation] Section ${sectionPlan.name}: ${selectedTracks.length} tracks selected`)
+        console.log(`[ai-curation] section tracks=${selectedTracks.length}`)
       }
 
       // Calculate quality score
@@ -929,7 +860,7 @@ serve(async (req) => {
     if (action === 'save_crate') {
       const { crate } = data
       
-      console.log(`[ai-curation] Saving crate: ${crate.name}`)
+      console.log('[ai-curation] Saving crate')
 
       // Create crate
       const { data: newCrate, error: crateError } = await supabaseAdmin
@@ -946,7 +877,7 @@ serve(async (req) => {
         .single()
 
       if (crateError) {
-        console.error('[ai-curation] Crate creation error:', crateError)
+        console.error('[ai-curation] Crate creation error', crateError?.code)
         throw crateError
       }
 
@@ -965,7 +896,7 @@ serve(async (req) => {
           .insert(allTracks)
 
         if (tracksError) {
-          console.error('[ai-curation] Tracks insert error:', tracksError)
+          console.error('[ai-curation] Tracks insert error', tracksError?.code)
           await supabaseAdmin.from('crates').delete().eq('id', newCrate.id)
           throw tracksError
         }
@@ -1033,12 +964,12 @@ serve(async (req) => {
             .eq('track_id', track.track_id)
 
           processed++
-          console.log(`[ai-curation] ✓ ${track.name}: ${genres.join(', ')}`)
+          
 
           await new Promise(r => setTimeout(r, 100))
         } catch (e) {
           failed++
-          console.error(`[ai-curation] Failed: ${track.name}`)
+          console.error('[ai-curation] backfill item failed')
         }
       }
 
@@ -1056,7 +987,7 @@ serve(async (req) => {
     )
 
   } catch (error: unknown) {
-    console.error('[ai-curation] Error:', error)
+    console.error('[ai-curation] Error:', error instanceof Error ? error.message : 'unknown')
     const message = error instanceof Error ? error.message : 'An error occurred'
     return new Response(
       JSON.stringify({ error: message }),

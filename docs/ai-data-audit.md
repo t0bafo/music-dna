@@ -43,3 +43,56 @@ user (or demo data) wrote: crate name, crate liner notes, per-track notes. It
 returns interpretations the user can remove and a quoted evidence snippet for
 every match. Literal title/artist search stays the default and runs first.
 It never creates or modifies crates. Demo lives on the sample crate page.
+
+---
+
+## Fixes applied (Nov 7, 2026)
+
+1. **No Spotify-derived data reaches the model.** The track-selection model call
+   (`selectBestTracks`) was removed. The model now receives only the user's description
+   (capped at 500 chars) via `buildStructureMessages` in
+   `supabase/functions/_shared/curation-core.ts` — the single builder of model input,
+   which accepts a string only. Candidates are ranked deterministically in the backend
+   by `rankCandidates` (BPM fit, energy fit, genre match, source, max 2 per artist).
+2. **Missing energy is unknown.** `knownEnergy` keeps 0 and returns null for missing.
+   The score is the mean of available signals, so missing energy neither helps nor hurts.
+   The library query no longer drops tracks with null energy. No "50%" placeholder remains.
+3. **Logging minimized.** Removed descriptions, Spotify account ids, search queries,
+   track names and raw gateway error bodies from logs in both functions and from the
+   client vibe-search hook. Errors log status/codes only. The AI Curation dialog now
+   states: only the typed description is sent; Spotify tracks are ranked in-app.
+4. **Vibe search protected.** Requires a valid Spotify session (`x-spotify-token`
+   checked against `/v1/me`) and a per-user limit of 20 calls / 10 min, stored in
+   `ai_rate_limits` under a SHA-256 key (no raw account id). Both checks run before any
+   model call (`handleVibeSearch` in `_shared/vibe-search-core.ts`). Single-word
+   queries return immediately with no auth or model call.
+
+### Tests (`src/lib/server/ai-boundaries.test.ts`, 12 tests, all pass)
+- Mock-gateway request body contains the description and no track ids, titles, artists or account id.
+- Description length cap.
+- Zero vs missing energy; missing energy is score-neutral; zero is ranked as low energy.
+- Signed-out → 401 and rate-limited → 429, both with zero model calls.
+- Single-word bypass skips auth and model.
+- Only the query text is passed to the model.
+- Model unavailable → `filters: null` (search keeps working).
+- Rate-limit key does not contain the Spotify id.
+- Title/artist search works with no AI filters.
+
+### Live checks against deployed functions
+- `vibe-search-expand` "Tems" → 200 skipped; multi-word without token → 401; with bad token → 401.
+- `ai-curation` without token → 401.
+
+### Unverified
+- A real signed-in vibe search and AI Curation run (needs a Spotify session).
+- Older logs: a log search found no matching entries in the retained window, but I could
+  not confirm the platform's retention period, and there is no per-entry delete control
+  available from the app. Nothing was deleted.
+- Signed-in Home, Crates, Add to Crate and Share still need a separate browser pass.
+
+## Personalized share links — not built
+
+Per-link Open Graph tags must be in the initial HTML. This app is a static single-page
+site, so every URL returns the same `index.html`. Serving HTML from a backend function
+was tested: the platform forces `Content-Type: text/plain` with a sandbox CSP, so
+crawlers would not read it. Smallest viable change: migrate to the server-rendered
+TanStack Start template, which can return per-route metadata for `/s/:id`.

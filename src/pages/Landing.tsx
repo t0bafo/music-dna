@@ -57,27 +57,19 @@ const Landing = () => {
             <p className="mt-4 lg:mt-6 text-base lg:text-lg text-muted-foreground max-w-md">
               Keep the music and the memory together. Save tracks in searchable crates, then turn a crate into a Spotify playlist whenever you want.
             </p>
-            <div className="mt-5 lg:mt-8 flex flex-wrap items-center gap-x-5 gap-y-3">
-              <Button asChild size="lg" className="h-12 px-6 rounded-full">
+            <div className="mt-5 lg:mt-8 flex flex-wrap gap-3">
+              <Button asChild size="lg" className="h-12 px-6 rounded-full grow sm:grow-0">
                 <Link to={SAMPLE_PATH}>Explore a sample crate</Link>
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                className="hidden sm:inline-flex h-12 px-6"
+                className="h-12 px-6 rounded-full grow sm:grow-0 border-2 border-foreground/70 bg-transparent text-foreground hover:bg-foreground/5"
                 onClick={handleLogin}
                 disabled={isLoggingIn}
               >
                 {isLoggingIn ? <Loader2 className="w-4 h-4 animate-spin" aria-label="Connecting" /> : 'Connect Spotify'}
               </Button>
-              <button
-                type="button"
-                className="sm:hidden min-h-11 text-sm font-medium text-foreground underline underline-offset-4 disabled:opacity-60"
-                onClick={handleLogin}
-                disabled={isLoggingIn}
-              >
-                {isLoggingIn ? 'Connecting…' : 'or Connect Spotify'}
-              </button>
             </div>
           </div>
 

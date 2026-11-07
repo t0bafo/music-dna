@@ -110,10 +110,15 @@ export function AICurationModal({ open, onOpenChange }: AICurationModalProps) {
                 setError(null);
               }}
               placeholder="e.g., 'Late night drive through Lagos, smooth Afrobeats and R&B, starts mellow and builds energy'"
-              className="min-h-[100px] bg-secondary/30 border-border/50 focus:border-purple-500/50 resize-none"
+              className="min-h-[100px] bg-secondary/30 border-border/50 focus:border-primary/50 resize-none"
               disabled={isGenerating}
             />
             
+            <p className="text-xs text-muted-foreground" data-testid="ai-disclosure">
+              Only the description you type above is sent to our AI provider, to plan the crate’s sections and genres.
+              Your Spotify tracks are matched and ranked inside Music DNA and are not sent to the AI.
+            </p>
+
             <AnimatePresence>
               {error && (
                 <motion.div

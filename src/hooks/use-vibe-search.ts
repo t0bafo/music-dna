@@ -16,7 +16,8 @@ const expansionCache = new Map<string, SearchFilters | null>();
 /**
  * Call the vibe-search-expand edge function
  */
-async function expandQueryWithAI(query: string): Promise<SearchFilters | null> {
+async function expandQueryWithAI(query: string, spotifyToken: string | null): Promise<SearchFilters | null> {
+  if (!spotifyToken) return null;
   const cacheKey = query.toLowerCase().trim();
   
   if (expansionCache.has(cacheKey)) {
@@ -29,6 +30,7 @@ async function expandQueryWithAI(query: string): Promise<SearchFilters | null> {
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        'x-spotify-token': spotifyToken,
       },
       body: JSON.stringify({ query }),
     });
@@ -60,7 +62,7 @@ async function expandQueryWithAI(query: string): Promise<SearchFilters | null> {
 /**
  * Hybrid search algorithm: matches tracks by EITHER text OR audio features
  */
-function hybridSearch(
+export function hybridSearch(
   query: string,
   filters: SearchFilters | null,
   cratesWithTracks: CrateWithTracks[]
@@ -76,14 +78,6 @@ function hybridSearch(
   const energyRange = filters ? getEnergyRange(filters) : undefined;
   const hasAudioFilters = !!bpmRange || !!energyRange;
 
-  console.log('[vibe-search] Filtering with:', { 
-    query: normalizedQuery, 
-    hasAudioFilters, 
-    bpmRange, 
-    energyRange,
-    vibes: filters?.vibes,
-    scenes: filters?.scenes
-  });
 
   // Score and filter all tracks
   const scoredTracks: Array<{ track: SearchableTrack; score: number }> = [];
@@ -249,6 +243,7 @@ function hybridSearch(
  * Main hook for vibe search with AI expansion
  */
 export function useVibeSearch(query: string, debounceMs: number = 400) {
+  const { accessToken } = useAuth();
   const [debouncedQuery, setDebouncedQuery] = useState(query);
   const [expandedFilters, setExpandedFilters] = useState<SearchFilters | null>(null);
   const [isExpanding, setIsExpanding] = useState(false);
@@ -283,7 +278,7 @@ export function useVibeSearch(query: string, debounceMs: number = 400) {
     setIsExpanding(true);
     setExpansionError(null);
 
-    expandQueryWithAI(debouncedQuery)
+    expandQueryWithAI(debouncedQuery, accessToken ?? null)
       .then(filters => {
         setExpandedFilters(filters);
       })
@@ -295,7 +290,7 @@ export function useVibeSearch(query: string, debounceMs: number = 400) {
       .finally(() => {
         setIsExpanding(false);
       });
-  }, [debouncedQuery]);
+  }, [debouncedQuery, accessToken]);
 
   // Perform hybrid search
   const { results, totalCount } = useMemo(() => {
