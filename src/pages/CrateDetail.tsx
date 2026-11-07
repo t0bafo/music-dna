@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { redirectToLanding } from '@/lib/return-to';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCrate, useRemoveTrackFromCrate, useDeleteCrate, useUpdateCrate, useReorderCrateTracks } from '@/hooks/use-crates';
@@ -178,6 +178,17 @@ const CrateDetail = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   usePageTitle(crate?.name || 'Crate');
+
+  // Open Add Tracks once after creating a new crate (?add=1), then drop the flag.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (crate && searchParams.get('add') === '1') {
+      setShowAddTracks(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('add');
+      setSearchParams(next, { replace: true });
+    }
+  }, [crate, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -367,7 +378,7 @@ const CrateDetail = () => {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h1 className="font-display text-2xl lg:text-3xl font-bold text-foreground mb-1">
+                  <h1 className="font-display text-2xl lg:text-3xl font-bold text-foreground mb-1 break-words">
                     {crate.name}
                   </h1>
                   {crate.description && (
