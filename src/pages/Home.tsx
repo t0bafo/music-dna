@@ -1,3 +1,4 @@
+import LibraryNav from '@/components/LibraryNav';
 import { useEffect, useMemo, useState } from 'react';
 import { redirectToLanding } from '@/lib/return-to';
 import { useNavigate, Link } from 'react-router-dom';
@@ -173,26 +174,7 @@ const Home = () => {
             </div>
             
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-1">
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 text-primary font-medium">
-                <HomeIcon className="w-4 h-4" />
-                <span>Home</span>
-              </div>
-              <Link
-                to="/crates"
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-              >
-                <Package className="w-4 h-4" />
-                <span>Crates</span>
-              </Link>
-              <Link 
-                to="/studio" 
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors"
-              >
-                <Palette className="w-4 h-4" />
-                <span>Studio</span>
-              </Link>
-            </nav>
+            <LibraryNav />
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />

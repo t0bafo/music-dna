@@ -1,210 +1,100 @@
-import { useState, useEffect } from 'react';
-import { redirectToLanding } from '@/lib/return-to';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { redirectToLanding } from '@/lib/return-to';
 import { useCrates } from '@/hooks/use-crates';
-import { useVibeSearch } from '@/hooks/use-vibe-search';
-import { Music, Plus, Home as HomeIcon, Palette, Package, Sparkles } from 'lucide-react';
+import { useAllCratesWithTracks } from '@/hooks/use-crates-search';
+import { readLibraryState, recentCrates, searchLibrary } from '@/lib/library';
+import { Library, Plus, Search, List, LayoutGrid, Sparkles, Loader2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import UserProfile from '@/components/UserProfile';
 import BottomNav from '@/components/BottomNav';
-import CrateGrid from '@/components/crates/CrateGrid';
+import LibraryNav from '@/components/LibraryNav';
+import LibraryCollections from '@/components/crates/LibraryCollections';
 import CreateCrateModal from '@/components/crates/CreateCrateModal';
 import AICurationModal from '@/components/crates/AICurationModal';
-import EmptyCratesState from '@/components/crates/EmptyCratesState';
-import { CrateGridSkeleton } from '@/components/ui/skeletons';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import { motion, AnimatePresence } from 'framer-motion';
 import { usePageTitle } from '@/hooks/use-page-title';
-import { Skeleton } from '@/components/ui/skeleton';
-import { CratesSearchBar } from '@/components/crates/CratesSearchBar';
-import { CratesSearchResults, SearchLoadingState } from '@/components/crates/CratesSearchResults';
-import { InterpretedFilters } from '@/components/search/InterpretedFilters';
 
-const Crates = () => {
-  usePageTitle('Your Crates | Music Memory System');
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+export default function Crates() {
+  usePageTitle('Library — Music DNA');
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const navigate = useNavigate();
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showAIModal, setShowAIModal] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
-  const { data: crates = [], isLoading } = useCrates();
-  
-  // AI-powered vibe search across all crates
-  const {
-    results: searchResults,
-    totalTrackCount,
-    crateCount,
-    isSearching,
-    isLoadingCrates,
-    hasResults,
-    isLimitReached,
-    expandedFilters,
-    isExpanding,
-    removeVibe,
-    removeScene,
-    removeTempo,
-    removeEnergy,
-  } = useVibeSearch(searchQuery);
-
-  const isActiveSearch = searchQuery.length >= 2;
-  const showSearchResults = isActiveSearch && !isSearching;
-  const showSearchLoading = isActiveSearch && isSearching;
-
-  const handleClearSearch = () => {
-    setSearchQuery('');
-  };
-
+  const key = `music-dna-library:${user?.id ?? 'guest'}`;
+  const [showCreate, setShowCreate] = useState(false);
+  const [showAI, setShowAI] = useState(false);
+  const [query, setQuery] = useState('');
+  const [view, setView] = useState<'list' | 'grid'>('list');
+  const [recent, setRecent] = useState<string[]>([]);
+  const [hydratedKey, setHydratedKey] = useState('');
+  const restored = useRef(false);
+  const restoreScroll = useRef(0);
+  const { data: crates = [], isLoading, isError, refetch } = useCrates();
+  const { data: fullCrates = [], isLoading: searchLoading, isError: searchError, refetch: retrySearch } = useAllCratesWithTracks();
+  const matches = useMemo(() => searchLibrary(query, fullCrates), [query, fullCrates]);
+  const opened = recentCrates(recent, crates);
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      redirectToLanding(navigate);
-    }
+    if (!authLoading && !isAuthenticated) redirectToLanding(navigate);
   }, [authLoading, isAuthenticated, navigate]);
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen gradient-bg pb-24 lg:pb-0">
-        {/* Header skeleton */}
-        <header className="bg-card/90 border-b border-border/50 sticky top-0 z-50 safe-top">
-          <div className="container mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Skeleton className="w-9 h-9 lg:w-10 lg:h-10 rounded-xl" />
-              <Skeleton className="h-6 w-24 rounded hidden lg:block" />
-            </div>
-            <div className="flex items-center gap-2">
-              <Skeleton className="w-9 h-9 rounded-full" />
-              <Skeleton className="w-9 h-9 rounded-full" />
-            </div>
-          </div>
-        </header>
-        <main className="container mx-auto px-4 lg:px-8 py-8 lg:py-12 max-w-6xl">
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-            <div>
-              <Skeleton className="h-8 w-48 rounded mb-2" />
-              <Skeleton className="h-5 w-64 rounded" />
-            </div>
-            <Skeleton className="h-10 w-28 rounded-lg" />
-          </div>
-          <CrateGridSkeleton count={6} />
-        </main>
-        <BottomNav />
+  useEffect(() => {
+    if (!user) return;
+    const state = readLibraryState(key);
+    restoreScroll.current = state.scroll;
+    setQuery(state.query); setView(state.view); setRecent(state.recent);
+    setHydratedKey(key);
+    restored.current = false;
+  }, [key, user]);
+  useEffect(() => {
+    if (!user || isLoading || restored.current) return;
+    const frame = requestAnimationFrame(() => window.scrollTo(0, restoreScroll.current));
+    restored.current = true;
+    return () => cancelAnimationFrame(frame);
+  }, [isLoading, key, user]);
+  useEffect(() => {
+    if (!user || hydratedKey !== key) return;
+    const save = () => {
+      try { sessionStorage.setItem(key, JSON.stringify({ ...readLibraryState(key), query, view, scroll: window.scrollY })); } catch { /* Optional history. */ }
+    };
+    window.addEventListener('scroll', save, { passive: true });
+    save();
+    return () => { window.removeEventListener('scroll', save); };
+  }, [query, view, key, user, hydratedKey]);
+  if (authLoading) return <div className="min-h-screen flex items-center justify-center"><Loader2 aria-label="Loading Library" className="w-6 h-6 animate-spin text-primary" /></div>;
+  return <div className="min-h-screen bg-background pb-28 lg:pb-8">
+    <header className="bg-background border-b border-border sticky top-0 z-40 safe-top">
+      <div className="container max-w-6xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center gap-3">
+        <div className="flex items-center gap-6"><Link to="/crates" className="font-display text-lg">Music DNA</Link><LibraryNav /></div>
+        <div className="flex gap-2"><ThemeToggle /><UserProfile /></div>
       </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen gradient-bg pb-24 lg:pb-0">
-      {/* Header */}
-      <header className="bg-card/90 border-b border-border/50 sticky top-0 z-50 safe-top">
-        <div className="container mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4 lg:gap-6">
-            <div 
-              className="w-9 h-9 lg:w-10 lg:h-10 bg-primary rounded-xl flex items-center justify-center cursor-pointer hover:scale-105 transition-transform touch-target"
-              onClick={() => navigate('/home')}
-            >
-              <Music className="w-4 h-4 lg:w-5 lg:h-5 text-primary-foreground" />
-            </div>
-            
-            <nav className="hidden lg:flex items-center gap-1">
-              <Link to="/home" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
-                <HomeIcon className="w-4 h-4" /><span>Home</span>
-              </Link>
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary/10 text-primary font-medium">
-                <Package className="w-4 h-4" /><span>Crates</span>
-              </div>
-              <Link to="/studio" className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-secondary/50 transition-colors">
-                <Palette className="w-4 h-4" /><span>Studio</span>
-              </Link>
-            </nav>
-          </div>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <UserProfile />
-          </div>
+    </header>
+    <main className="container max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+      <h1 className="font-display text-3xl sm:text-4xl mb-5">Library</h1>
+      <div className="flex flex-col sm:flex-row gap-3 mb-8">
+        <div className="relative flex-1"><Search className="absolute left-3 top-3.5 w-4 h-4 text-muted-foreground" />
+          <Input aria-label="Search your music" placeholder="Search your music" className="pl-10 pr-11 h-11" value={query} onChange={e => setQuery(e.target.value)} />
+          {query && <Button size="icon" variant="ghost" aria-label="Clear search" className="absolute right-0 top-0 h-11 w-11" onClick={() => setQuery('')}><X className="w-4 h-4" /></Button>}
         </div>
-      </header>
-
-      <main className="container mx-auto px-4 lg:px-8 py-8 lg:py-12 max-w-6xl">
-        {/* Header Row */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">📦 Your Crates</h1>
-            <p className="text-base lg:text-lg text-muted-foreground">Organize your music by vibe, mood, or meaning.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button onClick={() => setShowAIModal(true)} variant="ghost" className="gap-2 h-11 touch-target">
-              <Sparkles className="w-4 h-4" />
-              <span className="hidden sm:inline">Build with AI</span>
-            </Button>
-            <Button onClick={() => setShowCreateModal(true)} size="lg" className="gap-2 h-11 btn-scale touch-target">
-              <Plus className="w-4 h-4" />
-              New Crate
-            </Button>
-          </div>
-        </motion.div>
-
-        {/* Search Bar - only show when user has crates */}
-        {!isLoading && crates.length > 0 && (
-          <>
-            <CratesSearchBar
-              value={searchQuery}
-              onChange={setSearchQuery}
-              isSearching={isSearching || isExpanding}
-              onClear={handleClearSearch}
-              placeholder="Search your crates by track, artist, or vibe"
-            />
-            
-            {/* Show interpreted filters from AI */}
-            {expandedFilters && (
-              <InterpretedFilters
-                filters={expandedFilters}
-                onRemoveVibe={removeVibe}
-                onRemoveScene={removeScene}
-                onRemoveTempo={removeTempo}
-                onRemoveEnergy={removeEnergy}
-              />
-            )}
-          </>
-        )}
-
-        {/* Content */}
-        <AnimatePresence mode="wait">
-          {isLoading ? (
-            <CrateGridSkeleton count={6} />
-          ) : crates.length === 0 ? (
-            <EmptyCratesState onCreateCrate={() => setShowCreateModal(true)} />
-          ) : showSearchLoading ? (
-            <SearchLoadingState key="loading" />
-          ) : showSearchResults ? (
-            <CratesSearchResults
-              key="results"
-              results={searchResults}
-              totalTrackCount={totalTrackCount}
-              crateCount={crateCount}
-              isLimitReached={isLimitReached}
-              onClear={handleClearSearch}
-              searchQuery={searchQuery}
-              expandedFilters={expandedFilters}
-            />
-          ) : (
-            <motion.div 
-              key="grid"
-              initial={{ opacity: 0, y: 20 }} 
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-            >
-              <CrateGrid crates={crates} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
-
-      <BottomNav />
-      <CreateCrateModal open={showCreateModal} onOpenChange={setShowCreateModal} />
-      <AICurationModal open={showAIModal} onOpenChange={setShowAIModal} />
-    </div>
-  );
-};
-
-export default Crates;
+        <Button className="h-11 gap-2" onClick={() => setShowCreate(true)}><Plus className="w-4 h-4" />New crate</Button>
+      </div>
+      {isLoading ? <Loader2 className="w-6 h-6 animate-spin text-primary" aria-label="Loading crates" /> : isError ? <div role="alert"><p>Couldn't load your Library.</p><Button variant="outline" onClick={() => refetch()}>Try again</Button></div> : query.trim() ? <div className="space-y-7">
+        {searchLoading ? <Loader2 className="animate-spin w-5 h-5" aria-label="Searching saved music" /> : searchError ? <div role="alert"><p>Couldn't search saved music.</p><Button variant="outline" onClick={() => retrySearch()}>Try again</Button></div> : <>
+          {matches.crates.length > 0 && <section><h2 className="label-meta text-muted-foreground mb-3">Crates</h2><LibraryCollections crates={matches.crates} fullCrates={fullCrates} /></section>}
+          {matches.tracks.length > 0 && <section><h2 className="label-meta text-muted-foreground mb-3">Saved tracks</h2><div className="border-t border-border">
+            {matches.tracks.map(({ track, crate }) => <Link key={`${crate.id}:${track.track_id}`} to={`/crates/${crate.id}?track=${encodeURIComponent(track.track_id)}`} className="block py-4 border-b border-border hover:text-primary break-words">
+              <span className="font-medium">{track.name || 'Untitled track'} · {track.artist_name || 'Unknown artist'}</span><span className="text-muted-foreground"> — in {crate.name}</span>
+            </Link>)}
+          </div></section>}
+          {!matches.crates.length && !matches.tracks.length && <div className="py-10 text-center"><Search className="w-7 h-7 text-muted-foreground mx-auto mb-3" /><h2 className="font-display text-xl">No matches in your Library</h2><p className="text-sm text-muted-foreground mt-2">Try another song, artist, or crate name.</p><Button variant="ghost" onClick={() => setQuery('')} className="mt-3">Clear search</Button></div>}
+        </>}
+      </div> : crates.length === 0 ? <div className="py-12 border-y border-border text-center"><Library className="w-8 h-8 text-primary mx-auto mb-4" /><h2 className="font-display text-2xl">Your collection starts here</h2><p className="text-muted-foreground mt-2">Start with a song you’d want to find again.</p><Button variant="outline" className="mt-5" onClick={() => setShowCreate(true)}>Start your first crate</Button></div> : <>
+        {opened.length > 0 && <section className="mb-9"><h2 className="font-display text-xl mb-3">Recently opened</h2><LibraryCollections crates={opened} fullCrates={fullCrates} /></section>}
+        <section><div className="flex justify-between items-center mb-3"><h2 className="font-display text-xl">Your crates <span className="font-sans text-sm text-muted-foreground">{crates.length}</span></h2>
+          <div className="flex gap-1"><Button variant={view === 'list' ? 'secondary' : 'ghost'} size="icon" aria-label="List view" title="List view" aria-pressed={view === 'list'} onClick={() => setView('list')}><List className="w-4 h-4" /></Button><Button variant={view === 'grid' ? 'secondary' : 'ghost'} size="icon" aria-label="Sleeve grid" title="Sleeve grid" aria-pressed={view === 'grid'} onClick={() => setView('grid')}><LayoutGrid className="w-4 h-4" /></Button></div>
+        </div><LibraryCollections crates={crates} fullCrates={fullCrates} view={view} /></section>
+      </>}
+      <div className="mt-8 border-t border-border pt-4 flex flex-wrap gap-3"><Button variant="ghost" size="sm" onClick={() => setShowAI(true)} className="gap-2"><Sparkles className="w-4 h-4" />Build with AI</Button><Button asChild variant="ghost" size="sm"><Link to="/studio">Studio</Link></Button></div>
+    </main>
+    <BottomNav /><CreateCrateModal open={showCreate} onOpenChange={setShowCreate} /><AICurationModal open={showAI} onOpenChange={setShowAI} />
+  </div>;
+}

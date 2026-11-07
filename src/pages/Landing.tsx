@@ -49,7 +49,7 @@ const Landing = () => {
       </header>
 
       <main className="container mx-auto max-w-5xl px-5">
-        <section className="pt-4 pb-10 lg:pt-12 lg:pb-20 grid lg:grid-cols-[1.1fr_1fr] gap-6 lg:gap-12 items-center">
+        <section className="pt-4 pb-10 lg:pt-12 lg:pb-20 grid lg:grid-cols-[1.1fr_1fr] gap-4 lg:gap-12 items-center">
           <div>
             <h1 className="font-display text-[2.4rem] sm:text-5xl lg:text-6xl font-medium leading-[1.02] tracking-tight">
               Find the tracks you don’t want to lose.
@@ -58,13 +58,13 @@ const Landing = () => {
               Keep the music and the memory together. Save tracks in searchable crates, then turn a crate into a Spotify playlist whenever you want.
             </p>
             <div className="mt-5 lg:mt-8 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="h-12 px-6 rounded-full grow sm:grow-0">
+              <Button asChild size="lg" className="h-11 px-4 rounded-full grow sm:grow-0 text-sm">
                 <Link to={SAMPLE_PATH}>Explore a sample crate</Link>
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                className="h-12 px-6 rounded-full grow sm:grow-0 border-2 border-foreground/70 bg-transparent text-foreground hover:bg-foreground/5"
+                className="h-11 px-4 rounded-full grow sm:grow-0 text-sm border-2 border-foreground/70 bg-transparent text-foreground hover:bg-foreground/5"
                 onClick={handleLogin}
                 disabled={isLoggingIn}
               >

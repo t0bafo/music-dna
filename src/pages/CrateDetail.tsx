@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { recordCrateOpen } from '@/lib/library';
+import CollectionCover from '@/components/crates/CollectionCover';
 import { redirectToLanding } from '@/lib/return-to';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
@@ -60,7 +62,7 @@ import {
 
 const CrateDetail = () => {
   const { crateId } = useParams<{ crateId: string }>();
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   
@@ -181,6 +183,15 @@ const CrateDetail = () => {
 
   // Open Add Tracks once after creating a new crate (?add=1), then drop the flag.
   const [searchParams, setSearchParams] = useSearchParams();
+  const focusTrack = searchParams.get('track');
+  useEffect(() => {
+    if (crate && user) recordCrateOpen(`music-dna-library:${user.id}`, crate.id);
+  }, [crate?.id, user?.id]);
+  useEffect(() => {
+    if (!crate || !focusTrack) return;
+    const frame = requestAnimationFrame(() => document.getElementById(`saved-track-${focusTrack}`)?.scrollIntoView({ block: 'center' }));
+    return () => cancelAnimationFrame(frame);
+  }, [crate, focusTrack]);
   useEffect(() => {
     if (crate && searchParams.get('add') === '1') {
       setShowAddTracks(true);
@@ -328,7 +339,7 @@ const CrateDetail = () => {
         <div className="text-center">
           <Package className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-bold mb-2">Crate not found</h2>
-          <Button onClick={() => navigate('/crates')}>Back to Crates</Button>
+          <Button onClick={() => navigate('/crates')}>Back to Library</Button>
         </div>
       </div>
     );
@@ -342,10 +353,10 @@ const CrateDetail = () => {
       <header className="bg-card/90 border-b border-border/50 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/crates')}>
+            <Button variant="ghost" className="gap-2 px-0" onClick={() => navigate('/crates')}>
               <ArrowLeft className="w-5 h-5" />
+              Back to Library
             </Button>
-            <span className="text-sm text-muted-foreground">Back to Crates</span>
           </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
@@ -359,25 +370,15 @@ const CrateDetail = () => {
         <motion.div 
           initial={{ opacity: 0, y: 10 }} 
           animate={{ opacity: 1, y: 0 }} 
-          className="bg-card/60 rounded-2xl p-6 lg:p-8 border border-border/50 mb-6"
+          className="border-b border-border pb-6 mb-6"
         >
           <div className="flex flex-col sm:flex-row items-start gap-5">
-            {/* Large Emoji */}
-            <div 
-              className="w-16 h-16 lg:w-20 lg:h-20 rounded-2xl flex items-center justify-center shrink-0 shadow-lg"
-              style={{ 
-                backgroundColor: `${crate.color}25`,
-                borderColor: crate.color,
-                borderWidth: 2
-              }}
-            >
-              <span className="text-4xl lg:text-5xl">{crate.emoji}</span>
-            </div>
+            <CollectionCover name={crate.name} artwork={displayTracks.find(t => t.album_art_url)?.album_art_url} className="w-24 lg:w-32" />
 
             {/* Crate Info */}
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-3">
-                <div>
+                <div className="min-w-0">
                   <h1 className="font-display text-2xl lg:text-3xl font-bold text-foreground mb-1 break-words">
                     {crate.name}
                   </h1>
@@ -389,7 +390,7 @@ const CrateDetail = () => {
                       </blockquote>
                     </figure>
                   )}
-                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                     <span className="flex items-center gap-1.5">
                       <Music className="w-4 h-4" />
                       {crate.tracks?.length || 0} tracks
@@ -529,6 +530,7 @@ const CrateDetail = () => {
                     strategy={verticalListSortingStrategy}
                   >
                     {filteredTracks.map((track, index) => (
+                      <div key={track.id} id={`saved-track-${track.track_id}`} className={cn('scroll-mt-24 rounded-md', focusTrack === track.track_id && 'ring-2 ring-primary bg-primary/10')}>
                       <SortableTrackRow
                         key={track.id}
                         track={track}
@@ -539,6 +541,7 @@ const CrateDetail = () => {
                         isPreviewPlaying={isPreviewPlaying}
                         onTogglePreview={togglePreview}
                       />
+                      </div>
                     ))}
                   </SortableContext>
                 </DndContext>
@@ -548,9 +551,9 @@ const CrateDetail = () => {
         ) : (
           /* Empty State */
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10 rounded-2xl border border-dashed border-border/60">
-            <div className="text-4xl mb-3" aria-hidden>🎵</div>
+            <Music className="w-8 h-8 text-primary mx-auto mb-3" aria-hidden />
             <h3 className="font-display text-lg font-semibold mb-1">This crate is empty</h3>
-            <p className="text-sm text-muted-foreground mb-5">Search Spotify and save the first track you want to find again.</p>
+            <p className="text-sm text-muted-foreground mb-5">Start with a song you’d want to find again.</p>
             <Button className="gap-2 h-11" onClick={() => setShowAddTracks(true)}>
               <Plus className="w-4 h-4" /> Add Tracks
             </Button>

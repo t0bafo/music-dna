@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowDown, ArrowUp, Check, Disc3, Loader2, Music, Search, Sparkles, X, Save } from 'lucide-react';
@@ -38,6 +39,9 @@ const fmt = (ms: number) => `${Math.floor(ms / 60000)}:${String(Math.floor((ms %
 const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [customize, setCustomize] = useState(false);
+  const [pendingCrateId, setPendingCrateId] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<PickAlbum[]>([]);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<PickAlbum[]>([]);
@@ -80,6 +84,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
 
   const isSelected = (id: string) => selected.some((a) => a.id === id);
   const toggle = (album: PickAlbum) => {
+    if (saving || pendingCrateId) return;
     setResult(null);
     setSelected((cur) => {
       if (cur.some((a) => a.id === album.id)) return cur.filter((a) => a.id !== album.id);
@@ -88,6 +93,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
     });
   };
   const move = (i: number, dir: -1 | 1) => {
+    if (saving || pendingCrateId) return;
     setResult(null);
     setSelected((cur) => {
       const next = [...cur]; const j = i + dir;
@@ -98,10 +104,13 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
   };
 
   const generate = async () => {
+    if (generating || saving || pendingCrateId) return;
     setGenerating(true);
     try {
       const albumTracks = await Promise.all(selected.map((a) => getAlbumTracks(accessToken, a.id)));
-      const features = await getAudioFeaturesFromReccoBeats(albumTracks.flat().map((t) => t.id));
+      const features = ordering === 'bpm_flow' || ordering === 'energy_arc'
+        ? await getAudioFeaturesFromReccoBeats(albumTracks.flat().map((t) => t.id)).catch(() => new Map())
+        : new Map();
       const artMap: Record<string, string | null> = {};
       const albums: MixtapeAlbum[] = selected.map((a, ai) => {
         const tracks = albumTracks[ai];
@@ -141,27 +150,30 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
     setSaving(true);
     try {
       const name = `Mixtape: ${selected.map((a) => a.name).join(' × ')}`.slice(0, 80);
-      const crate = await createCrate(name, `Album mixtape · ${ORDERINGS.find((o) => o.id === ordering)?.label}`, '📼', '#8B5CF6', accessToken);
-      await addTracksToCrate(crate.id, result.tracks.map((t) => ({
+      const crateId = pendingCrateId ?? (await createCrate(name, `Album mixtape · ${ORDERINGS.find((o) => o.id === ordering)?.label}`, '📼', '#2F624E', accessToken)).id;
+      setPendingCrateId(crateId);
+      await addTracksToCrate(crateId, result.tracks.map((t) => ({
         track_id: t.trackId, name: t.name, artist_name: t.artists.join(', '), album_name: t.albumName,
         album_art_url: art[t.albumId] ?? '', duration_ms: t.durationMs, bpm: t.bpm, energy: t.energy,
         danceability: t.danceability, valence: t.valence,
       })), accessToken);
       toast({ title: `Saved ${result.tracks.length} tracks to "${name}"` });
-      navigate(`/crates/${crate.id}`);
+      await queryClient.invalidateQueries({ queryKey: ['crates'] });
+      await queryClient.invalidateQueries({ queryKey: ['crates-with-tracks'] });
+      navigate(`/crates/${crateId}`);
     } catch (e) {
-      toast({ title: 'Could not save', description: e instanceof Error ? e.message : 'Try again', variant: 'destructive' });
+      toast({ title: 'Could not save', description: 'Retry to finish saving the same crate.', variant: 'destructive' });
     } finally { setSaving(false); }
   };
 
   const AlbumTile = ({ album }: { album: PickAlbum }) => (
-    <button
+    <Button variant="ghost"
       type="button"
       onClick={() => toggle(album)}
-      className="flex-shrink-0 w-[104px] text-left group"
+      className="flex-shrink-0 w-[104px] h-auto p-0 block whitespace-normal text-left group"
       aria-pressed={isSelected(album.id)}
     >
-      <div className={cn('relative w-[104px] h-[104px] rounded-xl overflow-hidden ring-2 transition-all',
+      <div className={cn('relative w-[104px] h-[104px] rounded-md overflow-hidden ring-2 transition-all',
         isSelected(album.id) ? 'ring-primary' : 'ring-transparent group-hover:ring-border')}>
         {album.imageUrl ? <img src={album.imageUrl} alt={album.name} className="w-full h-full object-cover" loading="lazy" />
           : <div className="w-full h-full bg-muted flex items-center justify-center"><Music className="w-6 h-6 text-muted-foreground" /></div>}
@@ -173,7 +185,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
       </div>
       <p className="mt-1.5 text-xs font-medium text-foreground truncate">{album.name}</p>
       <p className="text-xs text-muted-foreground truncate">{album.artist}</p>
-    </button>
+    </Button>
   );
 
   let sideBreak = -1;
@@ -182,7 +194,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
   return (
     <div className="space-y-6">
       {/* Step 1: pick */}
-      <Card className="bg-card/70 border-border/40">
+      <section className="border-b border-border">
         <CardContent className="p-5 lg:p-6 space-y-5">
           <div className="flex items-center justify-between">
             <h3 className="font-display text-lg font-bold text-foreground">1. Pick 2–5 albums</h3>
@@ -221,48 +233,52 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
             </div>
           )}
         </CardContent>
-      </Card>
+      </section>
 
       {/* Step 2: settings */}
-      <Card className={cn('bg-card/70 border-border/40 transition-opacity', selected.length < 2 && 'opacity-50 pointer-events-none')}>
+      <section className={cn('border-b border-border', selected.length < 2 && 'opacity-50 pointer-events-none')}>
         <CardContent className="p-5 lg:p-6 space-y-5">
-          <h3 className="font-display text-lg font-bold text-foreground">2. Shape the flow</h3>
+          <h3 className="font-display text-lg font-bold text-foreground">2. Preview your mix</h3>
+          <p className="text-sm text-muted-foreground">Journey follows each album from its opening to its closing, bringing their stories together. 20 tracks, with A/B sides.</p>
+          <Button variant="ghost" aria-expanded={customize} onClick={() => setCustomize(v => !v)}>Customize the mix</Button>
+          {customize && <>
           <div className="grid grid-cols-2 gap-2">
             {ORDERINGS.map((o) => {
               const reason = disabledReason.get(o.id);
               return (
-                <button key={o.id} type="button" onClick={() => { setOrdering(o.id); setResult(null); }}
-                  className={cn('p-3 rounded-xl border text-left transition-colors',
+                <Button variant="outline" disabled={saving || !!pendingCrateId} key={o.id} type="button" onClick={() => { setOrdering(o.id); setResult(null); }}
+                  className={cn('p-3 h-auto block whitespace-normal rounded-md border text-left transition-colors',
                     ordering === o.id ? 'border-primary bg-primary/10' : 'border-border/50 hover:border-border')}
                   title={reason}>
                   <p className="text-sm font-semibold text-foreground">{o.label}</p>
                   <p className="text-xs text-muted-foreground">{reason ?? o.hint}</p>
-                </button>
+                </Button>
               );
             })}
           </div>
           <div className="flex flex-wrap items-center gap-4 justify-between">
             <div className="flex gap-1.5">
               {LENGTHS.map((n) => (
-                <Button key={n} size="sm" variant={length === n ? 'default' : 'outline'} onClick={() => { setLength(n); setResult(null); }}>{n} tracks</Button>
+                <Button key={n} disabled={saving || !!pendingCrateId} size="sm" variant={length === n ? 'default' : 'outline'} onClick={() => { setLength(n); setResult(null); }}>{n} tracks</Button>
               ))}
             </div>
             <label className="flex items-center gap-2 text-sm text-foreground">
-              <Switch checked={sides} onCheckedChange={(v) => { setSides(v); setResult(null); }} /> A/B sides
+              <Switch disabled={saving || !!pendingCrateId} checked={sides} onCheckedChange={(v) => { setSides(v); setResult(null); }} /> A/B sides
             </label>
           </div>
-          <Button size="lg" className="w-full gap-2" onClick={generate} disabled={generating || selected.length < 2}>
+          </>}
+          <Button size="lg" className="w-full gap-2" onClick={generate} disabled={generating || saving || !!pendingCrateId || selected.length < 2}>
             {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-            {generating ? 'Curating…' : 'Curate Mixtape'}
+            {generating ? 'Mixing…' : 'Preview sequence'}
           </Button>
         </CardContent>
-      </Card>
+      </section>
 
       {/* Step 3: result */}
       {result && result.tracks.length > 0 && (
-        <Card className="bg-card/70 border-primary/30">
+        <section className="border-t border-border">
           <CardContent className="p-5 lg:p-6 space-y-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 className="font-display text-lg font-bold text-foreground flex items-center gap-2"><Disc3 className="w-5 h-5 text-primary" /> Your mixtape</h3>
                 <p className="text-sm text-muted-foreground">
@@ -270,7 +286,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
                 </p>
               </div>
               <Button onClick={save} disabled={saving} className="gap-2">
-                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save as Crate
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save as crate
               </Button>
             </div>
             {result.diagnostics.notes.length > 0 && (
@@ -285,7 +301,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
                   {i === sideBreak && <p className="text-xs font-bold tracking-widest text-primary pt-4 pb-2">SIDE B</p>}
                   <div className="flex items-center gap-3 p-2 rounded-lg hover:bg-secondary/40">
                     <span className="w-6 text-right text-xs text-muted-foreground">{i + 1}</span>
-                    {art[t.albumId] ? <img src={art[t.albumId]!} alt="" className="w-9 h-9 rounded object-cover" /> : <div className="w-9 h-9 rounded bg-muted" />}
+                    {art[t.albumId] ? <img src={art[t.albumId] ?? ''} alt="" className="w-9 h-9 rounded object-cover" /> : <div className="w-9 h-9 rounded bg-muted" />}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium truncate text-foreground">{t.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{t.artists.join(', ')} · {t.albumName}</p>
@@ -297,7 +313,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
               ))}
             </ol>
           </CardContent>
-        </Card>
+        </section>
       )}
     </div>
   );

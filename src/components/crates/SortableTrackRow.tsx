@@ -132,7 +132,7 @@ export function SortableTrackRow({
   const deleteProgress = Math.min(Math.abs(swipeX) / 80, 1);
 
   return (
-    <div className="relative overflow-hidden rounded-xl">
+    <div className="relative overflow-hidden rounded-md">
       {/* Delete background (revealed on swipe) */}
       {isMobile && (
         <div 
@@ -156,7 +156,7 @@ export function SortableTrackRow({
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         className={cn(
-          "flex items-center gap-3 lg:gap-4 p-3 lg:p-4 bg-card/40 rounded-xl border border-border/30 hover:border-border/60 hover:bg-card/60 transition-all group touch-target-lg",
+          "flex items-center gap-2 lg:gap-4 p-2 lg:p-4 bg-card/40 rounded-md border-b border-border hover:bg-secondary/40 transition-colors group touch-target-lg",
           isDragging && "opacity-70 shadow-lg shadow-primary/10 border-primary/30 z-10 bg-card/80"
         )}
       >
@@ -170,7 +170,7 @@ export function SortableTrackRow({
           }}
           style={{ touchAction: 'none' }}
           className={cn(
-            "p-2 -m-1 rounded cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground transition-all touch-target",
+            "p-1 rounded cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground transition-all shrink-0",
             "lg:opacity-0 lg:group-hover:opacity-100",
             isDragging && "cursor-grabbing opacity-100"
           )}
@@ -202,11 +202,11 @@ export function SortableTrackRow({
 
         {/* Track Info */}
         <div className="flex-1 min-w-0">
-          <p className="font-medium text-foreground truncate">
+          <p className="font-medium text-sm sm:text-base text-foreground break-words">
             {track.name || 'Unknown Track'}
           </p>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <span className="truncate">{track.artist_name || 'Unknown Artist'}</span>
+          <div className="flex flex-wrap items-center gap-1 text-xs sm:text-sm text-muted-foreground">
+            <span className="break-words">{track.artist_name || 'Unknown Artist'}</span>
             {track.duration_ms && (
               <>
                 <span className="text-border">•</span>
