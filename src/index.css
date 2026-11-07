@@ -1,46 +1,46 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
 
 @layer base {
   /* Light mode (default for :root now, dark applied via class) */
   :root {
-    --background: 210 20% 98%;
-    --foreground: 240 10% 4%;
+    --background: 40 36% 93%;
+    --foreground: 80 8% 8%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 4%;
+    --card: 40 30% 96%;
+    --card-foreground: 80 8% 8%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 4%;
+    --popover: 40 30% 96%;
+    --popover-foreground: 80 8% 8%;
 
-    --primary: 156 100% 40%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 156 35% 28%;
+    --primary-foreground: 40 36% 93%;
 
-    --secondary: 210 20% 93%;
-    --secondary-foreground: 240 10% 20%;
+    --secondary: 41 33% 87%;
+    --secondary-foreground: 80 8% 12%;
 
-    --muted: 210 20% 93%;
-    --muted-foreground: 220 10% 45%;
+    --muted: 41 33% 87%;
+    --muted-foreground: 77 5% 28%;
 
-    --accent: 156 100% 40%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 156 35% 28%;
+    --accent-foreground: 40 36% 93%;
 
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 210 20% 88%;
-    --input: 210 20% 88%;
-    --ring: 156 100% 40%;
+    --border: 41 22% 81%;
+    --input: 41 22% 81%;
+    --ring: 156 35% 28%;
 
-    --radius: 1rem;
+    --radius: 0.5rem;
 
     /* Custom tokens - Sonic green palette */
-    --sonic-green: 156 100% 40%;
-    --sonic-green-glow: 156 100% 50%;
-    --sonic-green-dark: 156 100% 30%;
+    --sonic-green: 156 35% 28%;
+    --sonic-green-glow: 156 35% 34%;
+    --sonic-green-dark: 156 35% 22%;
     
     /* Chart gradient colors */
     --chart-purple: 262 83% 58%;
@@ -59,53 +59,53 @@
     --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.08), 0 2px 4px -2px hsl(0 0% 0% / 0.06);
     --shadow-lg: 0 10px 20px -5px hsl(0 0% 0% / 0.1), 0 4px 8px -4px hsl(0 0% 0% / 0.08);
     --shadow-xl: 0 20px 30px -8px hsl(0 0% 0% / 0.15), 0 8px 12px -6px hsl(0 0% 0% / 0.1);
-    --shadow-glow: 0 0 24px hsl(var(--sonic-green) / 0.25);
-    --shadow-glow-intense: 0 0 40px hsl(var(--sonic-green) / 0.4);
+    --shadow-glow: none;
+    --shadow-glow-intense: none;
 
-    --sidebar-background: 210 20% 98%;
-    --sidebar-foreground: 240 10% 20%;
-    --sidebar-primary: 156 100% 40%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 210 20% 93%;
-    --sidebar-accent-foreground: 240 10% 20%;
-    --sidebar-border: 210 20% 88%;
-    --sidebar-ring: 156 100% 40%;
+    --sidebar-background: 40 36% 93%;
+    --sidebar-foreground: 80 8% 12%;
+    --sidebar-primary: 156 35% 28%;
+    --sidebar-primary-foreground: 40 36% 93%;
+    --sidebar-accent: 41 33% 87%;
+    --sidebar-accent-foreground: 80 8% 12%;
+    --sidebar-border: 41 22% 81%;
+    --sidebar-ring: 156 35% 28%;
   }
 
   /* Dark mode */
   .dark {
-    --background: 228 15% 5%;
-    --foreground: 0 0% 98%;
+    --background: 80 8% 8%;
+    --foreground: 40 36% 93%;
 
-    --card: 228 15% 8%;
-    --card-foreground: 0 0% 98%;
+    --card: 80 8% 11%;
+    --card-foreground: 40 36% 93%;
 
-    --popover: 228 15% 10%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 80 8% 12%;
+    --popover-foreground: 40 36% 93%;
 
-    --primary: 156 100% 50%;
-    --primary-foreground: 228 15% 5%;
+    --primary: 151 28% 65%;
+    --primary-foreground: 80 8% 8%;
 
-    --secondary: 228 15% 14%;
-    --secondary-foreground: 0 0% 85%;
+    --secondary: 80 6% 16%;
+    --secondary-foreground: 40 20% 85%;
 
-    --muted: 228 15% 16%;
-    --muted-foreground: 220 10% 55%;
+    --muted: 80 6% 16%;
+    --muted-foreground: 42 10% 69%;
 
-    --accent: 156 100% 50%;
-    --accent-foreground: 228 15% 5%;
+    --accent: 151 28% 65%;
+    --accent-foreground: 80 8% 8%;
 
     --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 228 15% 16%;
-    --input: 228 15% 16%;
-    --ring: 156 100% 50%;
+    --border: 80 6% 20%;
+    --input: 80 6% 20%;
+    --ring: 151 28% 65%;
 
     /* Custom tokens - Sonic green palette (dark) */
-    --sonic-green: 156 100% 50%;
-    --sonic-green-glow: 156 100% 65%;
-    --sonic-green-dark: 156 100% 35%;
+    --sonic-green: 151 28% 65%;
+    --sonic-green-glow: 151 28% 72%;
+    --sonic-green-dark: 151 28% 52%;
     
     /* Chart gradient colors - dark mode (slightly brighter) */
     --chart-purple: 262 83% 62%;
@@ -124,17 +124,17 @@
     --shadow-md: 0 4px 8px -2px hsl(0 0% 0% / 0.5), 0 2px 4px -2px hsl(0 0% 0% / 0.4);
     --shadow-lg: 0 12px 24px -6px hsl(0 0% 0% / 0.6), 0 6px 10px -4px hsl(0 0% 0% / 0.5);
     --shadow-xl: 0 24px 40px -10px hsl(0 0% 0% / 0.7), 0 10px 16px -8px hsl(0 0% 0% / 0.6);
-    --shadow-glow: 0 0 28px hsl(var(--sonic-green) / 0.35);
-    --shadow-glow-intense: 0 0 50px hsl(var(--sonic-green) / 0.55);
+    --shadow-glow: none;
+    --shadow-glow-intense: none;
 
-    --sidebar-background: 228 15% 6%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 156 100% 50%;
-    --sidebar-primary-foreground: 228 15% 5%;
-    --sidebar-accent: 228 15% 14%;
-    --sidebar-accent-foreground: 0 0% 90%;
-    --sidebar-border: 228 15% 14%;
-    --sidebar-ring: 156 100% 50%;
+    --sidebar-background: 80 8% 8%;
+    --sidebar-foreground: 40 20% 88%;
+    --sidebar-primary: 151 28% 65%;
+    --sidebar-primary-foreground: 80 8% 8%;
+    --sidebar-accent: 80 6% 16%;
+    --sidebar-accent-foreground: 40 20% 88%;
+    --sidebar-border: 80 6% 20%;
+    --sidebar-ring: 151 28% 65%;
   }
 }
 
@@ -389,4 +389,20 @@
     min-height: 56px;
     min-width: 56px;
   }
+}
+
+/* Liner Notes: metadata labels and the ink sleeve (grain lives on the sleeve only) */
+@layer components {
+  .label-meta { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 0.6875rem; letter-spacing: 0.12em; text-transform: uppercase; }
+  .sleeve-ink { position: relative; isolation: isolate; background: hsl(80 8% 8%); color: hsl(40 36% 93%); --sleeve-muted: 42 10% 69%; --sleeve-accent: 151 28% 65%; --sleeve-rule: 80 6% 20%; }
+  .dark .sleeve-ink { background: hsl(80 8% 13%); }
+  .sleeve-ink::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; opacity: .12; mix-blend-mode: screen; border-radius: inherit;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .sleeve-ink .sleeve-muted { color: hsl(var(--sleeve-muted)); }
+  .sleeve-ink .sleeve-accent { color: hsl(var(--sleeve-accent)); }
+  .sleeve-ink .sleeve-rule { border-color: hsl(var(--sleeve-rule)); }
+  .sleeve-groove { position: absolute; right: -4rem; top: -4rem; width: 11rem; height: 11rem; border-radius: 9999px; pointer-events: none; z-index: -1;
+    background: repeating-radial-gradient(circle, hsl(40 36% 93% / .13) 0 1px, transparent 1px 5px); box-shadow: inset 0 0 0 30px hsl(80 8% 8%); }
+  .dark .sleeve-groove { box-shadow: inset 0 0 0 30px hsl(80 8% 13%); }
+  .font-display { font-variation-settings: "opsz" 144; letter-spacing: -0.015em; }
 }

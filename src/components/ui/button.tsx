@@ -10,7 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-gradient-to-r from-primary to-sonic-dark text-primary-foreground shadow-glow hover:shadow-glow-intense hover:scale-[1.02] active:scale-[0.98]",
+          "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98]",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
@@ -23,7 +23,7 @@ const buttonVariants = cva(
           "text-primary underline-offset-4 hover:underline",
         // New sonic variants for music studio aesthetic
         sonic:
-          "bg-gradient-to-r from-primary to-sonic-dark text-primary-foreground font-bold shadow-glow hover:shadow-glow-intense hover:scale-[1.03] active:scale-[0.98] rounded-xl",
+          "bg-primary text-primary-foreground font-semibold hover:bg-primary/90 active:scale-[0.98] rounded-full",
         glass:
           "bg-secondary/50 backdrop-blur-md border border-border/50 text-foreground hover:bg-secondary/70 hover:border-primary/30",
       },
