@@ -53,11 +53,11 @@ const MusicStatsSection = ({ topTracks, accessToken, isLoading }: MusicStatsSect
     return `${min}:${sec.toString().padStart(2, '0')}`;
   };
 
-  // Get top 10 tracks for bulk crate creation
-  const topTenTracks = topTracks.slice(0, 10);
+  // Use the full Spotify top tracks list (up to 50) for bulk crate creation
+  const topListTracks = topTracks.slice(0, 50);
 
   // Transform tracks for the bulk create modal
-  const bulkTracksForModal = topTenTracks.map(t => ({
+  const bulkTracksForModal = topListTracks.map(t => ({
     id: t.id,
     name: t.name,
     artist: t.artist,
@@ -181,14 +181,14 @@ const MusicStatsSection = ({ topTracks, accessToken, isLoading }: MusicStatsSect
                 >
                   <div className="mt-4 border-t border-border/50 pt-4">
                     {/* Bulk Create Crate Action */}
-                    {topTenTracks.length > 0 && (
+                    {topListTracks.length > 0 && (
                       <Button
                         variant="outline"
                         onClick={() => setShowBulkCreate(true)}
                         className="w-full mb-4 gap-2 border-primary/30 text-primary hover:bg-primary/10 hover:border-primary"
                       >
                         <Package className="w-4 h-4" />
-                        Create Crate from Top 10 Tracks
+                        Create Crate from Top {topListTracks.length} Tracks
                       </Button>
                     )}
                     
