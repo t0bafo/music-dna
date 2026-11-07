@@ -1,5 +1,11 @@
 # Crates-first redesign
 
+## Personalized sharing (current stack, production untouched)
+- [ ] Check existing pre-rendering support for two distinct public `/s/:id` thumbnails in an isolated deployment.
+- [ ] Verify with a supported social preview tool or messaging app where accessible; distinguish metadata evidence from messaging evidence.
+- [ ] Report standalone share-page hosting requirements if existing hosting cannot satisfy personalized previews.
+- [ ] Implement opt-in snapshot URL sharing, revocation and secondary image sharing only after the hosting boundary is resolved.
+
 ## Library product pass (preview only)
 - [x] Library navigation, list/grid, recent history, direct saved-music search and return position.
 - [x] New crate: empty starters, playlist preview/import, reused album mix with tucked-away customization.
