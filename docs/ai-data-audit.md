@@ -115,3 +115,13 @@ or per-path server proxy configuration. The existing Vite application can remain
 unchanged in either approach. No migration was started.
 
 Reference: https://docs.lovable.dev/features/upgrade-to-tanstack-start
+
+### Isolated probe outcome
+Both draft addresses `/s/test-late-drive` and `/s/test-global-soul` returned HTTP 401,
+`text/plain; charset=UTF-8`, `Unauthorized`, including at the draft root. No fictional
+snapshot routes were created after that access blocker was confirmed. No supported
+public crawler-ready draft deployment was available without publishing.
+LinkedIn Post Inspector's input page was accessible; Meta Sharing Debugger required
+login. Neither received two implemented public snapshot URLs, so no personalized
+thumbnail comparison or actual iMessage/WhatsApp test ran. The result is **unverified**,
+not a finding that published Classic pre-rendering cannot work.
