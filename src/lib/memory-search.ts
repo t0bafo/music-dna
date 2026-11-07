@@ -29,8 +29,8 @@ export function interpret(query: string): Interpretation[] {
   const words = query.toLowerCase().replace(/[^\p{L}\p{N}\s']/gu, ' ').split(/\s+/).filter((w) => w.length > 1 && !STOP.has(w));
   const out: Interpretation[] = [];
   const seen = new Set<string>();
+  for (const w of words) if (!seen.has(w)) { seen.add(w); out.push({ term: w, label: w }); }
   for (const w of words) {
-    if (!seen.has(w)) { seen.add(w); out.push({ term: w, label: w }); }
     for (const syn of SYNONYMS[w] ?? []) {
       if (!seen.has(syn)) { seen.add(syn); out.push({ term: syn, label: `${syn} (from “${w}”)` }); }
     }
