@@ -91,8 +91,37 @@ It never creates or modifies crates. Demo lives on the sample crate page.
 
 ## Personalized share links — not built
 
-Per-link Open Graph tags must be in the initial HTML. This app is a static single-page
-site, so every URL returns the same `index.html`. Serving HTML from a backend function
-was tested: the platform forces `Content-Type: text/plain` with a sandbox CSP, so
-crawlers would not read it. Smallest viable change: migrate to the server-rendered
-TanStack Start template, which can return per-route metadata for `/s/:id`.
+Per-link Open Graph tags must be in the response seen by the messaging crawler.
+This app is a static single-page site, but Lovable's current documentation describes
+pre-rendered published pages for **verified search engines and social-preview bots**.
+That does not establish support for distinct dynamic `/s/:id` thumbnails. The earlier
+claim that a full stack migration was the only viable option was too strong.
+
+Serving HTML directly from a backend function was previously tested: the platform
+forced `Content-Type: text/plain` with a sandbox CSP. That is a limitation of that
+endpoint, not proof that published-page crawler pre-rendering cannot work.
+
+Nov 7 follow-up: a separate draft hosting probe uses only fictional snapshots, with
+no publishing, backend mutations, or production changes. Requests to a nonexistent
+production `/s/hosting-probe` path with Facebook, WhatsApp and Twitter user agents
+returned the generic site title and image. This is a baseline only: spoofing an agent
+string does not make it a verified social crawler, and the path has no snapshot.
+
+If route-specific pre-rendering cannot be verified in an isolated published test,
+the smallest independent alternative is a standalone share-page service on a new
+subdomain. Keeping `/s/:id` on the main domain would instead require a controlled
+reverse proxy for those paths; Lovable's static hosting has no documented `_redirects`
+or per-path server proxy configuration. The existing Vite application can remain
+unchanged in either approach. No migration was started.
+
+Reference: https://docs.lovable.dev/features/upgrade-to-tanstack-start
+
+### Isolated probe outcome
+Both draft addresses `/s/test-late-drive` and `/s/test-global-soul` returned HTTP 401,
+`text/plain; charset=UTF-8`, `Unauthorized`, including at the draft root. No fictional
+snapshot routes were created after that access blocker was confirmed. No supported
+public crawler-ready draft deployment was available without publishing.
+LinkedIn Post Inspector's input page was accessible; Meta Sharing Debugger required
+login. Neither received two implemented public snapshot URLs, so no personalized
+thumbnail comparison or actual iMessage/WhatsApp test ran. The result is **unverified**,
+not a finding that published Classic pre-rendering cannot work.
