@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_rate_limits: {
+        Row: {
+          count: number
+          user_key: string
+          window_start: string
+        }
+        Insert: {
+          count?: number
+          user_key: string
+          window_start: string
+        }
+        Update: {
+          count?: number
+          user_key?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       crate_tracks: {
         Row: {
           added_at: string
@@ -389,7 +407,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      ai_rate_limit_hit: {
+        Args: { _max: number; _user_key: string; _window_seconds: number }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
