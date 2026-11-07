@@ -62,7 +62,7 @@ async function expandQueryWithAI(query: string, spotifyToken: string | null): Pr
 /**
  * Hybrid search algorithm: matches tracks by EITHER text OR audio features
  */
-function hybridSearch(
+export function hybridSearch(
   query: string,
   filters: SearchFilters | null,
   cratesWithTracks: CrateWithTracks[]
