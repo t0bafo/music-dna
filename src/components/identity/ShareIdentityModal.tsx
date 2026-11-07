@@ -19,7 +19,8 @@ interface ShareIdentityModalProps {
 }
 
 export const buildCaption = (title: string | null | undefined, tracks: ShareCardTrack[]) => {
-  const headline = title?.trim() ? `I'm a ${title}` : 'My Music DNA';
+  const pretty = title?.trim().toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+  const headline = pretty ? `My Music DNA: ${pretty}` : 'My Music DNA';
   const list = tracks.slice(0, 3).map((t, i) => `${i + 1}. ${t.name} by ${t.artist}`).join('\n');
   return [headline, list && `Tracks that define me:\n${list}`, 'Find yours at musicdna.tobiafo.com']
     .filter(Boolean)

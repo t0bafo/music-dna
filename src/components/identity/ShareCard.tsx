@@ -131,11 +131,11 @@ const TrackList = ({
           A{i + 1}
         </div>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: titleSize, fontWeight: 600, color: INK, lineHeight: 1.15 }}>
+          <div style={{ fontSize: titleSize, fontWeight: 600, color: INK, lineHeight: 1.15, whiteSpace: 'nowrap' }}>
             {truncate(t.name, maxTitle)}
           </div>
-          <div style={{ fontSize: artistSize, color: MUTED, marginTop: artistSize * 0.3, lineHeight: 1.2 }}>
-            {truncate(t.artist, maxTitle + 6)}
+          <div style={{ fontSize: artistSize, color: MUTED, marginTop: artistSize * 0.3, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+            {truncate(t.artist, maxTitle + 4)}
           </div>
         </div>
       </div>
@@ -144,10 +144,10 @@ const TrackList = ({
 );
 
 const Wordmark = ({ size }: { size: number }) => (
-  <div style={{ display: 'flex', alignItems: 'center', gap: size * 0.5 }}>
-    <div style={{ width: size * 0.5, height: size * 0.5, borderRadius: '50%', background: ACCENT }} />
-    <div style={{ fontSize: size, fontWeight: 700, color: INK, letterSpacing: -0.5 }}>Music DNA</div>
-    <div style={{ fontSize: size * 0.8, color: MUTED }}>musicdna.tobiafo.com</div>
+  <div style={{ display: 'flex', alignItems: 'center', gap: size * 0.5, height: size * 1.2 }}>
+    <div style={{ width: size * 0.45, height: size * 0.45, borderRadius: '50%', background: ACCENT, flexShrink: 0 }} />
+    <div style={{ fontSize: size, lineHeight: 1, fontWeight: 700, color: INK, letterSpacing: -0.5 }}>Music DNA</div>
+    <div style={{ fontSize: size * 0.8, lineHeight: 1, color: MUTED }}>musicdna.tobiafo.com</div>
   </div>
 );
 
@@ -188,7 +188,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(({ format, title, t
     return (
       <div ref={ref} style={base}>
         <Grain />
-        <Record size={760} top={300} right={-300} />
+        <Record size={700} top={1380} right={-260} />
         <div
           style={{
             position: 'absolute',
@@ -256,7 +256,7 @@ const ShareCard = forwardRef<HTMLDivElement, ShareCardProps>(({ format, title, t
         <div style={{ width: 2, background: FAINT }} />
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           {shown.length > 0 ? (
-            <TrackList tracks={shown} titleSize={30} artistSize={20} gap={30} maxTitle={26} />
+            <TrackList tracks={shown} titleSize={30} artistSize={20} gap={30} maxTitle={20} />
           ) : (
             <div style={{ fontSize: 24, color: MUTED }}>Organized by vibe, not genre.</div>
           )}
