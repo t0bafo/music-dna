@@ -1,7 +1,10 @@
-# Album Mixtapes — approved Phase 1 completion
+# Crates-first redesign
 
-- [x] Fix engine edge cases and strengthen rule-based tests.
-- [x] Run the mixtape tests and verify generation timing.
-- [x] Remove confirmed unused files from the approved cleanup list.
-- [x] Document engine structure, behavior, and remaining UI/save/export phases.
-- [x] Check preview diagnostics and existing app smoke test.
+- [x] Sign-in lands on Crates (safe deep-link return kept); welcome tour retired.
+- [x] Crates list: New Crate primary, AI secondary, two-line titles.
+- [x] Name-first crate creation → opens Add Tracks once.
+- [x] Crate page: Add Tracks opens Spotify search; other tools in menus; "Search tracks in this crate".
+- [x] Analysis: no invented scores, chart gaps, coverage, popularity signal labeled.
+- [x] Landing rebuilt around the Lagos Night Drive sample crate.
+- [ ] Signed-in QA with a test Spotify account (blocked: needs user sign-in).
+- [ ] Spotify dashboard follow-ups — see docs/redesign-followups.md (blocked: dashboard access).
