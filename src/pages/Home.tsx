@@ -19,7 +19,7 @@ import { usePageTitle } from '@/hooks/use-page-title';
 import { useLibrarySync } from '@/hooks/use-library-sync';
 
 // New Identity Components
-import MusicalIdentityHero from '@/components/identity/MusicalIdentityHero';
+import IdentitySleeve from '@/components/identity/IdentitySleeve';
 import IdentityStatCards from '@/components/identity/IdentityStatCards';
 import TopDefiningTracks from '@/components/identity/TopDefiningTracks';
 import HorizontalTrackScroller, { ScrollerTrack } from '@/components/identity/HorizontalTrackScroller';
@@ -148,17 +148,6 @@ const Home = () => {
     }
   }, [authLoading, isAuthenticated, navigate]);
 
-          {/* Your Music Year */}
-          {accessToken && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 1.0 }}
-            >
-              <YourMusicYearSection accessToken={accessToken} />
-            </motion.div>
-          )}
-
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center gradient-bg">
@@ -242,32 +231,43 @@ const Home = () => {
         )}
 
         <div className="space-y-8 lg:space-y-10">
-          {/* 2. Musical Identity Hero */}
-          <MusicalIdentityHero
+          {/* 2. Identity sleeve: identity + the tracks behind it */}
+          <IdentitySleeve
             archetype={archetype}
-            undergroundIndex={undergroundIndex}
-            avgBpm={stats?.avgBpm || 0}
-            avgEnergy={stats?.avgEnergy || 0}
-            undergroundGemsCount={undergroundCount}
-            topTracks={topTracks.slice(0, 3).map(t => ({ name: t.name, artist: t.artist }))}
             isLoading={loadingTopTracks}
             onShare={() => setShowShareModal(true)}
-          />
+          >
+            <TopDefiningTracks tracks={topTracks} isLoading={loadingTopTracks} />
+          </IdentitySleeve>
 
-          {/* 3. Stat Cards Row */}
-          <IdentityStatCards
-            avgBpm={stats?.avgBpm || 0}
-            avgEnergy={stats?.avgEnergy || 0}
-            undergroundPercent={undergroundIndex}
-            hiddenGemsCount={undergroundCount}
-            isLoading={loadingTopTracks}
-          />
+          {/* 3. Listening details (secondary) */}
+          <details className="group rounded-2xl border border-border bg-card/60">
+            <summary className="cursor-pointer list-none px-5 py-4 flex items-center justify-between font-medium text-foreground min-h-11">
+              Listening details
+              <span className="text-muted-foreground text-sm group-open:rotate-180 transition-transform" aria-hidden>⌄</span>
+            </summary>
+            <div className="px-5 pb-5">
+              <IdentityStatCards
+                avgBpm={stats?.avgBpm || 0}
+                avgEnergy={stats?.avgEnergy || 0}
+                undergroundPercent={undergroundIndex}
+                hiddenGemsCount={undergroundCount}
+                isLoading={loadingTopTracks}
+              />
+            </div>
+          </details>
 
-          {/* 4. Top 3 Tracks That Define You */}
-          <TopDefiningTracks
-            tracks={topTracks}
-            isLoading={loadingTopTracks}
-          />
+          {/* Your Music Year */}
+          {accessToken && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.2 }}
+            >
+              <YourMusicYearSection accessToken={accessToken} />
+            </motion.div>
+          )}
+
 
           {/* 5. Recent Discoveries */}
           <HorizontalTrackScroller
@@ -285,7 +285,7 @@ const Home = () => {
           {/* 6. Underground Gems */}
           <HorizontalTrackScroller
             title="Underground Gems You Vibe With"
-            subtitle="Hidden tracks under 50,000 streams"
+            subtitle="Saved tracks with a Spotify popularity score under 50"
             emoji="💎"
             tracks={gemTracks}
             isLoading={loadingUnderground}
