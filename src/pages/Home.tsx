@@ -62,6 +62,14 @@ const Home = () => {
     return topTracks.filter(t => t.popularity < 50).length;
   }, [topTracks]);
 
+  const topTracksForShare = useMemo(
+    () => topTracks.slice(0, 3).map(t => ({
+      name: t.name,
+      artist: t.artists?.map(a => a.name).join(', ') || t.artist,
+    })),
+    [topTracks]
+  );
+
   // Calculate underground index (0-100)
   const undergroundIndex = useMemo(() => {
     if (topTracks.length === 0) return 0;
