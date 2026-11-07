@@ -1,3 +1,8 @@
+import { useAuth } from '@/contexts/AuthContext';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { CRATE_STARTERS } from '@/lib/library';
+import PlaylistCrateStart from './PlaylistCrateStart';
+import AlbumMixtapeStudio from '@/components/AlbumMixtapeStudio';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -20,6 +25,8 @@ const DEFAULT_COLOR = CRATE_COLORS[0] ?? '#00ff87';
 
 const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
   const navigate = useNavigate();
+  const { accessToken } = useAuth();
+  const [start, setStart] = useState('empty');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [selectedEmoji, setSelectedEmoji] = useState(DEFAULT_EMOJI);
@@ -31,6 +38,7 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
   const createCrate = useCreateCrate();
 
   const resetForm = () => {
+    setStart('empty');
     setName('');
     setDescription('');
     setSelectedEmoji(DEFAULT_EMOJI);
@@ -76,12 +84,21 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[420px] max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[680px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display text-lg">New crate</DialogTitle>
           <DialogDescription>A crate is a named collection of tracks you want to find again.</DialogDescription>
         </DialogHeader>
 
+        <Tabs value={start} onValueChange={setStart}>
+          <TabsList className="grid grid-cols-3 w-full h-auto">
+            <TabsTrigger value="empty" className="text-xs sm:text-sm whitespace-normal">Start empty</TabsTrigger>
+            <TabsTrigger value="playlist" className="text-xs sm:text-sm whitespace-normal">Spotify playlist</TabsTrigger>
+            <TabsTrigger value="albums" className="text-xs sm:text-sm whitespace-normal">Mix albums</TabsTrigger>
+          </TabsList>
+          <TabsContent value="playlist">{accessToken && <PlaylistCrateStart accessToken={accessToken} />}</TabsContent>
+          <TabsContent value="albums">{accessToken && <AlbumMixtapeStudio accessToken={accessToken} />}</TabsContent>
+          <TabsContent value="empty">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="crate-name">Crate Name</Label>
@@ -98,7 +115,11 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
             />
           </div>
 
-          <button
+          <div className="border-y border-border py-3">
+            <p className="text-xs text-muted-foreground mb-2">A starting thought, if you want one</p>
+            <div className="flex flex-wrap gap-1">{CRATE_STARTERS.map(starter => <Button key={starter.name} type="button" variant="ghost" size="sm" className="h-auto py-2 whitespace-normal text-left" onClick={() => { setName(starter.name); setDescription(starter.note); setShowDetails(true); }}>{starter.name}</Button>)}</div>
+          </div>
+          <Button variant="ghost"
             type="button"
             onClick={() => setShowDetails((v) => !v)}
             aria-expanded={showDetails}
@@ -106,7 +127,7 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
           >
             <ChevronDown className={cn('w-4 h-4 transition-transform', showDetails && 'rotate-180')} />
             Description, emoji and color (optional)
-          </button>
+          </Button>
 
           {showDetails && (
             <div className="space-y-4">
@@ -175,6 +196,8 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
             </Button>
           </div>
         </form>
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

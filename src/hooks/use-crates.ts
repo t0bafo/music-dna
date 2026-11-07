@@ -55,6 +55,7 @@ export function useCreateCrate() {
       createCrate(data.name, data.description, data.emoji, data.color, accessToken!, data.vibe_keywords),
     onSuccess: (newCrate) => {
       queryClient.invalidateQueries({ queryKey: ['crates'] });
+      queryClient.invalidateQueries({ queryKey: ['crates-with-tracks'] });
       toast.success(`Created "${newCrate.name}"`, {
         description: 'Your new crate is ready!'
       });
@@ -79,6 +80,7 @@ export function useUpdateCrate() {
       updateCrate(data.crateId, data.name, data.description, data.emoji, data.color, accessToken!),
     onSuccess: (updatedCrate) => {
       queryClient.invalidateQueries({ queryKey: ['crates'] });
+      queryClient.invalidateQueries({ queryKey: ['crates-with-tracks'] });
       queryClient.invalidateQueries({ queryKey: ['crate', updatedCrate.id] });
       toast.success('Crate updated');
     },
@@ -101,6 +103,7 @@ export function useDeleteCrate() {
     mutationFn: (crateId: string) => deleteCrate(crateId, accessToken!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['crates'] });
+      queryClient.invalidateQueries({ queryKey: ['crates-with-tracks'] });
       toast.success('Crate deleted');
     },
     onError: (error) => {
@@ -123,6 +126,7 @@ export function useAddTracksToCrate() {
       addTracksToCrate(data.crateId, data.tracks, accessToken!),
     onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['crates'] });
+      queryClient.invalidateQueries({ queryKey: ['crates-with-tracks'] });
       queryClient.invalidateQueries({ queryKey: ['crate', variables.crateId] });
       toast.success(`Added ${variables.tracks.length} track${variables.tracks.length !== 1 ? 's' : ''}`);
       
@@ -149,6 +153,7 @@ export function useRemoveTrackFromCrate() {
       removeTrackFromCrate(data.crateId, data.trackId, accessToken!),
     onSuccess: async (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['crates'] });
+      queryClient.invalidateQueries({ queryKey: ['crates-with-tracks'] });
       queryClient.invalidateQueries({ queryKey: ['crate', variables.crateId] });
       toast.success('Track removed');
       
