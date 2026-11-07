@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Palette, Package } from 'lucide-react';
+import { libraryNavItems } from '@/components/LibraryNav';
 import { cn } from '@/lib/utils';
 import { useHaptics } from '@/hooks/use-haptics';
 
@@ -9,18 +9,14 @@ interface NavItem {
   icon: React.ReactNode;
 }
 
-const navItems: NavItem[] = [
-  { path: '/home', label: 'Home', icon: <Home className="w-6 h-6" /> },
-  { path: '/crates', label: 'Crates', icon: <Package className="w-6 h-6" /> },
-  { path: '/studio', label: 'Studio', icon: <Palette className="w-6 h-6" /> },
-];
+const navItems: NavItem[] = libraryNavItems.map(({ path, label, icon: Icon }) => ({ path, label, icon: <Icon className="w-6 h-6" /> }));
 
 const BottomNav = () => {
   const location = useLocation();
   const { lightTap } = useHaptics();
   
   const isActive = (path: string) => {
-    return location.pathname === path;
+    return location.pathname === path || (path === '/crates' && location.pathname.startsWith('/crates/'));
   };
 
   const handleNavClick = () => {
