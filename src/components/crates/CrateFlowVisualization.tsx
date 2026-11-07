@@ -156,7 +156,7 @@ export function CrateFlowVisualization({ tracks }: CrateFlowVisualizationProps) 
                             <div className="font-semibold truncate max-w-[200px]">{data.name}</div>
                             <div className="text-muted-foreground truncate">{data.artist}</div>
                             <div className="mt-1 text-xs">
-                              Energy: {data.energy}%
+                              {data.energy === null ? 'No energy data' : `Energy: ${data.energy}%`}
                               {data.bpm > 0 && ` • BPM: ${data.bpm}`}
                             </div>
                           </div>

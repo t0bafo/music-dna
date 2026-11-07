@@ -396,7 +396,7 @@ const CrateDetail = () => {
                       <Clock className="w-4 h-4" />
                       {totalDuration}
                       {totalDurationInfo.isEstimated && (
-                        <span className="text-amber-500 text-xs">(~est)</span>
+                        <span className="text-xs">(estimated)</span>
                       )}
                     </span>
                   </div>
