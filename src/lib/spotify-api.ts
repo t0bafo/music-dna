@@ -111,6 +111,33 @@ export const getPlaylistTracks = async (
   return spotifyFetch(`/playlists/${playlistId}/tracks?limit=${limit}`, accessToken);
 };
 
+// Read-only playlist import: paginate without mutating the Spotify source.
+export const getAllPlaylistTracks = async (accessToken: string, playlistId: string): Promise<SpotifyTrack[]> => {
+  const tracks: SpotifyTrack[] = [];
+  let offset = 0;
+  while (true) {
+    const page = await spotifyFetch<{ items: { track: (SpotifyTrack & { is_local?: boolean; type?: string }) | null }[]; next: string | null }>(
+      `/playlists/${encodeURIComponent(playlistId)}/tracks?limit=100&offset=${offset}`, accessToken
+    );
+    tracks.push(...page.items.flatMap(({ track }) => track?.id && !track.is_local && track.type !== 'episode' ? [track] : []));
+    if (!page.next || !page.items.length) break;
+    offset += page.items.length;
+  }
+  return tracks;
+};
+
+export const getAllUserPlaylists = async (accessToken: string): Promise<SpotifyPlaylist[]> => {
+  const playlists: SpotifyPlaylist[] = [];
+  let offset = 0;
+  while (true) {
+    const page = await spotifyFetch<{ items: (SpotifyPlaylist | null)[]; next: string | null }>(`/me/playlists?limit=50&offset=${offset}`, accessToken);
+    playlists.push(...page.items.filter((p): p is SpotifyPlaylist => !!p));
+    if (!page.next || !page.items.length) break;
+    offset += page.items.length;
+  }
+  return playlists;
+};
+
 export const getAudioFeatures = async (
   accessToken: string,
   trackIds: string[]
@@ -333,6 +360,13 @@ export const getAlbumTracks = async (
   accessToken: string,
   albumId: string
 ): Promise<SpotifyAlbumTrack[]> => {
-  const data = await spotifyFetch<{ items: SpotifyAlbumTrack[] }>(`/albums/${albumId}/tracks?limit=50`, accessToken);
-  return data.items.filter((t) => t?.id);
+  const tracks: SpotifyAlbumTrack[] = [];
+  let offset = 0;
+  while (true) {
+    const data = await spotifyFetch<{ items: SpotifyAlbumTrack[]; next: string | null }>(`/albums/${albumId}/tracks?limit=50&offset=${offset}`, accessToken);
+    tracks.push(...data.items.filter(t => t?.id));
+    if (!data.next || !data.items.length) break;
+    offset += data.items.length;
+  }
+  return tracks;
 };
