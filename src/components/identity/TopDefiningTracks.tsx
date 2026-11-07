@@ -6,7 +6,57 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import AddToCrateDropdown from '@/components/crates/AddToCrateDropdown';
 import CreateCrateWithTracksModal from '@/components/crates/CreateCrateWithTracksModal';
-import { TrackWithFeatures } from '@/hooks/use-music-intelligence';
+import { TrackWithFeatures, useTopTracks } from '@/hooks/use-music-intelligence';
+import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
+
+type TimeRange = 'short_term' | 'medium_term' | 'long_term';
+
+const TIME_RANGES: { value: TimeRange; label: string }[] = [
+  { value: 'short_term', label: 'Last 4 weeks' },
+  { value: 'medium_term', label: 'Last 6 months' },
+  { value: 'long_term', label: 'All time' },
+];
+
+const COUNTS = [25, 50] as const;
+
+const RANGE_NAMES: Record<TimeRange, string> = {
+  short_term: 'Right Now',
+  medium_term: 'Signature Sound',
+  long_term: 'All-Time Sound',
+};
+
+const ChipGroup = <T extends string | number>({
+  label, options, value, onChange,
+}: {
+  label: string;
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
+}) => (
+  <div className="space-y-2">
+    <p className="text-sm font-medium text-foreground">{label}</p>
+    <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={label}>
+      {options.map((o) => (
+        <button
+          key={String(o.value)}
+          type="button"
+          role="radio"
+          aria-checked={value === o.value}
+          onClick={() => onChange(o.value)}
+          className={cn(
+            'px-3 py-1.5 rounded-full text-sm border transition-colors',
+            value === o.value
+              ? 'bg-primary text-primary-foreground border-primary'
+              : 'bg-secondary/40 text-muted-foreground border-border/50 hover:text-foreground'
+          )}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  </div>
+);
 
 interface TopDefiningTracksProps {
   tracks: TrackWithFeatures[];
@@ -22,9 +72,23 @@ const formatDuration = (ms: number) => {
 const TopDefiningTracks = ({ tracks, isLoading }: TopDefiningTracksProps) => {
   const [showBulkCreate, setShowBulkCreate] = useState(false);
   
+  const [timeRange, setTimeRange] = useState<TimeRange>('medium_term');
+  const [count, setCount] = useState<number>(50);
+  const { accessToken } = useAuth();
+
+  // Home already loads 6-month top 50; fetch other ranges only when picked
+  const needsFetch = showBulkCreate && timeRange !== 'medium_term';
+  const { data: rangeTracks = [], isLoading: loadingRange } = useTopTracks(
+    needsFetch ? accessToken : null,
+    timeRange,
+    50
+  );
+  const sourceTracks = timeRange === 'medium_term' ? tracks : rangeTracks;
+  const loadingTracks = needsFetch && loadingRange;
+
   const top3 = tracks.slice(0, 3);
   
-  const bulkTracksForModal = tracks.slice(0, 50).map(t => ({
+  const bulkTracksForModal = sourceTracks.slice(0, count).map(t => ({
     id: t.id,
     name: t.name,
     artist: t.artist,
@@ -167,7 +231,7 @@ const TopDefiningTracks = ({ tracks, isLoading }: TopDefiningTracksProps) => {
           variant="ghost"
         >
           <Package className="w-4 h-4" />
-          Create Crate from My Top {Math.min(tracks.length, 50)} Tracks
+          Create Crate from My Top Songs
         </Button>
       </motion.section>
       
@@ -175,8 +239,20 @@ const TopDefiningTracks = ({ tracks, isLoading }: TopDefiningTracksProps) => {
         open={showBulkCreate}
         onOpenChange={setShowBulkCreate}
         tracks={bulkTracksForModal}
-        defaultName="My Signature Sound"
-        defaultDescription="Top tracks that define my musical identity"
+        defaultName={`My ${RANGE_NAMES[timeRange]}`}
+        defaultDescription={`My top ${count} tracks · ${TIME_RANGES.find(r => r.value === timeRange)?.label.toLowerCase()} (ranked by Spotify)`}
+        isLoadingTracks={loadingTracks}
+        controls={
+          <div className="space-y-4">
+            <ChipGroup label="Time period" options={TIME_RANGES} value={timeRange} onChange={setTimeRange} />
+            <ChipGroup
+              label="How many songs"
+              options={COUNTS.map(c => ({ value: c, label: `Top ${c}` }))}
+              value={count}
+              onChange={setCount}
+            />
+          </div>
+        }
       />
     </>
   );
