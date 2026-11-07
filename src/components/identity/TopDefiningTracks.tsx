@@ -244,8 +244,8 @@ const TopDefiningTracks = ({ tracks, isLoading }: TopDefiningTracksProps) => {
         isLoadingTracks={loadingTracks}
         controls={
           <div className="space-y-4">
-            <ChipGroup label="Time period" options={TIME_RANGES} value={timeRange} onChange={setTimeRange} />
-            <ChipGroup
+            <ChipGroup<TimeRange> label="Time period" options={TIME_RANGES} value={timeRange} onChange={setTimeRange} />
+            <ChipGroup<number>
               label="How many songs"
               options={COUNTS.map(c => ({ value: c, label: `Top ${c}` }))}
               value={count}
