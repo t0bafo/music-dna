@@ -84,6 +84,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
 
   const isSelected = (id: string) => selected.some((a) => a.id === id);
   const toggle = (album: PickAlbum) => {
+    if (saving || pendingCrateId) return;
     setResult(null);
     setSelected((cur) => {
       if (cur.some((a) => a.id === album.id)) return cur.filter((a) => a.id !== album.id);
@@ -92,6 +93,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
     });
   };
   const move = (i: number, dir: -1 | 1) => {
+    if (saving || pendingCrateId) return;
     setResult(null);
     setSelected((cur) => {
       const next = [...cur]; const j = i + dir;
@@ -102,6 +104,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
   };
 
   const generate = async () => {
+    if (generating || saving || pendingCrateId) return;
     setGenerating(true);
     try {
       const albumTracks = await Promise.all(selected.map((a) => getAlbumTracks(accessToken, a.id)));
@@ -243,7 +246,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
             {ORDERINGS.map((o) => {
               const reason = disabledReason.get(o.id);
               return (
-                <Button variant="outline" key={o.id} type="button" onClick={() => { setOrdering(o.id); setResult(null); }}
+                <Button variant="outline" disabled={saving || !!pendingCrateId} key={o.id} type="button" onClick={() => { setOrdering(o.id); setResult(null); }}
                   className={cn('p-3 h-auto block whitespace-normal rounded-md border text-left transition-colors',
                     ordering === o.id ? 'border-primary bg-primary/10' : 'border-border/50 hover:border-border')}
                   title={reason}>
@@ -256,15 +259,15 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
           <div className="flex flex-wrap items-center gap-4 justify-between">
             <div className="flex gap-1.5">
               {LENGTHS.map((n) => (
-                <Button key={n} size="sm" variant={length === n ? 'default' : 'outline'} onClick={() => { setLength(n); setResult(null); }}>{n} tracks</Button>
+                <Button key={n} disabled={saving || !!pendingCrateId} size="sm" variant={length === n ? 'default' : 'outline'} onClick={() => { setLength(n); setResult(null); }}>{n} tracks</Button>
               ))}
             </div>
             <label className="flex items-center gap-2 text-sm text-foreground">
-              <Switch checked={sides} onCheckedChange={(v) => { setSides(v); setResult(null); }} /> A/B sides
+              <Switch disabled={saving || !!pendingCrateId} checked={sides} onCheckedChange={(v) => { setSides(v); setResult(null); }} /> A/B sides
             </label>
           </div>
           </>}
-          <Button size="lg" className="w-full gap-2" onClick={generate} disabled={generating || selected.length < 2}>
+          <Button size="lg" className="w-full gap-2" onClick={generate} disabled={generating || saving || !!pendingCrateId || selected.length < 2}>
             {generating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
             {generating ? 'Mixing…' : 'Preview sequence'}
           </Button>

@@ -84,7 +84,7 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[680px] max-h-[85vh] overflow-y-auto">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[680px] max-h-[85vh] overflow-y-auto px-4 py-6 sm:px-6">
         <DialogHeader>
           <DialogTitle className="font-display text-lg">New crate</DialogTitle>
           <DialogDescription>A crate is a named collection of tracks you want to find again.</DialogDescription>
