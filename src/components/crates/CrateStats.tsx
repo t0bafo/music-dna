@@ -119,7 +119,7 @@ export function CrateStats({ tracks }: CrateStatsProps) {
     const tracksWithPopularity = tracks.filter(t => t.popularity !== undefined && t.popularity !== null);
     const undergroundScore = tracksWithPopularity.length > 0
       ? Math.round((tracksWithPopularity.filter(t => (t.popularity || 0) < 50).length / tracksWithPopularity.length) * 100)
-      : 0;
+      : null;
 
     return {
       duration: formatDuration(estimatedTotal),
@@ -131,7 +131,9 @@ export function CrateStats({ tracks }: CrateStatsProps) {
       avgEnergy: isNaN(avgEnergy) ? '—' : `${Math.round(avgEnergy * 100)}%`,
       avgEnergyLabel: getEnergyLabel(avgEnergy),
       undergroundScore,
-      undergroundLabel: getUndergroundLabel(undergroundScore),
+      undergroundLabel: undergroundScore === null ? 'Popularity unknown' : `Below 50 on Spotify popularity · known for ${tracksWithPopularity.length}/${tracks.length}`,
+      bpmCoverage: `${tracksWithBpm.length}/${tracks.length} tracks`,
+      energyCoverage: `${tracksWithEnergy.length}/${tracks.length} tracks`,
     };
   }, [tracks]);
 
@@ -153,20 +155,20 @@ export function CrateStats({ tracks }: CrateStatsProps) {
         icon={<Music className="w-5 h-5" />}
         title="Avg BPM"
         value={stats.avgBpm}
-        label={stats.avgBpmLabel}
+        label={stats.avgBpm === '—' ? `No BPM data (${stats.bpmCoverage})` : `${stats.avgBpmLabel} · ${stats.bpmCoverage}`}
       />
       <StatCard
         icon={<Zap className="w-5 h-5" />}
         title="Avg Energy"
         value={stats.avgEnergy}
-        label={stats.avgEnergyLabel}
+        label={stats.avgEnergy === '—' ? `No energy data (${stats.energyCoverage})` : `${stats.avgEnergyLabel} · ${stats.energyCoverage}`}
       />
       <StatCard
         icon={<Gem className="w-5 h-5" />}
-        title="Underground"
-        value={`${stats.undergroundScore}/100`}
+        title="Spotify popularity signal"
+        value={stats.undergroundScore === null ? '—' : `${stats.undergroundScore}%`}
         label={stats.undergroundLabel}
-        highlight={stats.undergroundScore > 60}
+        highlight={(stats.undergroundScore ?? 0) > 60}
       />
     </div>
   );
