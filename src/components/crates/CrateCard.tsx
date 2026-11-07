@@ -12,7 +12,7 @@ const CrateCard = ({ crate }: CrateCardProps) => {
   const { lightTap } = useHaptics();
 
   return (
-    <Link to={`/crates/${crate.id}`} onClick={lightTap}>
+    <Link to={`/crates/${crate.id}`} onClick={lightTap} title={crate.name} className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
       <Card 
         className="group bg-card/70 backdrop-blur-xl border-border/40 hover:border-primary/40 transition-all duration-200 hover:-translate-y-1 hover:shadow-xl overflow-hidden cursor-pointer h-full"
       >
@@ -26,7 +26,7 @@ const CrateCard = ({ crate }: CrateCardProps) => {
           </div>
 
           {/* Name */}
-          <h3 className="font-display text-lg lg:text-xl font-bold text-foreground truncate mb-1.5 group-hover:text-primary transition-colors">
+          <h3 className="font-display text-lg lg:text-xl font-bold text-foreground line-clamp-2 break-words leading-snug mb-1.5 group-hover:text-primary transition-colors">
             {crate.name}
           </h3>
 

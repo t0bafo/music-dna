@@ -79,7 +79,7 @@ const Crates = () => {
           </div>
         </header>
         <main className="container mx-auto px-4 lg:px-8 py-8 lg:py-12 max-w-6xl">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
             <div>
               <Skeleton className="h-8 w-48 rounded mb-2" />
               <Skeleton className="h-5 w-64 rounded" />
@@ -127,22 +127,19 @@ const Crates = () => {
 
       <main className="container mx-auto px-4 lg:px-8 py-8 lg:py-12 max-w-6xl">
         {/* Header Row */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center justify-between mb-8">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
             <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold text-foreground mb-2">📦 Your Crates</h1>
             <p className="text-base lg:text-lg text-muted-foreground">Organize your music by vibe, mood, or meaning.</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              onClick={() => setShowAIModal(true)} 
-              className="gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white shadow-lg touch-target"
-            >
+            <Button onClick={() => setShowAIModal(true)} variant="ghost" className="gap-2 h-11 touch-target">
               <Sparkles className="w-4 h-4" />
               <span className="hidden sm:inline">Build with AI</span>
             </Button>
-            <Button onClick={() => setShowCreateModal(true)} variant="outline" size="lg" className="gap-2 btn-scale touch-target">
+            <Button onClick={() => setShowCreateModal(true)} size="lg" className="gap-2 h-11 btn-scale touch-target">
               <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">New Crate</span>
+              New Crate
             </Button>
           </div>
         </motion.div>
@@ -155,7 +152,7 @@ const Crates = () => {
               onChange={setSearchQuery}
               isSearching={isSearching || isExpanding}
               onClear={handleClearSearch}
-              placeholder="🔍 Search by vibe, mood, artist... (e.g., 'late night Lagos drive')"
+              placeholder="Search your crates by track, artist, or vibe"
             />
             
             {/* Show interpreted filters from AI */}

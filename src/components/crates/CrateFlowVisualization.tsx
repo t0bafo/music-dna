@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ChevronDown, ChevronUp, TrendingUp, AlertTriangle, CheckCircle } from 'lucide-react';
 import { CrateTrack } from '@/lib/crates-api';
+import { flowChartData, energyCoverage, type FlowPoint } from '@/lib/crate-analysis';
 import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -14,8 +15,9 @@ interface FlowInsight {
   message: string;
 }
 
-function analyzeFlow(flowData: { position: number; energy: number; bpm: number; name: string }[]): FlowInsight[] {
+function analyzeFlow(points: FlowPoint[]): FlowInsight[] {
   const insights: FlowInsight[] = [];
+  const flowData = points.filter((p): p is FlowPoint & { energy: number } => p.energy !== null);
 
   if (flowData.length < 3) {
     return insights;
@@ -24,12 +26,13 @@ function analyzeFlow(flowData: { position: number; energy: number; bpm: number; 
   // Check for sharp energy jumps
   let hasSharpJump = false;
   for (let i = 1; i < flowData.length; i++) {
+    if (flowData[i].position !== flowData[i - 1].position + 1) continue; // gap: not measured
     const energyDiff = Math.abs(flowData[i].energy - flowData[i - 1].energy);
     if (energyDiff > 30) {
       hasSharpJump = true;
       insights.push({
         type: 'warning',
-        message: `Sharp energy change between tracks ${i} and ${i + 1} (${Math.round(energyDiff)}% jump). Consider reordering for smoother flow.`,
+        message: `Sharp energy change between tracks ${flowData[i - 1].position} and ${flowData[i].position} (${Math.round(energyDiff)}% jump). Consider reordering for smoother flow.`,
       });
       break;
     }
@@ -38,7 +41,7 @@ function analyzeFlow(flowData: { position: number; energy: number; bpm: number; 
   if (!hasSharpJump) {
     insights.push({
       type: 'success',
-      message: 'Great flow! Energy transitions smoothly between tracks.',
+      message: 'No sharp jumps between measured neighbouring tracks.',
     });
   }
 
@@ -89,21 +92,13 @@ function average(values: number[]): number {
 export function CrateFlowVisualization({ tracks }: CrateFlowVisualizationProps) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const flowData = useMemo(() => {
-    return tracks.map((track, index) => ({
-      position: index + 1,
-      energy: Math.round((track.energy || 0.5) * 100),
-      bpm: track.bpm || 0,
-      name: track.name || 'Unknown',
-      artist: track.artist_name || 'Unknown',
-    }));
-  }, [tracks]);
+  const flowData = useMemo(() => flowChartData(tracks), [tracks]);
+  const coverage = useMemo(() => energyCoverage(tracks), [tracks]);
 
   const insights = useMemo(() => analyzeFlow(flowData), [flowData]);
 
   // Need at least 3 tracks with energy data for meaningful analysis
-  const tracksWithEnergy = tracks.filter(t => t.energy !== undefined && t.energy !== null);
-  if (tracksWithEnergy.length < 3) return null;
+  if (coverage.available < 3) return null;
 
   return (
     <div className="mb-6">
@@ -129,7 +124,10 @@ export function CrateFlowVisualization({ tracks }: CrateFlowVisualizationProps) 
             className="overflow-hidden"
           >
             <div className="mt-4 p-5 rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm">
-              <h3 className="text-base font-semibold text-foreground mb-4">Energy Flow</h3>
+              <h3 className="text-base font-semibold text-foreground">Energy Flow</h3>
+              <p className="text-xs text-muted-foreground mb-4">
+                Energy available for {coverage.available} of {coverage.total} tracks. Gaps mark tracks without data.
+              </p>
 
               {/* Chart */}
               <div className="h-48 w-full">
@@ -158,7 +156,7 @@ export function CrateFlowVisualization({ tracks }: CrateFlowVisualizationProps) 
                             <div className="font-semibold truncate max-w-[200px]">{data.name}</div>
                             <div className="text-muted-foreground truncate">{data.artist}</div>
                             <div className="mt-1 text-xs">
-                              Energy: {data.energy}%
+                              {data.energy === null ? 'No energy data' : `Energy: ${data.energy}%`}
                               {data.bpm > 0 && ` • BPM: ${data.bpm}`}
                             </div>
                           </div>
@@ -172,6 +170,7 @@ export function CrateFlowVisualization({ tracks }: CrateFlowVisualizationProps) 
                       strokeWidth={2.5}
                       dot={{ fill: 'hsl(var(--primary))', r: 3, strokeWidth: 0 }}
                       activeDot={{ r: 5, fill: 'hsl(var(--primary))' }}
+                      connectNulls={false}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -189,7 +188,7 @@ export function CrateFlowVisualization({ tracks }: CrateFlowVisualizationProps) 
                       className={`
                         flex items-start gap-2 p-3 rounded-lg text-sm
                         ${insight.type === 'warning' 
-                          ? 'bg-amber-500/10 text-amber-200' 
+                          ? 'bg-muted text-foreground' 
                           : 'bg-primary/10 text-primary'
                         }
                       `}

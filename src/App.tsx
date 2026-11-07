@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { NativeAppProvider } from "@/components/NativeAppProvider";
 
+import SampleCrate from "./pages/SampleCrate";
 import Landing from "./pages/Landing";
 import Callback from "./pages/Callback";
 import Home from "./pages/Home";
@@ -34,6 +35,7 @@ const App = () => (
               <InstallPrompt />
               <Routes>
                 <Route path="/" element={<Landing />} />
+                <Route path="/sample/lagos-night-drive" element={<SampleCrate />} />
                 <Route path="/callback" element={<Callback />} />
                 <Route path="/home" element={<Home />} />
                 <Route path="/dashboard" element={<Navigate to="/home" replace />} />

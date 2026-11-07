@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { redirectToLanding } from '@/lib/return-to';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCrate, useRemoveTrackFromCrate, useDeleteCrate, useUpdateCrate, useReorderCrateTracks } from '@/hooks/use-crates';
@@ -178,6 +178,17 @@ const CrateDetail = () => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   usePageTitle(crate?.name || 'Crate');
+
+  // Open Add Tracks once after creating a new crate (?add=1), then drop the flag.
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    if (crate && searchParams.get('add') === '1') {
+      setShowAddTracks(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('add');
+      setSearchParams(next, { replace: true });
+    }
+  }, [crate, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -367,7 +378,7 @@ const CrateDetail = () => {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h1 className="font-display text-2xl lg:text-3xl font-bold text-foreground mb-1">
+                  <h1 className="font-display text-2xl lg:text-3xl font-bold text-foreground mb-1 break-words">
                     {crate.name}
                   </h1>
                   {crate.description && (
@@ -385,114 +396,91 @@ const CrateDetail = () => {
                       <Clock className="w-4 h-4" />
                       {totalDuration}
                       {totalDurationInfo.isEstimated && (
-                        <span className="text-amber-500 text-xs">(~est)</span>
+                        <span className="text-xs">(estimated)</span>
                       )}
                     </span>
                   </div>
                 </div>
 
-                {/* Edit Button */}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="gap-2 shrink-0"
-                  onClick={() => setShowEditDialog(true)}
-                >
-                  <Pencil className="w-4 h-4" />
-                  <span className="hidden sm:inline">Edit</span>
-                </Button>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* Actions Row */}
-        <div className="flex flex-wrap justify-between items-center gap-2 mb-6">
+        {/* Actions Row: one primary action, everything else secondary */}
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <Button className="gap-2 h-11" onClick={() => setShowAddTracks(true)}>
+            <Plus className="w-4 h-4" />
+            Add Tracks
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Add Tracks
+              <Button variant="ghost" className="gap-2 h-11" aria-label="More ways to add tracks">
+                <Sparkles className="w-4 h-4" />
+                <span className="hidden sm:inline">More ways to add</span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-64 bg-card/95 backdrop-blur-xl border-border/50">
-              <DropdownMenuItem 
-                onClick={() => setShowSmartSuggestions(true)}
-                className="flex items-start gap-3 p-3 cursor-pointer focus:bg-primary/10"
-              >
+            <DropdownMenuContent align="start" className="w-64">
+              <DropdownMenuItem onClick={() => setShowSmartSuggestions(true)} className="flex items-start gap-3 p-3 cursor-pointer">
                 <Sparkles className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <div className="font-medium text-foreground">Smart Suggestions</div>
-                  <div className="text-xs text-muted-foreground">Get tracks from your library</div>
+                  <div className="font-medium">Smart Suggestions</div>
+                  <div className="text-xs text-muted-foreground">Tracks from your library</div>
                 </div>
               </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => setShowDiscoverByVibe(true)}
-                className="flex items-start gap-3 p-3 cursor-pointer focus:bg-primary/10"
-              >
+              <DropdownMenuItem onClick={() => setShowDiscoverByVibe(true)} className="flex items-start gap-3 p-3 cursor-pointer">
                 <Search className="w-5 h-5 text-primary mt-0.5 shrink-0" />
                 <div>
-                  <div className="font-medium text-foreground">Filter by Vibe</div>
+                  <div className="font-medium">Filter by Vibe</div>
                   <div className="text-xs text-muted-foreground">Search by BPM, energy, mood</div>
-                </div>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem 
-                onClick={() => setShowAddTracks(true)}
-                className="flex items-start gap-3 p-3 cursor-pointer focus:bg-primary/10"
-              >
-                <Plus className="w-5 h-5 text-muted-foreground mt-0.5 shrink-0" />
-                <div>
-                  <div className="font-medium text-foreground">Search Spotify</div>
-                  <div className="text-xs text-muted-foreground">Find any song manually</div>
                 </div>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Sync Toggle */}
-            {crate && (
-              <CrateSyncToggle
-                crate={{
-                  id: crate.id,
-                  spotify_playlist_id: crate.spotify_playlist_id ?? null,
-                  sync_enabled: crate.sync_enabled ?? false,
-                  sync_status: crate.sync_status ?? null,
-                  last_synced_at: crate.last_synced_at ?? null,
-                  sync_error: crate.sync_error ?? null,
-                }}
-                onUpdate={() => queryClient.invalidateQueries({ queryKey: ['crate', crateId] })}
-                onLinkPlaylist={() => setShowLinkPlaylist(true)}
-              />
-            )}
-            
-            <Button 
-              variant="outline" 
-              onClick={() => setShowExportModal(true)} 
-              className="gap-2"
-              disabled={displayTracks.length === 0}
-            >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
-              </svg>
-              Export
-            </Button>
-            <Button variant="outline" onClick={() => setShowShareModal(true)} className="gap-2">
-              <Share2 className="w-4 h-4" />
-              Share
-            </Button>
+
+          <div className="ml-auto flex items-center gap-2">
+            <CrateSyncToggle
+              crate={{
+                id: crate.id,
+                spotify_playlist_id: crate.spotify_playlist_id ?? null,
+                sync_enabled: crate.sync_enabled ?? false,
+                sync_status: crate.sync_status ?? null,
+                last_synced_at: crate.last_synced_at ?? null,
+                sync_error: crate.sync_error ?? null,
+              }}
+              onUpdate={() => queryClient.invalidateQueries({ queryKey: ['crate', crateId] })}
+              onLinkPlaylist={() => setShowLinkPlaylist(true)}
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-11 w-11" aria-label="Crate actions">
+                  <MoreVertical className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                <DropdownMenuItem onClick={() => setShowEditDialog(true)} className="gap-2 cursor-pointer">
+                  <Pencil className="w-4 h-4" /> Edit crate
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowExportModal(true)} disabled={displayTracks.length === 0} className="gap-2 cursor-pointer">
+                  <ArrowRight className="w-4 h-4" /> Export to Spotify
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setShowShareModal(true)} className="gap-2 cursor-pointer">
+                  <Share2 className="w-4 h-4" /> Share
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="gap-2 cursor-pointer text-destructive focus:text-destructive">
+                  <Trash2 className="w-4 h-4" /> Delete crate
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
-
-        {/* Crate Analysis Section */}
-        <CrateAnalysis tracks={displayTracks} />
 
         {/* Tracks List */}
         {displayTracks.length > 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {/* In-Crate Search Bar - show when 3+ tracks */}
-            {displayTracks.length >= 3 && (
+            {displayTracks.length > 0 && (
               <CrateSearchBar
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -555,82 +543,22 @@ const CrateDetail = () => {
             )}
           </motion.div>
         ) : (
-          /* Empty State - Action Cards */
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="space-y-4"
-          >
-            <div className="text-center py-6">
-              <div className="text-5xl mb-3">🎵</div>
-              <h3 className="font-display text-lg font-semibold mb-1">Your Crate is empty!</h3>
-              <p className="text-sm text-muted-foreground">Quick ways to fill it:</p>
-            </div>
-
-            {/* Smart Suggestions Card */}
-            <button
-              onClick={() => setShowSmartSuggestions(true)}
-              className="w-full bg-card/60 hover:bg-card/80 backdrop-blur-sm rounded-xl p-5 border border-border/40 hover:border-primary/30 transition-all text-left group"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <Sparkles className="w-6 h-6 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-foreground mb-0.5">Try Smart Suggestions</h4>
-                  <p className="text-sm text-muted-foreground">Get tracks from your library that match this vibe</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
-              </div>
-            </button>
-
-            {/* Filter Library Card */}
-            <button
-              onClick={() => setShowDiscoverByVibe(true)}
-              className="w-full bg-card/60 hover:bg-card/80 backdrop-blur-sm rounded-xl p-5 border border-border/40 hover:border-primary/30 transition-all text-left group"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-secondary/50 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <Search className="w-6 h-6 text-muted-foreground" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-foreground mb-0.5">Filter My Library by Vibe</h4>
-                  <p className="text-sm text-muted-foreground">Search by BPM, energy, mood and more</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
-              </div>
-            </button>
-
-            {/* Manual Add Card */}
-            <button
-              onClick={() => setShowAddTracks(true)}
-              className="w-full bg-card/60 hover:bg-card/80 backdrop-blur-sm rounded-xl p-5 border border-border/40 hover:border-primary/30 transition-all text-left group"
-            >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-secondary/50 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                  <Plus className="w-6 h-6 text-muted-foreground" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-foreground mb-0.5">Add Tracks Manually</h4>
-                  <p className="text-sm text-muted-foreground">Search any song on Spotify</p>
-                </div>
-                <ArrowRight className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
-              </div>
-            </button>
+          /* Empty State */
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-10 rounded-2xl border border-dashed border-border/60">
+            <div className="text-4xl mb-3" aria-hidden>🎵</div>
+            <h3 className="font-display text-lg font-semibold mb-1">This crate is empty</h3>
+            <p className="text-sm text-muted-foreground mb-5">Search Spotify and save the first track you want to find again.</p>
+            <Button className="gap-2 h-11" onClick={() => setShowAddTracks(true)}>
+              <Plus className="w-4 h-4" /> Add Tracks
+            </Button>
           </motion.div>
         )}
 
-        {/* Danger Zone */}
-        <div className="mt-12 pt-6 border-t border-border/30">
-          <Button 
-            variant="ghost" 
-            className="text-destructive hover:text-destructive hover:bg-destructive/10 gap-2"
-            onClick={() => setShowDeleteDialog(true)}
-          >
-            <Trash2 className="w-4 h-4" />
-            Delete Crate
-          </Button>
+        {/* Analysis stays secondary to the track list */}
+        <div className="mt-8">
+          <CrateAnalysis tracks={displayTracks} />
         </div>
+
       </main>
 
       <BottomNav />
@@ -860,6 +788,14 @@ const CrateDetail = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <LinkPlaylistModal
+        isOpen={showLinkPlaylist}
+        onClose={() => setShowLinkPlaylist(false)}
+        crateId={crate.id}
+        crateName={crate.name}
+        onLinked={() => queryClient.invalidateQueries({ queryKey: ['crate', crateId] })}
+      />
 
       {/* Export to Spotify Modal */}
       <ExportToSpotifyModal
