@@ -467,9 +467,6 @@ const CrateDetail = () => {
                 <DropdownMenuItem onClick={() => setShowShareModal(true)} className="gap-2 cursor-pointer">
                   <Share2 className="w-4 h-4" /> Share
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setShowLinkPlaylist(true)} className="gap-2 cursor-pointer">
-                  <LinkIcon className="w-4 h-4" /> Link a Spotify playlist
-                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setShowDeleteDialog(true)} className="gap-2 cursor-pointer text-destructive focus:text-destructive">
                   <Trash2 className="w-4 h-4" /> Delete crate
@@ -483,7 +480,7 @@ const CrateDetail = () => {
         {displayTracks.length > 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             {/* In-Crate Search Bar - show when 3+ tracks */}
-            {displayTracks.length >= 3 && (
+            {displayTracks.length > 0 && (
               <CrateSearchBar
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
@@ -791,6 +788,14 @@ const CrateDetail = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <LinkPlaylistModal
+        isOpen={showLinkPlaylist}
+        onClose={() => setShowLinkPlaylist(false)}
+        crateId={crate.id}
+        crateName={crate.name}
+        onLinked={() => queryClient.invalidateQueries({ queryKey: ['crate', crateId] })}
+      />
 
       {/* Export to Spotify Modal */}
       <ExportToSpotifyModal

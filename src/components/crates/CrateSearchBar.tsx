@@ -75,7 +75,8 @@ export function CrateSearchBar({
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Search by name, artist, or album..."
+            placeholder="Search tracks in this crate"
+            aria-label="Search tracks in this crate"
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="pl-9 pr-8 bg-card/60 border-border/40 focus:border-primary/50"
