@@ -84,13 +84,13 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[680px] max-h-[85vh] overflow-y-auto px-4 py-6 sm:px-6">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-[680px] max-h-[85vh] overflow-y-auto !p-4 sm:!p-6 [&>*]:min-w-0">
         <DialogHeader>
           <DialogTitle className="font-display text-lg">New crate</DialogTitle>
           <DialogDescription>A crate is a named collection of tracks you want to find again.</DialogDescription>
         </DialogHeader>
 
-        <Tabs value={start} onValueChange={setStart}>
+        <Tabs value={start} onValueChange={setStart} className="min-w-0 w-full">
           <TabsList className="grid grid-cols-3 w-full h-auto">
             <TabsTrigger value="empty" className="text-xs sm:text-sm whitespace-normal">Start empty</TabsTrigger>
             <TabsTrigger value="playlist" className="text-xs sm:text-sm whitespace-normal">Spotify playlist</TabsTrigger>
@@ -123,7 +123,7 @@ const CreateCrateModal = ({ open, onOpenChange }: CreateCrateModalProps) => {
             type="button"
             onClick={() => setShowDetails((v) => !v)}
             aria-expanded={showDetails}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[44px]"
+            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring min-h-[44px] h-auto whitespace-normal text-left px-0"
           >
             <ChevronDown className={cn('w-4 h-4 transition-transform', showDetails && 'rotate-180')} />
             Description, emoji and color (optional)
