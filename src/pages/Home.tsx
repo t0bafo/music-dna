@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { redirectToLanding } from '@/lib/return-to';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Music, Loader2, AlertCircle, RefreshCw, Home as HomeIcon, Palette, Package, Search, BarChart3 } from 'lucide-react';
@@ -9,7 +10,6 @@ import BottomNav from '@/components/BottomNav';
 import HomeCratesSection from '@/components/HomeCratesSection';
 import MusicStatsSection from '@/components/MusicStatsSection';
 import { ThemeToggle } from '@/components/ThemeToggle';
-import WelcomeModal from '@/components/WelcomeModal';
 import { motion } from 'framer-motion';
 import { calculateArchetype, Archetype, MusicProfile } from '@/lib/music-archetypes';
 import { useTopTracks, TrackWithFeatures } from '@/hooks/use-music-intelligence';
@@ -136,7 +136,7 @@ const Home = () => {
   // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate('/', { replace: true });
+      redirectToLanding(navigate);
     }
   }, [authLoading, isAuthenticated, navigate]);
 
@@ -392,7 +392,6 @@ const Home = () => {
       <BottomNav />
       
       {/* First-time Welcome Modal */}
-      <WelcomeModal />
 
       {/* Share Identity Modal */}
       <ShareIdentityModal

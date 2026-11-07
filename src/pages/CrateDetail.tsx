@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { redirectToLanding } from '@/lib/return-to';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
@@ -180,7 +181,7 @@ const CrateDetail = () => {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate('/', { replace: true });
+      redirectToLanding(navigate);
     }
   }, [authLoading, isAuthenticated, navigate]);
 
