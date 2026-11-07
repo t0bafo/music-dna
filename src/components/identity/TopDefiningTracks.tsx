@@ -24,7 +24,7 @@ const TopDefiningTracks = ({ tracks, isLoading }: TopDefiningTracksProps) => {
   
   const top3 = tracks.slice(0, 3);
   
-  const bulkTracksForModal = top3.map(t => ({
+  const bulkTracksForModal = tracks.slice(0, 50).map(t => ({
     id: t.id,
     name: t.name,
     artist: t.artist,
@@ -167,7 +167,7 @@ const TopDefiningTracks = ({ tracks, isLoading }: TopDefiningTracksProps) => {
           variant="ghost"
         >
           <Package className="w-4 h-4" />
-          Create Crate from These 3 Tracks
+          Create Crate from My Top {Math.min(tracks.length, 50)} Tracks
         </Button>
       </motion.section>
       
