@@ -95,129 +95,55 @@ Response: {"vibes": ["energy", "hype", "intense", "workout"], "tempo": "fast", "
 Query: "songs for the gym"
 Response: {"vibes": ["energy", "hype", "intense", "workout", "gym"], "tempo": "fast", "energy": "high", "bpmRange": [130, 180]}`;
 
+import { createClient } from 'npm:@supabase/supabase-js@2'
+import { handleVibeSearch, hashUserKey } from '../_shared/vibe-search-core.ts'
+
+const WINDOW_SECONDS = 600
+const MAX_PER_WINDOW = 20
+
 serve(async (req) => {
-  // Handle CORS preflight
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  const json = (status: number, body: unknown) =>
+    new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
-  try {
-    const { query } = await req.json()
+  let payload: { query?: unknown } = {}
+  try { payload = await req.json() } catch { return json(400, { error: 'Invalid JSON' }) }
 
-    if (!query || typeof query !== 'string') {
-      return new Response(
-        JSON.stringify({ error: 'Query is required' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    console.log('[vibe-search-expand] Expanding query:', query)
-
-    // Skip expansion for very short queries (likely artist/track names)
-    const words = query.trim().split(/\s+/)
-    if (words.length === 1) {
-      console.log('[vibe-search-expand] Query too short, skipping expansion')
-      return new Response(
-        JSON.stringify({ filters: null, skipped: true }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Use Lovable AI Gateway
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY')
-    if (!LOVABLE_API_KEY) {
-      console.error('[vibe-search-expand] LOVABLE_API_KEY not configured')
-      return new Response(
-        JSON.stringify({ filters: null, error: 'AI not configured' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
+  const admin = createClient(Deno.env.get('SUPABASE_URL') ?? '', Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '')
+  const result = await handleVibeSearch(
+    { query: payload.query, spotifyToken: req.headers.get('x-spotify-token') },
+    {
+      verifyUser: async (token) => {
+        if (!token) return null
+        const r = await fetch('https://api.spotify.com/v1/me', { headers: { Authorization: `Bearer ${token}` } })
+        if (!r.ok) return null
+        const me = await r.json()
+        return me?.id ? await hashUserKey(me.id) : null
       },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: EXPANSION_PROMPT },
-          { role: 'user', content: `Now parse this query and return JSON only:\n\nQuery: "${query}"` }
-        ],
-      }),
-    })
-
-    if (!response.ok) {
-      if (response.status === 429) {
-        console.warn('[vibe-search-expand] Rate limited')
-        return new Response(
-          JSON.stringify({ filters: null, error: 'Rate limited, try again later' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-      if (response.status === 402) {
-        console.warn('[vibe-search-expand] Payment required')
-        return new Response(
-          JSON.stringify({ filters: null, error: 'AI credits exhausted' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-      const errorText = await response.text()
-      console.error('[vibe-search-expand] AI gateway error:', response.status, errorText)
-      return new Response(
-        JSON.stringify({ filters: null, error: 'AI expansion failed' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    const aiResponse = await response.json()
-    const content = aiResponse.choices?.[0]?.message?.content
-
-    if (!content) {
-      console.error('[vibe-search-expand] Empty AI response')
-      return new Response(
-        JSON.stringify({ filters: null, error: 'Empty AI response' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Parse JSON response (remove any markdown formatting)
-    let jsonText = content.trim()
-    if (jsonText.startsWith('```')) {
-      jsonText = jsonText.replace(/```json\n?|\n?```/g, '')
-    }
-
-    try {
-      const filters: SearchFilters = JSON.parse(jsonText)
-
-      // Validate response structure
-      if (!filters.vibes && !filters.scenes && !filters.artistHint && !filters.bpmRange && !filters.energy) {
-        console.warn('[vibe-search-expand] LLM returned empty filters')
-        return new Response(
-          JSON.stringify({ filters: null, skipped: true }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        )
-      }
-
-      console.log('[vibe-search-expand] Expanded filters:', filters)
-
-      return new Response(
-        JSON.stringify({ filters }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    } catch (parseError) {
-      console.error('[vibe-search-expand] Failed to parse AI response:', parseError, jsonText)
-      return new Response(
-        JSON.stringify({ filters: null, error: 'Failed to parse AI response' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
-    }
-  } catch (error) {
-    console.error('[vibe-search-expand] Error:', error)
-    return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-  }
+      allow: async (userKey) => {
+        const { data, error } = await admin.rpc('ai_rate_limit_hit', { _user_key: userKey, _window_seconds: WINDOW_SECONDS, _max: MAX_PER_WINDOW })
+        if (error) { console.error('[vibe-search-expand] rate limit check failed:', error.code); return false }
+        return data === true
+      },
+      callModel: async (query) => {
+        const key = Deno.env.get('LOVABLE_API_KEY')
+        if (!key) throw { status: 500 }
+        const r = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: EXPANSION_PROMPT },
+              { role: 'user', content: `Now parse this query and return JSON only:\n\nQuery: "${query}"` },
+            ],
+          }),
+        })
+        if (!r.ok) { console.error('[vibe-search-expand] gateway status', r.status); throw { status: r.status } }
+        const data = await r.json()
+        return data.choices?.[0]?.message?.content ?? ''
+      },
+    },
+  )
+  return json(result.status, result.body)
 })
