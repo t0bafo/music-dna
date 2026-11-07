@@ -1,5 +1,10 @@
 # Crates-first redesign
 
+## AI safeguards recheck (preview only)
+- [ ] Remove remaining sensitive logs and missing-energy scoring/explanation gaps.
+- [ ] Exercise actual gateway request builders with mock fetch, auth/limit gates, and literal search fallback.
+- [ ] Update audit with verified results and hosted/log-retention limitations; do not publish, deploy shared functions, or mutate crates.
+
 ## Personalized sharing (current stack, production untouched)
 - [x] Check isolated hosting: both test draft addresses returned 401 Unauthorized; no supported public isolated deployment available without publishing.
 - [ ] Compare two personalized thumbnails through an official social preview tool (blocked: public crawler-ready test deployment unavailable).

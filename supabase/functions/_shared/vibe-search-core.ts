@@ -18,6 +18,15 @@ export interface VibeDeps {
 export interface VibeResult { status: number; body: Record<string, unknown> }
 
 export const MAX_QUERY_CHARS = 200;
+export const VIBE_WINDOW_SECONDS = 600;
+export const VIBE_MAX_PER_WINDOW = 20;
+
+export function buildVibeMessages(systemPrompt: string, query: string) {
+  return [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: `Now parse this query and return JSON only:\n\nQuery: "${query}"` },
+  ];
+}
 
 export async function handleVibeSearch(
   input: { query?: unknown; spotifyToken: string | null },
@@ -30,10 +39,15 @@ export async function handleVibeSearch(
   // Single words are almost always titles or artists: never call the model.
   if (q.split(/\s+/).length === 1) return { status: 200, body: { filters: null, skipped: true } };
 
-  const userKey = await deps.verifyUser(input.spotifyToken);
+  let userKey: string | null;
+  try { userKey = await deps.verifyUser(input.spotifyToken); }
+  catch { return { status: 401, body: { filters: null, error: 'Unable to verify sign-in' } }; }
   if (!userKey) return { status: 401, body: { filters: null, error: 'Sign in to use vibe search' } };
 
-  if (!(await deps.allow(userKey))) {
+  let allowed = false;
+  try { allowed = await deps.allow(userKey); }
+  catch { return { status: 503, body: { filters: null, error: 'Search protection unavailable' } }; }
+  if (!allowed) {
     return { status: 429, body: { filters: null, error: 'Too many vibe searches. Try again in a few minutes.' } };
   }
 
@@ -42,8 +56,10 @@ export async function handleVibeSearch(
     content = await deps.callModel(q);
   } catch (e) {
     const status = (e as { status?: number })?.status;
+    if (status === 400 || status === 401 || status === 402 || status === 403 || status === 404) {
+      return { status, body: { filters: null, error: e instanceof Error ? e.message : 'AI expansion unavailable' } };
+    }
     if (status === 429) return { status: 429, body: { filters: null, error: 'Rate limited, try again later' } };
-    if (status === 402) return { status: 402, body: { filters: null, error: 'AI credits exhausted' } };
     return { status: 200, body: { filters: null, error: 'AI expansion unavailable' } };
   }
 
