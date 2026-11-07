@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { redirectToLanding } from '@/lib/return-to';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import {
@@ -119,7 +120,7 @@ const MusicIntelligence = () => {
   // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate('/', { replace: true });
+      redirectToLanding(navigate);
     }
   }, [authLoading, isAuthenticated, navigate]);
 

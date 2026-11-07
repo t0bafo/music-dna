@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { exchangeCodeForTokens, storeTokens, clearTokens, getStoredTokens } from '@/lib/spotify-auth';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { consumeReturnTo } from '@/lib/return-to';
 
 const Callback = () => {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ const Callback = () => {
       // Check if already authenticated (prevents re-processing on remount)
       const { accessToken: existingToken } = getStoredTokens();
       if (existingToken && !code) {
-        navigate('/dashboard', { replace: true });
+        navigate(consumeReturnTo(), { replace: true });
         return;
       }
 
@@ -53,8 +54,8 @@ const Callback = () => {
       // Clear the URL params to prevent reprocessing on refresh
       window.history.replaceState({}, document.title, '/callback');
 
-      // Navigate to dashboard - the AuthContext will pick up the stored tokens
-      navigate('/dashboard', { replace: true });
+      // Validated deep link if one was saved, otherwise Crates
+      navigate(consumeReturnTo(), { replace: true });
     };
 
     handleCallback();

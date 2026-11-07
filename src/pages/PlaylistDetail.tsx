@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { redirectToLanding } from '@/lib/return-to';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -207,7 +208,7 @@ const PlaylistDetail = () => {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate('/', { replace: true });
+      redirectToLanding(navigate);
     }
   }, [authLoading, isAuthenticated, navigate]);
 

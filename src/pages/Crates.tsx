@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { redirectToLanding } from '@/lib/return-to';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCrates } from '@/hooks/use-crates';
@@ -57,7 +58,7 @@ const Crates = () => {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      navigate('/', { replace: true });
+      redirectToLanding(navigate);
     }
   }, [authLoading, isAuthenticated, navigate]);
 
