@@ -74,13 +74,6 @@ function getEnergyLabel(energy: number): string {
   return 'High energy';
 }
 
-function getUndergroundLabel(score: number): string {
-  if (score < 30) return 'Mainstream';
-  if (score < 60) return 'Balanced mix';
-  if (score < 80) return 'Deep cuts';
-  return 'True digger';
-}
-
 function formatDuration(ms: number): string {
   const totalMinutes = Math.floor(ms / 60000);
   const hours = Math.floor(totalMinutes / 60);
