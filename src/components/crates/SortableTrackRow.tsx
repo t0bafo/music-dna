@@ -253,7 +253,7 @@ export function SortableTrackRow({
               <MoreVertical className="w-5 h-5" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-border/50">
+          <DropdownMenuContent align="end" className="bg-card/95 border-border/50">
             <DropdownMenuItem
               onClick={() => {
                 heavyTap();

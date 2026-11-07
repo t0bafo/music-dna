@@ -47,7 +47,7 @@ export function TargetCrateSelector({
 
   if (crates.length === 0) {
     return (
-      <div className="sticky top-0 bg-card/95 backdrop-blur-xl z-10 py-3 border-b border-border/30">
+      <div className="sticky top-0 bg-card/95 z-10 py-3 border-b border-border/30">
         <div className="flex items-center gap-3 max-w-2xl mx-auto">
           <span className="text-sm font-medium text-muted-foreground">
             No crates yet.
@@ -62,7 +62,7 @@ export function TargetCrateSelector({
   }
 
   return (
-    <div className="sticky top-0 bg-card/95 backdrop-blur-xl z-10 py-3 border-b border-border/30">
+    <div className="sticky top-0 bg-card/95 z-10 py-3 border-b border-border/30">
       <div className="flex items-center gap-3 max-w-2xl mx-auto flex-wrap">
         <span className="text-sm font-medium text-muted-foreground">
           Adding to:
@@ -90,7 +90,7 @@ export function TargetCrateSelector({
           </DropdownMenuTrigger>
           <DropdownMenuContent 
             align="start" 
-            className="w-64 bg-card/95 backdrop-blur-xl border-border/50"
+            className="w-64 bg-card/95 border-border/50"
           >
             <div className="max-h-[240px] overflow-y-auto">
               {crates.slice(0, 20).map((crate) => (

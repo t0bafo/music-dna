@@ -339,7 +339,7 @@ const CrateDetail = () => {
   return (
     <div className="min-h-screen gradient-bg pb-24 lg:pb-0">
       {/* Header */}
-      <header className="bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50">
+      <header className="bg-card/90 border-b border-border/50 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={() => navigate('/crates')}>
@@ -359,7 +359,7 @@ const CrateDetail = () => {
         <motion.div 
           initial={{ opacity: 0, y: 10 }} 
           animate={{ opacity: 1, y: 0 }} 
-          className="bg-card/60 backdrop-blur-xl rounded-2xl p-6 lg:p-8 border border-border/50 mb-6"
+          className="bg-card/60 rounded-2xl p-6 lg:p-8 border border-border/50 mb-6"
         >
           <div className="flex flex-col sm:flex-row items-start gap-5">
             {/* Large Emoji */}
@@ -590,7 +590,7 @@ const CrateDetail = () => {
       
       {/* Edit Crate Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-[500px] bg-card/95 backdrop-blur-xl">
+        <DialogContent className="sm:max-w-[500px] bg-card/95">
           <DialogHeader>
             <DialogTitle className="font-display">Edit Crate</DialogTitle>
           </DialogHeader>
@@ -610,7 +610,7 @@ const CrateDetail = () => {
                 </button>
                 
                 {showEmojiPicker && (
-                  <div className="absolute top-full left-0 mt-2 p-3 bg-card/95 backdrop-blur-xl rounded-xl border border-border/50 shadow-xl z-50 animate-fade-in">
+                  <div className="absolute top-full left-0 mt-2 p-3 bg-card/95 rounded-xl border border-border/50 shadow-xl z-50 animate-fade-in">
                     <div className="grid grid-cols-6 gap-2">
                       {CRATE_EMOJIS.map((emoji) => (
                         <button
@@ -722,7 +722,7 @@ const CrateDetail = () => {
 
       {/* Share Modal */}
       <Dialog open={showShareModal} onOpenChange={setShowShareModal}>
-        <DialogContent className="w-[95vw] max-w-[600px] bg-card/95 backdrop-blur-xl">
+        <DialogContent className="w-[95vw] max-w-[600px] bg-card/95">
           <DialogHeader>
             <DialogTitle className="font-display flex items-center gap-2">
               <span className="text-2xl">{crate.emoji}</span>

@@ -118,7 +118,7 @@ const Studio = () => {
   return (
     <div className="min-h-screen gradient-bg pb-24 lg:pb-0">
       {/* Header with Navigation */}
-      <header className="bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50">
+      <header className="bg-card/90 border-b border-border/50 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4 lg:gap-6">
             <div 
@@ -183,7 +183,7 @@ const Studio = () => {
               {/* Featured: Album Mixtapes */}
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="mb-8">
                 <Card
-                  className="relative overflow-hidden cursor-pointer group border-primary/40 bg-gradient-to-br from-primary/15 via-card/80 to-card/70 backdrop-blur-xl hover:-translate-y-1 hover:shadow-glow transition-all duration-200"
+                  className="relative overflow-hidden cursor-pointer group border-primary/40 bg-gradient-to-br from-primary/15 via-card/80 to-card/70 hover:-translate-y-1 hover:shadow-glow transition-all duration-200"
                   onClick={() => handleToolClick('mixtape')}
                 >
                   <CardContent className="p-6 lg:p-10">
@@ -219,7 +219,7 @@ const Studio = () => {
                   >
                     <Card 
                       className={cn(
-                        "bg-card/70 backdrop-blur-xl border-border/40 overflow-hidden cursor-pointer group",
+                        "bg-card/70 border-border/40 overflow-hidden cursor-pointer group",
                         "hover:border-primary/40 hover:-translate-y-1 hover:shadow-xl transition-all duration-200"
                       )}
                       onClick={() => handleToolClick(tool.id)}

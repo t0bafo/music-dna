@@ -51,7 +51,7 @@ const TopSongsTable = ({ tracks, isLoading }: TopSongsTableProps) => {
   if (isLoading) {
     return (
       <section id="top-songs" className="scroll-mt-24">
-        <Card className="bg-card/80 backdrop-blur-xl border-border/50">
+        <Card className="bg-card/80 border-border/50">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg lg:text-xl font-bold flex items-center gap-2">
               🎵 Top Songs
@@ -83,7 +83,7 @@ const TopSongsTable = ({ tracks, isLoading }: TopSongsTableProps) => {
   if (tracks.length === 0) {
     return (
       <section id="top-songs" className="scroll-mt-24">
-        <Card className="bg-card/80 backdrop-blur-xl border-border/50">
+        <Card className="bg-card/80 border-border/50">
           <CardHeader className="pb-4">
             <CardTitle className="text-lg lg:text-xl font-bold flex items-center gap-2">
               🎵 Top Songs
@@ -101,7 +101,7 @@ const TopSongsTable = ({ tracks, isLoading }: TopSongsTableProps) => {
 
   return (
     <section id="top-songs" className="scroll-mt-24">
-      <Card className="bg-card/80 backdrop-blur-xl border-border/50">
+      <Card className="bg-card/80 border-border/50">
         <CardHeader className="pb-4">
           <CardTitle className="text-lg lg:text-xl font-bold flex items-center gap-2">
             🎵 Top Songs

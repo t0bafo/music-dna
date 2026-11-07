@@ -25,7 +25,7 @@ const HomeCratesSection = () => {
         <h2 className="font-display text-lg lg:text-xl font-bold text-foreground mb-4">
           🗂️ Your Crates
         </h2>
-        <div className="bg-card/60 backdrop-blur-xl rounded-2xl p-8 text-center border border-border/50">
+        <div className="bg-card/60 rounded-2xl p-8 text-center border border-border/50">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
         </div>
       </motion.section>
@@ -52,7 +52,7 @@ const HomeCratesSection = () => {
                 to={`/crates/${crate.id}`}
                 className="shrink-0 w-[140px] lg:w-[160px]"
               >
-                <div className="group bg-card/60 backdrop-blur-xl rounded-xl border border-border/50 hover:border-primary/30 p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg h-full">
+                <div className="group bg-card/60 rounded-xl border border-border/50 hover:border-primary/30 p-4 transition-all duration-200 hover:-translate-y-1 hover:shadow-lg h-full">
                   {/* Emoji */}
                   <div 
                     className="w-12 h-12 lg:w-14 lg:h-14 rounded-xl flex items-center justify-center mb-3 transition-transform group-hover:scale-105"
@@ -93,7 +93,7 @@ const HomeCratesSection = () => {
             onClick={() => setShowCreateModal(true)}
             className="shrink-0 w-[140px] lg:w-[160px] group"
           >
-            <div className="bg-card/40 backdrop-blur-xl rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 p-4 transition-all duration-200 hover:-translate-y-1 h-full flex flex-col items-center justify-center text-center min-h-[140px]">
+            <div className="bg-card/40 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 p-4 transition-all duration-200 hover:-translate-y-1 h-full flex flex-col items-center justify-center text-center min-h-[140px]">
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
                 <Plus className="w-6 h-6 text-primary" />
               </div>
@@ -110,7 +110,7 @@ const HomeCratesSection = () => {
             onClick={() => setShowCreateModal(true)}
             className="shrink-0 w-[140px] lg:w-[160px] group"
           >
-            <div className="bg-card/40 backdrop-blur-xl rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 p-4 transition-all duration-200 hover:-translate-y-1 h-full flex flex-col items-center justify-center text-center min-h-[130px]">
+            <div className="bg-card/40 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 p-4 transition-all duration-200 hover:-translate-y-1 h-full flex flex-col items-center justify-center text-center min-h-[130px]">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary/20 transition-colors">
                 <Plus className="w-5 h-5 text-primary" />
               </div>

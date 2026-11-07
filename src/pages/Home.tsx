@@ -162,7 +162,7 @@ const Home = () => {
   return (
     <div className="min-h-screen gradient-bg pb-24 lg:pb-0">
       {/* Header with Navigation */}
-      <header className="bg-card/90 backdrop-blur-xl border-b border-border/50 sticky top-0 z-50">
+      <header className="bg-card/90 border-b border-border/50 sticky top-0 z-50">
         <div className="container mx-auto px-4 lg:px-8 py-3 flex items-center justify-between">
           <div className="flex items-center gap-4 lg:gap-6">
             <div 
@@ -343,7 +343,7 @@ const Home = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
               {/* Create a Crate */}
               <Link to="/crates">
-                <Card className="bg-card/70 backdrop-blur-xl border-border/40 hover:border-primary/40 hover:-translate-y-1 hover:shadow-xl transition-all duration-200 h-full group">
+                <Card className="bg-card/70 border-border/40 hover:border-primary/40 hover:-translate-y-1 hover:shadow-xl transition-all duration-200 h-full group">
                   <CardContent className="p-6 lg:p-8 flex flex-col items-center text-center">
                     <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
                       <span className="text-3xl lg:text-4xl">🗂️</span>
@@ -360,7 +360,7 @@ const Home = () => {
 
               {/* Discover Tracks */}
               <Link to="/studio">
-                <Card className="bg-card/70 backdrop-blur-xl border-border/40 hover:border-chart-purple/40 hover:-translate-y-1 hover:shadow-xl transition-all duration-200 h-full group">
+                <Card className="bg-card/70 border-border/40 hover:border-chart-purple/40 hover:-translate-y-1 hover:shadow-xl transition-all duration-200 h-full group">
                   <CardContent className="p-6 lg:p-8 flex flex-col items-center text-center">
                     <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-chart-purple/10 flex items-center justify-center mb-4 group-hover:bg-chart-purple/20 transition-colors">
                       <Search className="w-7 h-7 lg:w-8 lg:h-8 text-chart-purple" />
@@ -377,7 +377,7 @@ const Home = () => {
 
               {/* Analyze Playlist */}
               <Link to="/studio">
-                <Card className="bg-card/70 backdrop-blur-xl border-border/40 hover:border-chart-cyan/40 hover:-translate-y-1 hover:shadow-xl transition-all duration-200 h-full group">
+                <Card className="bg-card/70 border-border/40 hover:border-chart-cyan/40 hover:-translate-y-1 hover:shadow-xl transition-all duration-200 h-full group">
                   <CardContent className="p-6 lg:p-8 flex flex-col items-center text-center">
                     <div className="w-14 h-14 lg:w-16 lg:h-16 rounded-2xl bg-chart-cyan/10 flex items-center justify-center mb-4 group-hover:bg-chart-cyan/20 transition-colors">
                       <BarChart3 className="w-7 h-7 lg:w-8 lg:h-8 text-chart-cyan" />

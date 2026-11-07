@@ -73,7 +73,7 @@ export function CratePreviewModal({
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] p-0 bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl overflow-hidden">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] p-0 bg-card/95 border-border/50 shadow-2xl overflow-hidden">
         {/* Header */}
         <DialogHeader className="p-6 pb-0">
           <DialogTitle className="flex items-center justify-between">

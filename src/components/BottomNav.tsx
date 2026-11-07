@@ -30,7 +30,7 @@ const BottomNav = () => {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
       {/* Glass background */}
-      <div className="absolute inset-0 bg-card/90 backdrop-blur-xl border-t border-border/50" />
+      <div className="absolute inset-0 bg-card/90 border-t border-border/50" />
       
       {/* Safe area padding for iPhone notch */}
       <div className="relative flex items-center justify-around px-2 py-2 pb-[max(env(safe-area-inset-bottom,8px),8px)]">

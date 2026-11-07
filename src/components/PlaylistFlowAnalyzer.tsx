@@ -358,7 +358,7 @@ const PlaylistFlowAnalyzer = ({ fullWidth }: PlaylistFlowAnalyzerProps) => {
   return (
     <div className={cn("space-y-6", fullWidth && "w-full")}>
       {/* Playlist Selection */}
-      <Card className="bg-card/70 backdrop-blur-xl border-border/40">
+      <Card className="bg-card/70 border-border/40">
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
@@ -413,7 +413,7 @@ const PlaylistFlowAnalyzer = ({ fullWidth }: PlaylistFlowAnalyzerProps) => {
             className="space-y-6"
           >
             {/* Flow Score Card */}
-            <Card className="bg-card/70 backdrop-blur-xl border-border/40 overflow-hidden">
+            <Card className="bg-card/70 border-border/40 overflow-hidden">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-xl">
                   📊 Flow Analysis Results
@@ -509,7 +509,7 @@ const PlaylistFlowAnalyzer = ({ fullWidth }: PlaylistFlowAnalyzerProps) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <Card className="bg-card/70 backdrop-blur-xl border-border/40">
+                <Card className="bg-card/70 border-border/40">
                   <CardHeader className="pb-2">
                     <CardTitle className="flex items-center gap-2 text-xl">
                       🎯 Optimized Playlist

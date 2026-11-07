@@ -26,7 +26,7 @@ export function InterpretedFilters({
   if (!hasFilters) return null;
 
   return (
-    <div className="mb-4 p-4 bg-card/60 backdrop-blur-sm rounded-xl border border-border/50">
+    <div className="mb-4 p-4 bg-card/60 rounded-xl border border-border/50">
       <div className="flex items-center gap-2 mb-3 text-sm text-muted-foreground">
         <Sparkles className="w-4 h-4 text-primary" />
         <span>What we understood:</span>

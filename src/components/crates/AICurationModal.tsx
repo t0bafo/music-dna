@@ -82,7 +82,7 @@ export function AICurationModal({ open, onOpenChange }: AICurationModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl">
+      <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto bg-card/95 border-border/50 shadow-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center">

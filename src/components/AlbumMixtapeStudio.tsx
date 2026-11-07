@@ -182,7 +182,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
   return (
     <div className="space-y-6">
       {/* Step 1: pick */}
-      <Card className="bg-card/70 backdrop-blur-xl border-border/40">
+      <Card className="bg-card/70 border-border/40">
         <CardContent className="p-5 lg:p-6 space-y-5">
           <div className="flex items-center justify-between">
             <h3 className="font-display text-lg font-bold text-foreground">1. Pick 2–5 albums</h3>
@@ -224,7 +224,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
       </Card>
 
       {/* Step 2: settings */}
-      <Card className={cn('bg-card/70 backdrop-blur-xl border-border/40 transition-opacity', selected.length < 2 && 'opacity-50 pointer-events-none')}>
+      <Card className={cn('bg-card/70 border-border/40 transition-opacity', selected.length < 2 && 'opacity-50 pointer-events-none')}>
         <CardContent className="p-5 lg:p-6 space-y-5">
           <h3 className="font-display text-lg font-bold text-foreground">2. Shape the flow</h3>
           <div className="grid grid-cols-2 gap-2">
@@ -260,7 +260,7 @@ const AlbumMixtapeStudio = ({ accessToken }: { accessToken: string }) => {
 
       {/* Step 3: result */}
       {result && result.tracks.length > 0 && (
-        <Card className="bg-card/70 backdrop-blur-xl border-primary/30">
+        <Card className="bg-card/70 border-primary/30">
           <CardContent className="p-5 lg:p-6 space-y-4">
             <div className="flex items-center justify-between gap-3">
               <div>

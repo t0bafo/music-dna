@@ -123,7 +123,7 @@ export function CrateFlowVisualization({ tracks }: CrateFlowVisualizationProps) 
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="mt-4 p-5 rounded-xl border border-border/50 bg-card/60 backdrop-blur-sm">
+            <div className="mt-4 p-5 rounded-xl border border-border/50 bg-card/60">
               <h3 className="text-base font-semibold text-foreground">Energy Flow</h3>
               <p className="text-xs text-muted-foreground mb-4">
                 Energy available for {coverage.available} of {coverage.total} tracks. Gaps mark tracks without data.

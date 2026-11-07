@@ -444,7 +444,7 @@ const PlaylistDetail = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => window.open(`https://open.spotify.com/playlist/${playlistId}`, '_blank')}
-                    className="bg-background/50 backdrop-blur-sm"
+                    className="bg-background/50"
                   >
                     <ExternalLink className="w-4 h-4 mr-2" />
                     View on Spotify
@@ -454,7 +454,7 @@ const PlaylistDetail = () => {
                       variant="outline"
                       size="sm"
                       onClick={handleReset}
-                      className="bg-background/50 backdrop-blur-sm"
+                      className="bg-background/50"
                     >
                       <RotateCcw className="w-4 h-4 mr-2" />
                       Reset Order

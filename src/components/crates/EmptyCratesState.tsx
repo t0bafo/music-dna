@@ -35,7 +35,7 @@ export const EmptyCratesState = ({ onCreateCrate }: EmptyCratesStateProps) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="bg-card/60 backdrop-blur-xl rounded-2xl p-8 sm:p-12 border border-border/50 max-w-xl mx-auto"
+      className="bg-card/60 rounded-2xl p-8 sm:p-12 border border-border/50 max-w-xl mx-auto"
     >
       {/* Icon */}
       <div className="flex justify-center mb-6">

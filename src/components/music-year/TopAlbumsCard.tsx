@@ -39,7 +39,7 @@ const TopAlbumsCard = ({ savedTracks, isLoading }: TopAlbumsCardProps) => {
 
   if (isLoading) {
     return (
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+      <Card className="bg-card/50 border-border/50">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Disc3 className="w-4 h-4 text-primary" />
@@ -68,7 +68,7 @@ const TopAlbumsCard = ({ savedTracks, isLoading }: TopAlbumsCardProps) => {
 
   if (sortedAlbums.length === 0) {
     return (
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+      <Card className="bg-card/50 border-border/50">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <Disc3 className="w-4 h-4 text-primary" />
@@ -88,7 +88,7 @@ const TopAlbumsCard = ({ savedTracks, isLoading }: TopAlbumsCardProps) => {
   }
 
   return (
-    <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+    <Card className="bg-card/50 border-border/50">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <Disc3 className="w-4 h-4 text-primary" />

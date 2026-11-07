@@ -101,7 +101,7 @@ const SmartDiscoveryEngine = ({ onSearch, fullWidth }: SmartDiscoveryEngineProps
 
   return (
     <Card className={cn(
-      "border-primary/20 bg-gradient-to-br from-card/80 via-card/60 to-primary/5 backdrop-blur-xl",
+      "border-primary/20 bg-gradient-to-br from-card/80 via-card/60 to-primary/5",
       fullWidth && "shadow-none border-0 bg-transparent"
     )}>
       <CardHeader>

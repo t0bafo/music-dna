@@ -12,7 +12,7 @@ interface AudioEvolutionCardProps {
 const AudioEvolutionCard = ({ currentFeatures, baselineFeatures, isLoading }: AudioEvolutionCardProps) => {
   if (isLoading) {
     return (
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+      <Card className="bg-card/50 border-border/50">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <TrendingUp className="w-4 h-4 text-primary" />
@@ -37,7 +37,7 @@ const AudioEvolutionCard = ({ currentFeatures, baselineFeatures, isLoading }: Au
 
   if (!currentFeatures) {
     return (
-      <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+      <Card className="bg-card/50 border-border/50">
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-base">
             <TrendingUp className="w-4 h-4 text-primary" />
@@ -94,7 +94,7 @@ const AudioEvolutionCard = ({ currentFeatures, baselineFeatures, isLoading }: Au
   ];
 
   return (
-    <Card className="bg-card/50 backdrop-blur-sm border-border/50">
+    <Card className="bg-card/50 border-border/50">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <TrendingUp className="w-4 h-4 text-primary" />

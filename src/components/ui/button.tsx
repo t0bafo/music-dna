@@ -25,7 +25,7 @@ const buttonVariants = cva(
         sonic:
           "bg-primary text-primary-foreground font-semibold hover:bg-primary/90 active:scale-[0.98] rounded-full",
         glass:
-          "bg-secondary/50 backdrop-blur-md border border-border/50 text-foreground hover:bg-secondary/70 hover:border-primary/30",
+          "bg-secondary/50 border border-border/50 text-foreground hover:bg-secondary/70 hover:border-primary/30",
       },
       size: {
         default: "h-10 px-4 py-2 rounded-lg",
