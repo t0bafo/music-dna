@@ -101,7 +101,7 @@ describe('vibe search protection', () => {
 describe('manual title/artist search with the model unavailable', () => {
   it('still finds tracks by title and artist', async () => {
     const { hybridSearch } = await import('@/hooks/use-vibe-search');
-    const crates = [{ id: 'c1', name: 'Night', tracks: [{ id: 't1', track_name: 'Essence', artist_name: 'Wizkid', track_id: 'x' }] }] as never;
+    const crates = [{ id: 'c1', name: 'Night', tracks: [{ id: 't1', name: 'Essence', artist_name: 'Wizkid', track_id: 'x' }] }] as never;
     expect(hybridSearch('essence', null, crates).totalCount).toBe(1);
     expect(hybridSearch('wizkid', null, crates).totalCount).toBe(1);
   });

@@ -78,14 +78,6 @@ export function hybridSearch(
   const energyRange = filters ? getEnergyRange(filters) : undefined;
   const hasAudioFilters = !!bpmRange || !!energyRange;
 
-  console.log('[vibe-search] Filtering with:', { 
-    query: normalizedQuery, 
-    hasAudioFilters, 
-    bpmRange, 
-    energyRange,
-    vibes: filters?.vibes,
-    scenes: filters?.scenes
-  });
 
   // Score and filter all tracks
   const scoredTracks: Array<{ track: SearchableTrack; score: number }> = [];
