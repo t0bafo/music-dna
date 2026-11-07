@@ -32,6 +32,9 @@ interface CreateCrateWithTracksModalProps {
   tracks: TrackInput[];
   defaultName?: string;
   defaultDescription?: string;
+  /** Optional filter controls rendered above the track preview */
+  controls?: React.ReactNode;
+  isLoadingTracks?: boolean;
 }
 
 const CreateCrateWithTracksModal = ({ 
@@ -39,7 +42,9 @@ const CreateCrateWithTracksModal = ({
   onOpenChange, 
   tracks,
   defaultName = 'My Signature Sound',
-  defaultDescription = ''
+  defaultDescription = '',
+  controls,
+  isLoadingTracks = false,
 }: CreateCrateWithTracksModalProps) => {
   const navigate = useNavigate();
   const [name, setName] = useState(defaultName);
@@ -128,9 +133,13 @@ const CreateCrateWithTracksModal = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-5 mt-2">
+          {controls}
+
           {/* Track Preview */}
           <div className="p-3 bg-secondary/30 rounded-lg border border-border/30">
-            <p className="text-xs text-muted-foreground mb-2">Tracks to add:</p>
+            <p className="text-xs text-muted-foreground mb-2">
+              {isLoadingTracks ? 'Loading tracks…' : 'Tracks to add:'}
+            </p>
             <div className="flex flex-wrap gap-2">
               {tracks.slice(0, 5).map((track) => (
                 <div 
@@ -263,7 +272,7 @@ const CreateCrateWithTracksModal = ({
             <Button
               type="submit"
               className="flex-1 gap-2"
-              disabled={isCreating}
+              disabled={isCreating || isLoadingTracks || tracks.length === 0}
             >
               {isCreating ? (
                 <>
